@@ -14,7 +14,8 @@ trees distributed across several modules. It consists of:
    project if needed.
 
 This language extensions has been developed as a convenience frontend
-for the [ZOTI](TODO) project and its tools, but can be used independently.
+for the [ZOTI](https://github.com/Ericsson/zoti) project and its
+tools, but can be used independently.
 
 Installation
 ------------
@@ -74,6 +75,14 @@ PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-yaml/src
 ideally from within the Pipenv shell which takes care of the
 dependency on PyYAML.
 
+### Testing the library
+
+To run the test suite, call from within a `--dev` Pipenv environment:
+
+```shell
+pytest # --cov
+```
+
 ### Generating the API documentation locally
 
 To generate the API documentation you need the `sphinx-build` tool,
@@ -94,18 +103,12 @@ Documentation
 -------------
 
 The ZOTI-YAML syntax, CLI tool usage and API documentation can be
-found on the project [web page](TODO). CLI arguments are also
-documented using the `--help` flag.
+found on the project [web
+page](https://ericsson.github.io/zoti/zoti-yaml). CLI arguments are
+also documented using the `--help` flag.
 
 An inline documented test example can be found in
 [`zoti-yaml/tests/scenario1`](tests/scenario1). This example is
-thoroughly explained on the [web page](TODO).
+thoroughly explained on the [web
+page](https://ericsson.github.io/zoti/zoti-yaml).
 
-Contribution
-------------
-
-Please check the [issues](TODO) page for discussions on current/past
-issues. Contact the main developer if you intend to contribute to this
-project. Keep in mind that the strength of the ZOTI tools lies in
-their simplicity so, sticking to the original vision, adding new
-features _should_ be scrutinized.
