@@ -2,11 +2,12 @@ ZOTI-Graph
 ==========
 
 This is a Python implementation of the core representation of
-[ZOTI](TODO) system models. These models are hierarchical graph-like
-structures representing system elements such as kernel computations,
-actors, ports, platform nodes, dependencies, etc. For a full
-documentation on ZOTI-Graph, as well as links to the ZOTI project,
-please refer to the [project web page](TODO).
+[ZOTI](https://github.com/Ericsson/zoti) system models. These models
+are hierarchical graph-like structures representing system elements
+such as kernel computations, actors, ports, platform nodes,
+dependencies, etc. For a full documentation on ZOTI-Graph, as well as
+links to the ZOTI project, please refer to the [project web
+page](https://ericsson.github.io/zoti/zoti-graph).
 
 This project currently consists in:
 
@@ -25,11 +26,12 @@ This project currently consists in:
  * a CLI tool for basic operations on system graphs. 
   
 This core representation format is designed to be used within the
-[ZOTI](TODO) tool ecosystem, but it can be used as a standalone tool
-as well. The input format is designed to be machine-friendly (not
-user-friendly) and is verbose on purpose. For advanced input syntax
-and utilities we recommend specifying the system graph using the
-[ZOTI-YAML](TODO) language extension.
+[ZOTI](https://ericsson.github.io/zoti) tool ecosystem, but it can be
+used as a standalone tool as well. The input format is designed to be
+machine-friendly (not user-friendly) and is verbose on purpose. For
+advanced input syntax and utilities we recommend specifying the system
+graph using the [ZOTI-YAML](https://ericsson.github.io/zoti/zoti-yaml)
+language extension.
 
 Installation
 ------------
@@ -86,8 +88,16 @@ adding the following path to the `PYTHONPATH` variable:
 PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-graph/src
 ```
 
-ideally from within the Pipenv shell which takes care of the
-dependency on PyYAML.
+ideally from within the Pipenv shell which takes care of the library
+dependencies.
+
+### Testing the library
+
+To run the test suite, call from within a `--dev` Pipenv environment:
+
+```shell
+pytest # --cov
+```
 
 ### Generating the API documentation locally
 
@@ -109,15 +119,6 @@ Documentation
 -------------
 
 The ZOTI-Graph input syntax, CLI tool usage and API documentation can
-be found on the project [web page](TODO). CLI arguments are also
-documented using the `--help` flag.
-
-Contribution
-------------
-
-Please check the [issues](TODO) page for discussions on current/past
-issues. Contact the maintainers you plan to contribute to the
-project. Keep in mind that the strength of the ZOTI tools lies in
-their simplicity. So, sticking to the original vision, adding new
-features _should_ be scrutinized, whereas proposals for simplification
-and bugfixes will be prioritized.
+be found on the project [web
+page](https://ericsson.github.io/zoti/zoti-graph). CLI arguments are
+also documented using the `--help` flag.

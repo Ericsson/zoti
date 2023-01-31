@@ -4,6 +4,7 @@ import yaml
 from glob import glob
 from pprint import pprint
 import pytest
+import logging
 
 sys.path.insert(0, "src")
 
@@ -11,11 +12,12 @@ from zoti_ftn.lang import load_str, load_file
 import zoti_ftn.core as core
 import zoti_ftn.backend.c as c
 
+from pprint import pformat
 
 @pytest.fixture
 def ftn(request):
     docs = [doc for f in glob("tests/inputs/*.ftn") for doc in load_file(open(f))]
-    single = request.param.FtnDb({doc[0]["module"]: doc[1] for doc in docs})
+    single = request.param.FtnDb({doc[0]["module"]: doc[1]["entries"] for doc in docs})
     return single
 
 
@@ -51,7 +53,7 @@ def test_core(ftn) -> None:
 def test_c_backend(ftn) -> None:
     print("")
     try:
-        print(ftn)
+        # print(ftn)
         _ = ftn.get("Tst.TypeOne")
         _ = ftn.get("Tst.TypeTwo")
         assert ftn.c_name("Tst.TypeOne") == "Tst__TypeOne_t"
