@@ -1,0 +1,59 @@
+---
+import:
+- {module: mod1}
+- {as: mod2, module: sub.mod}
+module: main
+path: main.zoml
+tool-log:
+- ['2023-01-30 10:48:51.798700', toy-example-0.1.0]
+---
+root:
+- _info:
+    _pos:
+    - [11, 4, 148, 499, main.zoml, toy-example-0.1.0]
+  mark: DEFAULT_MARKING
+  name: n1
+  nodes:
+  - _info:
+      _pos:
+      - [13, 8, 176, 338, main.zoml, toy-example-0.1.0]
+    name: n1_n1
+    nodes:
+    - _info:
+        _pos:
+        - [15, 12, 215, 338, main.zoml, toy-example-0.1.0]
+      data: I am referenced by n1_n1_n1!
+      name: n1_n1_n1
+  - _info:
+      _pos:
+      - [19, 8, 340, 499, main.zoml, toy-example-0.1.0]
+    data: Hello World!
+    extra: I am referenced by n1_n1_n1!
+    name: n1_n2
+- _info:
+    _pos:
+    - [6, 6, 43, 331, sub/mod.zoml, toy-example-0.1.0]
+    - [24, 4, 501, 622, main.zoml, 'toy-example-0.1.0:!attach']
+    _prev_attrs: {name: n1}
+  content1: |
+    BEGIN block1
+    I am the 'block1'.
+    Fear me!
+    END block1
+
+    :(!)
+    I am a monkey! Ook!
+    (!):
+  content2: |
+    Fear me!
+    END block1
+
+    :(!)
+  content3: |
+    I am the 'block1'.
+    Fear me!
+  content4: |
+    I am a monkey! Ook!
+  floating-ref: {module: main, path: '/nodes[n1]'}
+  mark: DEFAULT_MARKING
+  name: n2

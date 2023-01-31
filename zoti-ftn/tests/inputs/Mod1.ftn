@@ -1,0 +1,11 @@
+import test_import as Mod;
+
+Tst: module {
+  TypeOne: structure {
+    id:       Mod.TimeSlot(endian:little);
+    length:   integer(range: 1..100; bit-size: 16);
+    data:     array(range: 1..100) boolean(bit-size: 0o10);
+  };
+
+  TypeTwo:    Mod.ArrId;
+};

@@ -1,0 +1,19 @@
+{
+  "modules": {
+    "Common": {
+      "type": "module",
+      "entries": {
+        "Timespec": {
+          "type": "structure",
+          "fields": {
+            "seconds": { "type": "integer", "range": [0, 1000000000000] },
+            "nanosecs": { "type": "integer", "range": [0, 1000000000] }
+          }
+        },
+        "TimeSlot": { "type": "integer", "range": [-1, 100], "endian": "big" },
+        "StreamId": { "type": "integer", "range": [0, 10000], "bit-size": "16" },
+        "Timestamp": { "type": "integer", "range": [0, 255], "bit-size": "8" }
+      }
+    }
+  }
+}

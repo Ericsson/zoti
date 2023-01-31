@@ -1,0 +1,25 @@
+import: []
+module: test_import
+path: tests/inputs/Mod2.ftn
+---
+ArrId:
+  __info__:
+    __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod2.ftn,
+      start_column: 5, start_index: 0, start_line: 3}
+  element-type:
+    range: ['0', '0xFFFFFFFF']
+    type: integer
+  range: '100'
+  type: array
+Nothing:
+  __info__:
+    __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod2.ftn,
+      start_column: 5, start_index: 0, start_line: 4}
+  type: void
+TimeSlot:
+  __info__:
+    __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod2.ftn,
+      start_column: 5, start_index: 0, start_line: 2}
+  endian: big
+  range: ['-1', '100']
+  type: integer

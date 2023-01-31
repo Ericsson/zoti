@@ -1,0 +1,23 @@
+import Res;
+
+StreamQ: module {
+  BEARERS_MAX: constant(50);
+  BLOCKS_MAX: constant(10000);
+  DATA_MAX: constant(200);
+  
+  BuffCube: array(BEARERS_MAX)
+  	    array(BLOCKS_MAX)
+	    array(DATA_MAX) Res.Sample; 
+
+  BlockArray: array(BEARERS_MAX) integer(range: 0..10000; bit-size: 16);
+  
+  LengthArray: array(BEARERS_MAX) integer(range: 0..10000; bit-size: 32);
+
+  LengthMatrix: array(BEARERS_MAX)
+  		array(BLOCKS_MAX) integer(range: 0..10000; bit-size: 16);
+
+  BlockBuffer: structure{
+    start: StreamQ.BlockArray;
+    next:  StreamQ.BlockArray;
+  };
+};

@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyyaml = "*"
+build = "*"
+marshmallow = "*"
+toml = "*"
+zoti-yaml = {editable = true, path = "./../zoti-yaml"}
+zoti-graph = {editable = true, path = "./../zoti-graph"}
+zoti-ftn = {editable = true, path = "./../zoti-ftn"}
+
+[dev-packages]
+pytest = "*"
+flake8 = "*"
+isort = "*"
+mypy = "*"
+pytest-cov = "*"
+autopep8 = "*"
+black = "*"
+types-pyyaml = "*"
+license-sh = "*"
+virtualenv = "*"
+pydot = "*"
+networkx = "*"
+
+[requires]
+python_version = "3.10"
