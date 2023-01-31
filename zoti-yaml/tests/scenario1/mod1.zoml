@@ -1,0 +1,9 @@
+module: mod1
+sup: ss
+
+---
+
+root:
+  node:
+    - name: n_who
+      data: Hello World!

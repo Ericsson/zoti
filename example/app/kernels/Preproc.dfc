@@ -1,0 +1,54 @@
+
+#define MAX_SIZE 400
+#define PREPROC_MULT 5000
+#define PREPROC_MULT2 1
+
+union {
+  float f;
+  uint32_t i;
+} t;
+float a[MAX_SIZE], b[MAX_SIZE], c[MAX_SIZE], r[MAX_SIZE];
+const uint16_t length = {{ getter("st_data.data.LEN") }};
+
+for (uint16_t i = 0; i < length; ++i) {
+  t.i = {{ getter("st_data.data.a", "i") }}; a[i] = t.f;
+  t.i = {{ getter("st_data.data.a", "i") }}; b[i] = t.f;
+  t.i = {{ getter("st_data.data.a", "i") }}; c[i] = t.f;
+ }
+
+#ifdef DFL_DEBUG_PRINT
+Common__StreamId_t id = {{ getter("st_data.id") }};
+printf("<#compute#>(Preproc_compute): id=%d\n", id);
+printf("data:\n");
+for (int i = 0; i < length && i < 10; ++i) {
+  printf("%f ", a[i]);
+ }
+printf("\n");
+for (int i = 0; i < length && i < 10; ++i) {
+  printf("%f ", b[i]);
+ }
+printf("\n");
+for (int i = 0; i < length && i < 10; ++i) {
+  printf("%f ", c[i]);
+ }
+printf("\n");
+#endif
+
+for (uint16_t m2 = 0; m2 < PREPROC_MULT2; ++m2) {
+  for (uint16_t m = 0; m < PREPROC_MULT; ++m) {
+    for (uint16_t i = 0; i < length; ++i) {
+      r[i] = a[i]+b[i]-c[i]+3*(float)m;
+#ifdef DFL_DEBUG_PRINT
+      if (m == 0 && i < 10)
+	printf("  r: %f, a: %f, b: %f, c: %f\n", r[i], a[i], b[i], c[i]);
+#endif
+    }
+  }
+ }
+
+for (uint16_t i = 0; i < length; ++i) {
+  t.f = r[i]; {{ setter("out.r", "i", "t.i") }};
+  t.f = b[i]; {{ setter("out.b", "i", "t.i") }};
+  t.f = c[i]; {{ setter("out.c", "i", "t.i") }};
+ }
+{{ setter("out.LEN", "length") }}

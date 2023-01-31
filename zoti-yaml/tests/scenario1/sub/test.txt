@@ -1,0 +1,8 @@
+BEGIN block1
+I am the 'block1'.
+Fear me!
+END block1
+
+:(!)
+I am a monkey! Ook!
+(!):

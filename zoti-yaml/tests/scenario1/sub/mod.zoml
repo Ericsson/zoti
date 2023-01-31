@@ -1,0 +1,12 @@
+module: sub.mod
+
+---
+
+root:
+  nodes:
+    - name: n1
+      content1: !include {file: test.txt}
+      content2: !include {file: test.txt, begin: 3, end: 6}
+      content3: !include {file: test.txt, name: block1}
+      content4: !include {file: test.txt, begin: ":(!)", end: "(!):"}
+      floating-ref: !ref {path: "../../nodes[n1]"}

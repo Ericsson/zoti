@@ -1,0 +1,38 @@
+import:
+- {module: test_import}
+module: Tst
+path: tests/inputs/Mod1.ftn
+---
+TypeOne:
+  __info__:
+    __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod1.ftn,
+      start_column: 3, start_index: 0, start_line: 4}
+  fields:
+    data:
+      __info__:
+        __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod1.ftn,
+          start_column: 5, start_index: 0, start_line: 7}
+      element-type: {bit-size: 0o10, type: boolean}
+      range: ['1', '100']
+      type: array
+    id:
+      __info__:
+        __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod1.ftn,
+          start_column: 5, start_index: 0, start_line: 5}
+      endian: little
+      ref: {module: test_import, name: TimeSlot}
+      type: ref
+    length:
+      __info__:
+        __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod1.ftn,
+          start_column: 5, start_index: 0, start_line: 6}
+      bit-size: '16'
+      range: ['1', '100']
+      type: integer
+  type: structure
+TypeTwo:
+  __info__:
+    __pos__: !!python/object:zoti_yaml.types.Pos {end_index: -1, path: tests/inputs/Mod1.ftn,
+      start_column: 3, start_index: 0, start_line: 10}
+  ref: {module: test_import, name: ArrId}
+  type: ref

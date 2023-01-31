@@ -1,0 +1,29 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+build = "*"
+pyyaml = "*"
+marshmallow = "*"
+pydot = "*"
+networkx = "*"
+zoti-yaml = {editable = true, path = "./../zoti-yaml"}
+jinja2 = "*"
+toml = "*"
+
+[dev-packages]
+pytest = "*"
+flake8 = "*"
+isort = "*"
+mypy = "*"
+pytest-cov = "*"
+autopep8 = "*"
+black = "*"
+types-pyyaml = "*"
+license-sh = "*"
+virtualenv = "*"
+
+[requires]
+python_version = "3.10"

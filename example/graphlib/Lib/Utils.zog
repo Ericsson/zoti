@@ -1,0 +1,23 @@
+module: Lib.Utils
+---
+
+nodes:
+- name: SingleKernelActor
+  kind: ActorNode
+  parameters:
+    external-function: null
+    passed-ports: null
+    passed-marks: {}
+    passed-parameters: {}
+  nodes:
+  - name: _kern
+    kind: KernelNode
+    extern:
+      !attach {ref: !ref {path: "../../parameters/external-function"}}
+    ports:
+      !attach {ref: !ref {path: "../../parameters/passed-ports"}}
+    mark:
+      !attach {ref: !ref {path: "../../parameters/passed-mark"}}
+    parameters:
+      !attach {ref: !ref {path: "../../parameters/passed-parameters"}}
+      

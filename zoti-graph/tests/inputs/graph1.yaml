@@ -1,0 +1,386 @@
+module: main
+path: inputs/graph1.yaml
+main-is: /nodes[Tst]
+---
+nodes:
+- _info:
+    _pos: [7, 1, 0, 0, inputs/graph1.yaml]
+  description: Example Dataflow Graph
+  edges:
+  - _info:
+      _pos: [11, 1, 0, 0, inputs/graph1.yaml]
+    connect: [sys1, null, Src, trig]
+  - _info:
+      _pos: [14, 1, 0, 0, inputs/graph1.yaml]
+    connect: [sys2, null, Src, flush]
+    edge_type: {external-name: trig, name: ext}
+  - _info:
+      _pos: [18, 1, 0, 0, inputs/graph1.yaml]
+    connect: [Src, data, streamq, ldata]
+  - _info:
+      _pos: [21, 1, 0, 0, inputs/graph1.yaml]
+    connect: [Src, stat, syso1, null]
+  - _info:
+      _pos: [24, 1, 0, 0, inputs/graph1.yaml]
+    connect: [streamq, reports, syso2, null]
+  - _info:
+      _pos: [27, 1, 0, 0, inputs/graph1.yaml]
+    connect: [streamq, st_data, syso3, null]
+  - _info:
+      _pos: [30, 1, 0, 0, inputs/graph1.yaml]
+    connect: [sys3, null, streamq, sched]
+  name: Tst
+  nodes:
+  - _info:
+      _pos: [50, 1, 0, 0, inputs/graph1.yaml]
+      __prev_attrs__: {name: Src}
+      __prev_pos__: [21, 6, 527, 592, ../test/app/ScheduledCompute.zog]
+    description: Proto-dataflow of Src
+    edges:
+    - _info:
+        _pos: [56, 1, 0, 0, inputs/graph1.yaml]
+      connect: [., trig, Src/src_native, trig]
+    - _info:
+        _pos: [59, 1, 0, 0, inputs/graph1.yaml]
+      connect: [Src/src_native, inited, null1, null]
+      kind: storage
+    - _info:
+        _pos: [63, 1, 0, 0, inputs/graph1.yaml]
+      connect: [Src/src_native, predef_data, null2, null]
+      kind: storage
+    - _info:
+        _pos: [67, 1, 0, 0, inputs/graph1.yaml]
+      connect: [Src/src_native, data, counter, monitored_input]
+    - _info:
+        _pos: [70, 1, 0, 0, inputs/graph1.yaml]
+      connect: [., flush, counter, flush_cnt]
+    - _info:
+        _pos: [73, 1, 0, 0, inputs/graph1.yaml]
+      connect: [counter, cnt_stat, ., stat]
+    - _info:
+        _pos: [76, 1, 0, 0, inputs/graph1.yaml]
+      connect: [counter, bypassed_data, ., data]
+    kind: PlatformNode
+    name: Src
+    nodes:
+    - _info:
+        _pos: [82, 1, 0, 0, inputs/graph1.yaml]
+      description: Proto-dataflow of Src_compute
+      kind: ActorNode
+      name: Src
+      nodes:
+      - _info:
+          _pos: [88, 1, 0, 0, inputs/graph1.yaml]
+        extern: Src.dfc
+        kind: KernelNode
+        name: src_native
+        ports:
+        - _info:
+            _pos: [94, 1, 0, 0, inputs/graph1.yaml]
+          dir: in
+          name: trig
+        - _info:
+            _pos: [98, 1, 0, 0, inputs/graph1.yaml]
+          data_type: {name: Tst.LinkData}
+          dir: out
+          name: data
+        - _info:
+            _pos: [103, 1, 0, 0, inputs/graph1.yaml]
+          data_type: {name: Common.Boolean, value: 'false'}
+          dir: inout
+          name: inited
+          port_type: {name: assign}
+        - _info:
+            _pos: [109, 1, 0, 0, inputs/graph1.yaml]
+          data_type: {name: Tst.PredefLinkData}
+          dir: inout
+          name: predef_data
+          port_type: {name: assign}
+    - _info:
+        _pos: [115, 1, 0, 0, inputs/graph1.yaml]
+        __prev_attrs__: {name: CounterProbe}
+        __prev_pos__: [54, 4, 1475, 1568, ../test/app/ScheduledCompute/Src.zog]
+      edges:
+      - _info:
+          _pos: [120, 1, 0, 0, inputs/graph1.yaml]
+        connect: [., monitored_input, packet-cnt/_kern, monitored]
+      - _info:
+          _pos: [123, 1, 0, 0, inputs/graph1.yaml]
+        connect: [., flush_cnt, buffer-flush/_kern, flush_cnt]
+      - _info:
+          _pos: [126, 1, 0, 0, inputs/graph1.yaml]
+        connect: [buffer-flush/_kern, cnt_stat, ., cnt_stat]
+      - _info:
+          _pos: [129, 1, 0, 0, inputs/graph1.yaml]
+        connect: [packet-cnt/_kern, cnt_buff, buffer-flush/_kern, cnt_buff]
+        kind: storage
+      - _info:
+          _pos: [133, 1, 0, 0, inputs/graph1.yaml]
+        connect: [., monitored_input, ., bypassed_data]
+      name: counter
+      nodes:
+      - _info:
+          _pos: [138, 1, 0, 0, inputs/graph1.yaml]
+          __prev_attrs__:
+            name: SingleKernelActor
+            parameters:
+              external-function: null
+              passed-marks: {}
+              passed-ports: null
+          __prev_pos__: [27, 4, 551, 869, ../test/graphlib/Lib/Probes.zog]
+        kind: ActorNode
+        name: packet-cnt
+        nodes:
+        - _info:
+            _pos: [150, 1, 0, 0, inputs/graph1.yaml]
+          extern: counter_c.dfc
+          kind: KernelNode
+          mark:
+            _info:
+              __prev_attrs__: {}
+              __prev_pos__: [18, 6, 382, 440, ../test/graphlib/Lib/Utils.zog]
+            inline: true
+          name: _kern
+          ports:
+          - {dir: in, name: monitored}
+          - {dir: inout, name: cnt_buff}
+        parameters:
+          external-function: counter_c.dfc
+          passed-mark: {inline: true}
+          passed-ports:
+          - {dir: in, name: monitored}
+          - {dir: inout, name: cnt_buff}
+      - _info:
+          _pos: [169, 1, 0, 0, inputs/graph1.yaml]
+          __prev_attrs__:
+            name: SingleKernelActor
+            parameters:
+              external-function: null
+              passed-marks: {}
+              passed-ports: null
+          __prev_pos__: [37, 4, 871, 1364, ../test/graphlib/Lib/Probes.zog]
+        kind: ActorNode
+        name: buffer-flush
+        nodes:
+        - _info:
+            _pos: [181, 1, 0, 0, inputs/graph1.yaml]
+          extern: flusher_c.dfc
+          kind: KernelNode
+          mark:
+            _info:
+              __prev_attrs__: {}
+              __prev_pos__: [18, 6, 382, 440, ../test/graphlib/Lib/Utils.zog]
+            inline: true
+          name: _kern
+          ports:
+          - {dir: in, name: flush_cnt}
+          - {dir: out, name: cnt_stat}
+          - data_type: {name: Monitor.Sample64, value: '{ (DFL_ATOM_INVALID_BIT | 0), 0 }'}
+            dir: inout
+            mark: {probe_buffer: true}
+            name: cnt_buff
+            port_type: {name: assign}
+        parameters:
+          external-function: flusher_c.dfc
+          passed-mark: {inline: true}
+          passed-ports:
+          - {dir: in, name: flush_cnt}
+          - {dir: out, name: cnt_stat}
+          - data_type: {name: Monitor.Sample64, value: '{ (DFL_ATOM_INVALID_BIT | 0), 0 }'}
+            dir: inout
+            mark: {probe_buffer: true}
+            name: cnt_buff
+            port_type: {name: assign}
+      parameters: {monitored-edge: null}
+      ports:
+      - _info:
+          _pos: [212, 1, 0, 0, inputs/graph1.yaml]
+        data_type: {name: Common.Boolean}
+        dir: in
+        name: flush_cnt
+        port_type: {name: socket}
+      - _info:
+          _pos: [218, 1, 0, 0, inputs/graph1.yaml]
+        data_type: {name: Monitor.Collection64, value: '0'}
+        dir: out
+        name: cnt_stat
+        port_type: {name: socket}
+      - _info:
+          _pos: [224, 1, 0, 0, inputs/graph1.yaml]
+        dir: in
+        name: monitored_input
+      - _info:
+          _pos: [228, 1, 0, 0, inputs/graph1.yaml]
+        dir: out
+        name: bypassed_data
+    primitives:
+    - _info:
+        _pos: [232, 1, 0, 0, inputs/graph1.yaml]
+      name: null1
+      type: 'NULL'
+    - _info:
+        _pos: [237, 1, 0, 0, inputs/graph1.yaml]
+      name: null2
+      type: 'NULL'
+    ports:
+    - _info:
+        _pos: [243, 1, 0, 0, inputs/graph1.yaml]
+      data_type: {name: Common.Timestamp}
+      dir: in
+      name: trig
+    - _info:
+        _pos: [248, 1, 0, 0, inputs/graph1.yaml]
+      data_type: {name: Tst.LinkData}
+      dir: out
+      name: data
+    - _info:
+        _pos: [253, 1, 0, 0, inputs/graph1.yaml]
+      dir: in
+      name: flush
+    - _info:
+        _pos: [257, 1, 0, 0, inputs/graph1.yaml]
+      dir: out
+      name: stat
+    target: {language: C, platform: unix-process}
+  - _info:
+      _pos: [262, 1, 0, 0, inputs/graph1.yaml]
+      __prev_attrs__: {name: StreamQ}
+      __prev_pos__: [22, 6, 599, 676, ../test/app/ScheduledCompute.zog]
+    description: Proto-dataflow of Stream Queue
+    edges:
+    - _info:
+        _pos: [268, 1, 0, 0, inputs/graph1.yaml]
+      connect: [., ldata, queue_data/streamq_lnk_act, ldata]
+    - _info:
+        _pos: [271, 1, 0, 0, inputs/graph1.yaml]
+      connect: [queue_data/streamq_lnk_act, reports, ., reports]
+    - _info:
+        _pos: [274, 1, 0, 0, inputs/graph1.yaml]
+      connect: [., sched, release_data/strq_find_blk, sched]
+    - _info:
+        _pos: [277, 1, 0, 0, inputs/graph1.yaml]
+      connect: [release_data/strq_find_blk, block_nr, release_data/strq_fetch_blk, block_nr]
+    - _info:
+        _pos: [280, 1, 0, 0, inputs/graph1.yaml]
+      connect: [release_data/strq_find_blk, length, release_data/strq_fetch_blk, length]
+    - _info:
+        _pos: [283, 1, 0, 0, inputs/graph1.yaml]
+      connect: [release_data/strq_fetch_blk, st_data, ., st_data]
+    kind: PlatformNode
+    name: streamq
+    nodes:
+    - _info:
+        _pos: [289, 1, 0, 0, inputs/graph1.yaml]
+      description: Proto-dataflow of Stream Queue, link activity part
+      kind: ActorNode
+      name: queue_data
+      nodes:
+      - _info:
+          _pos: [295, 1, 0, 0, inputs/graph1.yaml]
+        extern: StreamQ_link.dfc
+        kind: KernelNode
+        name: streamq_lnk_act
+        ports:
+        - _info:
+            _pos: [301, 1, 0, 0, inputs/graph1.yaml]
+          dir: in
+          name: ldata
+        - _info:
+            _pos: [305, 1, 0, 0, inputs/graph1.yaml]
+          dir: out
+          name: reports
+    - _info:
+        _pos: [309, 1, 0, 0, inputs/graph1.yaml]
+      description: Proto-dataflow of Stream Queue, tslot part
+      kind: ActorNode
+      name: release_data
+      nodes:
+      - _info:
+          _pos: [315, 1, 0, 0, inputs/graph1.yaml]
+        description: Proto-dataflow of Stream Queue, find block part
+        extern: StreamQ_find.dfc
+        kind: KernelNode
+        name: strq_find_blk
+        ports:
+        - _info:
+            _pos: [322, 1, 0, 0, inputs/graph1.yaml]
+          dir: in
+          name: sched
+        - _info:
+            _pos: [326, 1, 0, 0, inputs/graph1.yaml]
+          data_type: {ftn: integer(0..10000)}
+          dir: out
+          name: block_nr
+          port_type: {name: assign}
+        - _info:
+            _pos: [332, 1, 0, 0, inputs/graph1.yaml]
+          data_type: {ftn: integer(0..200)}
+          dir: out
+          name: length
+          port_type: {name: assign}
+      - _info:
+          _pos: [338, 1, 0, 0, inputs/graph1.yaml]
+        description: Proto-dataflow of Stream Queue, fetch block part
+        extern: StreamQ_tslot.dfc
+        kind: KernelNode
+        name: strq_fetch_blk
+        ports:
+        - _info:
+            _pos: [345, 1, 0, 0, inputs/graph1.yaml]
+          dir: in
+          name: block_nr
+        - _info:
+            _pos: [349, 1, 0, 0, inputs/graph1.yaml]
+          dir: in
+          name: length
+        - _info:
+            _pos: [353, 1, 0, 0, inputs/graph1.yaml]
+          dir: out
+          name: st_data
+    ports:
+    - _info:
+        _pos: [358, 1, 0, 0, inputs/graph1.yaml]
+      data_type: {name: Tst.LinkData}
+      dir: in
+      name: ldata
+    - _info:
+        _pos: [363, 1, 0, 0, inputs/graph1.yaml]
+      data_type: {name: Tst.StreamSched}
+      dir: in
+      name: sched
+    - _info:
+        _pos: [368, 1, 0, 0, inputs/graph1.yaml]
+      data_type: {name: Tst.BufferReport}
+      dir: out
+      name: reports
+    - _info:
+        _pos: [373, 1, 0, 0, inputs/graph1.yaml]
+      data_type: {name: Tst.StreamData}
+      dir: out
+      name: st_data
+    target: {language: C, platform: unix-process}
+  primitives:
+  - _info:
+      _pos: [379, 1, 0, 0, inputs/graph1.yaml]
+    name: syso1
+    type: SYSTEM
+  - _info:
+      _pos: [384, 1, 0, 0, inputs/graph1.yaml]
+    name: syso2
+    type: SYSTEM
+  - _info:
+      _pos: [389, 1, 0, 0, inputs/graph1.yaml]
+    name: syso3
+    type: SYSTEM
+  - _info:
+      _pos: [35, 1, 0, 0, inputs/graph1.yaml]
+    name: sys1
+    type: SYSTEM
+  - _info:
+      _pos: [40, 1, 0, 0, inputs/graph1.yaml]
+    name: sys2
+    type: SYSTEM
+  - _info:
+      _pos: [45, 1, 0, 0, inputs/graph1.yaml]
+    name: sys3
+    type: SYSTEM

@@ -1,0 +1,5 @@
+test_import: module {
+    TimeSlot: integer(range: -1..100; endian: big);
+    ArrId: array(100) integer(0..0xFFFFFFFF);
+    Nothing: void;
+};

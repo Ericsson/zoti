@@ -1,0 +1,6 @@
+[zoti.yaml.toy]
+tool = "toy-example-0.1.0"  # for bookkeeping in node metadata
+keys = ["root", "nodes"]    # adds metadata to children of these nodes
+ext = [".zoml"]             # checks only files with extension .zoml
+pathvar = ["."]             # (not required) does not look for
+			    # libraries outside the current path

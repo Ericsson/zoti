@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zoti-gen"
+version = "0.1.0"
+authors = [
+  { name="George Ungureanu", email="george.ungureanu@ericsson.com" },
+]
+description = """A template-based code generation tool."""
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  'PyYAML ~= 6.0',
+]
+
+[project.urls]
+"Homepage" = "http://TBA.io"
+"Bug Tracker" = "http://TBA.io"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+# addopts = "-ra -q"
+addopts = "-s"
+testpaths = [
+    "tests",
+]
+
+[tool.coverage.report]
+omit = ["src/zoti_gen/exceptions.py", "tests/*", "*zoti_yaml*"]
+
+exclude_lines =[
+    "pass"
+]
+
