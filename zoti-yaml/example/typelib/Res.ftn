@@ -1,0 +1,13 @@
+Res: module {
+  Sample: structure {
+    a: integer(0..0xFFFFFFFF);
+    b: integer(0..0xFFFFFFFF);
+    c: integer(0..0xFFFFFFFF);
+  };
+
+  InterSample: structure {
+    r: integer(0..0xFFFFFFFF);
+    b: integer(0..0xFFFFFFFF);
+    c: integer(0..0xFFFFFFFF);
+  };
+};

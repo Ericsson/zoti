@@ -1,0 +1,45 @@
+module: ProdCons
+main-is: "/nodes[Tst]"
+import:
+  - {module: ProdCons.Src, as: Src}
+  - {module: ProdCons.Proc, as: Proc}
+  - {module: ProdCons.Sink, as: Sink}
+  - {module: Lib.Probes, as: Probes}
+---
+
+!default
+- nodes:
+  - edges:
+    - edge_type: !with_create {name: UDP}
+    nodes:
+    - ports:
+        - port_type: !with_create {type: socket}
+- nodes:
+    - name: Tst   # kind: CompositeNode
+      description: "Example Dataflow Graph"
+      primitives:
+        - {name: sys-trigger, type: SYSTEM}
+        - {name: sys-flush, type: SYSTEM}
+        - {name: sys-stat, type: SYSTEM}
+      nodes:
+        - !attach {name: Src, ref: !ref {module: Src, path: "/nodes[Src]"}}
+        - !attach {name: Proc,  ref: !ref {module: Proc, path: "/nodes[Proc]"}}
+        - !attach {name: Sink, ref: !ref {module: Sink, path: "/nodes[Sink]"}}  
+        - !attach
+          ref: !ref {module: Probes , path: "/nodes[CounterStat]"}
+          name: DFL_counter_stat
+          parameters:
+            flush_ports:
+              - {name: flush1, dir: out}
+              - {name: flush2, dir: out}
+      edges:
+        - connect: ["sys-stat", null,  "Src", "trig"]
+        - connect: ["sys-trigger", null,  "Sink", "stat_time"]
+        - connect: ["Src", "data", "Proc", "st_data"]
+        - connect: ["Proc", "res_data", "Sink", "data"]
+        ### probe connections ###
+        - connect: ["sys-flush", null,  "DFL_counter_stat", "flush"]
+        - connect: ["DFL_counter_stat/Flush/flush", "flush1", "Src", "DFL_counter_flush"]
+        - connect: ["DFL_counter_stat/Flush/flush", "flush2", "Proc", "DFL_counter_flush"]
+        - connect: ["Src", "DFL_counter_samples",  "DFL_counter_stat", "samples"]
+        - connect: ["Proc", "DFL_counter_samples", "DFL_counter_stat", "samples"]

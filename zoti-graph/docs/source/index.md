@@ -56,3 +56,11 @@ api-reference
 [^id2]: The format is still in development and there might be
     discrepancies between drawings and definition. For proper
     definitions check the [Model Documentation](the-zoti-graph-model) page.
+
+
+```{eval-rst}
+.. sidebar-links::
+	:github:
+	
+	ZOTI <https://ericsson.github.io/zoti/>
+```

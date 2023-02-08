@@ -1,0 +1,65 @@
+
+
+// <#begin#>(StreamQ_find_block)
+Common__StreamId_t id = {{getter("sched.id")}};
+uint16_t lgt;
+int16_t blk_nr;
+
+if (id >= {{getter("block.start.LEN")}}) {
+  {{ setter("block_nr", "0") }};
+  {{ setter("length", "0") }};
+  return;
+ }
+
+blk_nr = {{label.block.name}}_pop(id, {{getter("stored_data.LEN", "0")}});
+if (blk_nr < 0) {
+  {{ setter("block_nr", "0") }};
+  {{ setter("length", "0") }};
+  return;
+ }
+
+lgt = {{getter("stored_length", "id", "blk_nr")}};
+
+#ifdef DFL_DEBUG_PRINT
+printf("<#compute#>(select_block): id=%d, tslot=%d, length=%d\n",
+       id, {{getter("sched.tslot")}}, lgt);
+#endif
+
+{{ setter("block_nr", "blk_nr") }};
+{{ setter("length", "lgt") }};
+
+
+uint32_t* tot_len = &{{getter("total_length", "id")}};
+uint16_t* blk_cnt = &{{getter("block_cnt", "id")}};
+tot_len -= length;
+blk_cnt -= 1;
+// <#end#>(StreamQ_find_block)
+
+
+
+
+/* <#begin#>(StreamQ_fetch_block) */
+Common__StreamId_t id = {{getter("sched.id")}};
+Common__TimeSlot_t tslot = {{getter("sched.tslot")}};
+uint16_t lgt = {{getter("length")}};
+int16_t blk_nr = {{getter("block_nr")}};
+int i;
+
+#ifdef DFL_DEBUG_PRINT
+printf("<#compute#>(tslot): id=%d, tslot=%d, length=%d, block_nr=%d\n",
+       id, tslot, lgt, blk_nr);
+#endif
+
+/* data_t * data_p = StreamQ_stored_data[id][blk_nr]; */
+{{ setter("st_data.id", "id") }};
+{{ setter("st_data.tslot", "tslot") }};
+for (i = 0; i < lgt; ++i) {
+  /* <#put#>(st_data#data[i].a, data_p[i].a); */
+  /* <#put#>(st_data#data[i].b, data_p[i].b); */
+  /* <#put#>(st_data#data[i].c, data_p[i].c); */
+  {{setter("st_data.data.a", "i", getter("stored_data.a", "id", "blk_nr", "i"))}};
+  {{setter("st_data.data.b", "i", getter("stored_data.b", "id", "blk_nr", "i"))}};
+  {{setter("st_data.data.c", "i", getter("stored_data.c", "id", "blk_nr", "i"))}};
+ }
+{{ setter("st_data.data.LEN", "lgt") }};
+/* <#end#>(StreamQ_fetch_block) */

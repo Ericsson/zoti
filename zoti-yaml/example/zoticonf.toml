@@ -1,0 +1,24 @@
+[zoti.yaml.graph]
+tool = "zoti-graph-0.1.0"
+keys = ["nodes", "ports", "edges", "primitives"]
+ext = [".zog"]
+pathvar = ["app", "graphlib"]
+
+[zoti.yaml.ftn_dbg]
+tool = "zoti-yaml-0.1.0"
+keys = ["type", "entries"]
+pathvar = ["gen/types"]
+
+[zoti.yaml.gen]
+tool = "zoti-gen-0.1.0"
+keys = ["block", "port", "instance", "bind"]
+ext = [".zoc"]
+pathvar = ["gen/genspec"]
+
+[zoti.graph]
+debug_out = "gen/dbg"
+
+[zoti.gen]
+lib = ["templatelib"]
+begin_block = "\n// vvv {comp.name} begin\n"
+end_block = "\n// ^^^ {comp.name} end\n"

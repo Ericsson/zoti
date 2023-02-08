@@ -1,0 +1,33 @@
+#define MAX_SIZE 400
+#define MAINCOMP_MULT 5000
+#define MAINCOMP_MULT2 30
+
+union {
+  float f;
+  uint32_t i;
+} t;
+float a[MAX_SIZE], b[MAX_SIZE], c[MAX_SIZE], r[MAX_SIZE];
+const uint16_t length = {{ getter("in.LEN") }};
+
+for (uint16_t i = 0; i < length; ++i) {
+  t.i = {{ getter("in.r", "i") }}; r[i] = t.f;
+  t.i = {{ getter("in.b", "i") }}; b[i] = t.f;
+  t.i = {{ getter("in.c", "i") }}; c[i] = t.f;
+ }
+
+for (uint16_t m2 = 0; m2 < MAINCOMP_MULT2; ++m2) {
+  for (uint16_t m = 0; m < MAINCOMP_MULT; ++m) {
+    for (uint16_t i = 0; i < length; ++i) {
+      a[i] = r[i]-b[i]+c[i]-3*(float)m;
+#ifdef DFL_DEBUG_PRINT
+      if (m == (MAINCOMP_MULT-1) && i < 10)
+	printf("  r: %f, a: %f, b: %f, c: %f\n", r[i], a[i], b[i], c[i]);
+#endif
+    }
+  }
+ }
+
+for (uint16_t i = 0; i < length; ++i) {
+  t.f = a[i]; {{ setter("res.data", "i", "t.i") }};
+ }
+{{ setter("res.length", "length") }}
