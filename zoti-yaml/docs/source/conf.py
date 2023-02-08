@@ -5,7 +5,9 @@ from enum import Flag
 from typing import Any, Optional
 
 from sphinx.ext import autodoc
+from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
+from sphinx_toolbox.sidebar_links import SidebarLinksDirective
 
 sys.path.insert(0, os.path.abspath("../../src/"))
 from zoti_yaml import __version__
@@ -20,6 +22,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "myst_parser",
+    'sphinx_toolbox.sidebar_links',
+    'sphinx_toolbox.github',
 ]
 
 myst_enable_extensions = [
@@ -30,7 +34,6 @@ myst_enable_extensions = [
     "html_image",
 ]
 
-templates_path = []
 exclude_patterns = []
 # html_static_path = ["_static"]
 
@@ -39,6 +42,11 @@ autodoc_member_order = "bysource"
 add_module_names = False
 autodoc_inherit_docstrings = False
 myst_heading_anchors = 3
+
+github_username = 'Ericsson'
+github_repository = 'zoti/tree/main/zoti-yaml'
+
+
 
 class SimpleClassDocumenter(autodoc.ClassDocumenter):
     objtype = "simple"
@@ -54,7 +62,6 @@ class SimpleClassDocumenter(autodoc.ClassDocumenter):
     # do not add a header to the docstring
     def add_directive_header(self, sig):
         pass
-
 
 def setup(app):
     app.add_autodocumenter(SimpleClassDocumenter)

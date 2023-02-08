@@ -69,3 +69,11 @@ api-reference
 - {ref}`genindex`
 - {ref}`modindex`
 - {ref}`search`
+
+
+```{eval-rst}
+.. sidebar-links::
+	:github:
+	
+	ZOTI <https://ericsson.github.io/zoti/>
+```

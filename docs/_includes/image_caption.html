@@ -1,0 +1,9 @@
+<figure class="image">
+  <a href="{{ include.url }}">    
+    <img src="{{ include.url }}"
+	 alt="{{ include.description }}"
+	 {% if include.scale %} height="{{ include.scale }}"{% endif %}
+	 >
+  </a>
+  <figcaption><font size="2">{{ include.description }}</font></figcaption>
+</figure>

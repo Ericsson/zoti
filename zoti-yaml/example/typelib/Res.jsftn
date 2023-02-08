@@ -1,0 +1,27 @@
+{
+  "imports": [{"module": "Common"}],
+  "modules": {
+    "Res": {
+      "type": "module",
+      "imports": ["Common"],
+      "entries": {
+        "Sample": {
+          "type": "structure",
+          "fields": {
+            "a": { "type": "integer", "range": [0, "0xFFFFFFFF"] },
+            "b": { "type": "integer", "range": [0, "0xFFFFFFFF"] },
+            "c": { "type": "integer", "range": [0, "0xFFFFFFFF"] }
+          }
+        },
+        "InterSample": {
+          "type": "structure",
+          "fields": {
+            "r": { "type": "integer", "range": [0, "0xFFFFFFFF"] },
+            "b": { "type": "integer", "range": [0, "0xFFFFFFFF"] },
+            "c": { "type": "integer", "range": [0, "0xFFFFFFFF"] }
+          }
+        }
+      }
+    }
+  }
+}

@@ -24,6 +24,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "myst_parser",
+    'sphinx_toolbox.sidebar_links',
+    'sphinx_toolbox.github',
 ]
 
 myst_enable_extensions = [
@@ -38,6 +40,8 @@ exclude_patterns = []
 autodoc_member_order = "bysource"
 add_module_names = False
 
+github_username = 'Ericsson'
+github_repository = 'zoti/tree/main/zoti-yaml'
 
 class MyClassDocumenter(autodoc.ClassDocumenter):
     objtype = "simple"

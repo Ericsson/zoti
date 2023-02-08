@@ -1,0 +1,23 @@
+- title: "Overview"
+  path: /overview/
+  
+- title: "ZOTI-YAML"
+  path: /zoti-yaml/
+  
+- title: "ZOTI-Graph"
+  path: /zoti-graph/
+  
+- title: "ZOTI-FTN"
+  path: null
+  
+- title: "ZOTI-Tran"
+  path: null
+
+- title: "ZOTI-Gen"
+  path: null
+
+- title: "Toy Example"
+  path: null
+  
+- title: "Acknowledgements"
+  path: /acknowledgements/
