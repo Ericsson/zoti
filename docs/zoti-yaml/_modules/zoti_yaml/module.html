@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zoti_yaml.module &#8212; zoti-yaml 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for zoti_yaml.module</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePosixPath</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">marshmallow</span> <span class="k">as</span> <span class="nn">mm</span>
+
+<span class="kn">import</span> <span class="nn">zoti_yaml.core</span> <span class="k">as</span> <span class="nn">ty</span>
+<span class="kn">from</span> <span class="nn">zoti_yaml.exceptions</span> <span class="kn">import</span> <span class="n">MarkedError</span><span class="p">,</span> <span class="n">SearchError</span>
+<span class="kn">from</span> <span class="nn">zoti_yaml.loader</span> <span class="kn">import</span> <span class="n">ZotiLoader</span><span class="p">,</span> <span class="n">load</span>
+
+
+<span class="k">class</span> <span class="nc">PreambleSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">INCLUDE</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_MODULE</span><span class="p">)</span>
+    <span class="n">impt</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span>
+            <span class="s2">&quot;module&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="s2">&quot;as&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">),</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_IMPORT</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Module"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module">[docs]</a><span class="k">class</span> <span class="nc">Module</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Module&quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">preamble</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="n">Dict</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preamble</span><span class="o">=</span><span class="p">{},</span> <span class="n">doc</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">PreambleSchema</span><span class="p">()</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">preamble</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">pformat</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">preamble</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_MODULE</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">preamble</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_PATH</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preamble</span> <span class="o">=</span> <span class="n">preamble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
+
+<div class="viewcode-block" id="Module.from_zoml"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.from_zoml">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_zoml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tool</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">key_nodes</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]):</span>
+        <span class="c1"># print(key_nodes)</span>
+        <span class="n">docs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">filepath</span><span class="p">,</span> <span class="n">tool</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span>
+                         <span class="n">Loader</span><span class="o">=</span><span class="n">ZotiLoader</span><span class="p">,</span> <span class="n">key_nodes</span><span class="o">=</span><span class="n">key_nodes</span><span class="p">))</span>
+        <span class="c1"># print(docs)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&#39; is not a ZOTI-YAML module.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">preamble</span><span class="p">,</span> <span class="n">content</span> <span class="o">=</span> <span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">clean</span><span class="p">(</span><span class="n">docs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">docs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">PreambleSchema</span><span class="p">()</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">preamble</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Error in preamble of </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="n">pformat</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">preamble</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_PATH</span><span class="p">]</span> <span class="o">=</span> <span class="n">filepath</span>
+        <span class="k">if</span> <span class="s2">&quot;tool-log&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">preamble</span><span class="p">:</span>
+            <span class="n">preamble</span><span class="p">[</span><span class="s2">&quot;tool-log&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">preamble</span><span class="p">[</span><span class="s2">&quot;tool-log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span> <span class="n">tool</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">preamble</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Module.map_doc"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.map_doc">[docs]</a>    <span class="k">def</span> <span class="nf">map_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">with_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_get_name</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span> <span class="ow">in</span> <span class="n">node</span>
+                    <span class="k">else</span> <span class="n">idx</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">k</span><span class="p">:</span> <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">path</span><span class="o">.</span><span class="n">with_key</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">}</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">_get_name</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Attach</span><span class="p">):</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Default</span><span class="p">):</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">original</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">k</span><span class="p">:</span> <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">path</span><span class="o">.</span><span class="n">with_key</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">}</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">WithCreate</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;!with_create construct outside !default&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">WithReplace</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;!with_replace construct outside !default&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="n">f</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">with_path</span><span class="p">:</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">TreePath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">with_path</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Module.get"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">TreePath</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_get_element_with_name</span><span class="p">(</span><span class="n">nm_idx</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">prev_path</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">nm_idx</span><span class="p">)]</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">filt</span> <span class="o">=</span> <span class="p">[</span><span class="n">el</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">lst</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+                            <span class="ow">and</span> <span class="n">el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span><span class="p">)</span> <span class="o">==</span> <span class="n">nm_idx</span><span class="p">]</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="n">filt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">strict</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot find element with index </span><span class="si">{</span><span class="n">nm_idx</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">raise</span> <span class="n">SearchError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prev_path</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">_recursive_node_getter</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">prev_path</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_recursive_node_getter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">prev_path</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Default</span><span class="p">):</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">original</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">obj</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">elpath</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">])[:</span><span class="mi">2</span><span class="p">])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; entries found&quot;</span>
+                    <span class="k">raise</span> <span class="n">SearchError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prev_path</span><span class="p">),</span> <span class="n">obj</span><span class="p">)</span>
+
+                <span class="n">prev_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">elpath</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">_get_element_with_name</span><span class="p">(</span>
+                        <span class="n">elpath</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">),</span> <span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">prev_path</span><span class="p">,</span> <span class="n">key</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">_recursive_node_getter</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">prev_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">strict</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">MarkedError</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ref_path</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_path</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">ref_path</span><span class="o">.</span><span class="n">path</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_path</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">TreePath</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="n">ref_path</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">root</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">parts</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">_recursive_node_getter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">,</span> <span class="n">parts</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Module.to_dump"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.to_dump">[docs]</a>    <span class="k">def</span> <span class="nf">to_dump</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">preamble</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">]</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">zoti-yaml</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../syntax-reference.html">Syntax Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api-reference.html">API Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-yaml">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Ericsson S&T.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

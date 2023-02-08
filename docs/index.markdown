@@ -20,7 +20,7 @@ offering to fill in an increasingly prominent gap between formal
 design methodologies and commercial platform solutions by addressing
 the *translation* between these two domains.
 
-{% include image_caption.html url="/assets/fundamental.png"
+{% include image_caption.html url="/assets/images/fundamental.png"
 	description="Visualization of the translation problem. The
 	declarative specification model usually depicts a graph-like
 	structure describing components and relations between them. The

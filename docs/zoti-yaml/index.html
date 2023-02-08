@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>ZOTI-YAML &#8212; zoti-yaml 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="zoti-yaml">
+<h1>ZOTI-YAML<a class="headerlink" href="#zoti-yaml" title="Permalink to this heading">¶</a></h1>
+<p>ZOTI-YAML is a YAML language extension that supports describing
+document trees distributed across several modules. It consists of:</p>
+<ul class="simple">
+<li><p>special keywords (e.g., <code class="docutils literal notranslate"><span class="pre">!ref</span></code>, <code class="docutils literal notranslate"><span class="pre">!attach</span></code>, <code class="docutils literal notranslate"><span class="pre">!include</span></code>, <code class="docutils literal notranslate"><span class="pre">!default</span></code>)
+that help constructing document trees with information spread across
+several files;</p></li>
+<li><p>a module system, i.e. a document preamble structure and a custom
+loader;</p></li>
+<li><p>a CLI tool to convert ZOTI-YAML modules to regular YAML or JSON
+files;</p></li>
+<li><p>an API to import the loading and building utilities in your own
+project.</p></li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Toy example written with ZOTI-YAML. Check the <a class="reference internal" href="tutorial.html"><span class="doc std std-doc">Tutorial</span></a> for an explanation.</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+<span class="nt">import</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">mod1</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">sub.mod</span><span class="p p-Indicator">,</span><span class="nt"> as</span><span class="p">:</span><span class="w"> </span><span class="nv">mod2</span><span class="p p-Indicator">}</span>
+
+<span class="nn">---</span>
+
+<span class="kt">!default</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mark</span><span class="p">:</span><span class="w"> </span><span class="kt">!with_create</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEFAULT_MARKING</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n1</span>
+<span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n1_n1</span>
+<span class="w">        </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n1_n1_n1</span>
+<span class="w">            </span><span class="nt">data</span><span class="p">:</span>
+<span class="w">              </span><span class="kt">!attach</span>
+<span class="w">              </span><span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="kt">!ref</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;../../../nodes[n1_n2]/extra&quot;</span><span class="p p-Indicator">}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n1_n2</span>
+<span class="w">        </span><span class="nt">extra</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;I</span><span class="nv"> </span><span class="s">am</span><span class="nv"> </span><span class="s">referenced</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">n1_n1_n1!&quot;</span>
+<span class="w">        </span><span class="nt">data</span><span class="p">:</span>
+<span class="w">          </span><span class="kt">!attach</span>
+<span class="w">          </span><span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="kt">!ref</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">mod1</span><span class="p p-Indicator">,</span><span class="nt"> path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/root/node[n_who]/data&quot;</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!attach</span>
+<span class="w">    </span><span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="kt">!ref</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">mod2</span><span class="p p-Indicator">,</span><span class="nt"> path</span><span class="p">:</span><span class="w">  </span><span class="s">&quot;/root/nodes[n1]&quot;</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n2</span>
+<span class="w">    </span><span class="nt">content-extra</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;I</span><span class="nv"> </span><span class="s">will</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">ignored!&quot;</span>
+</pre></div>
+</div>
+</div>
+<p>This language extensions has been developed as a convenience frontend
+for the <span class="xref myst">ZOTI</span> project and its tools, but can also be used as an
+independent tool.</p>
+<section id="documentation-pages">
+<h2>Documentation pages<a class="headerlink" href="#documentation-pages" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syntax-reference.html">Syntax Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="syntax-reference.html#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax-reference.html#preamble">Preamble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax-reference.html#document">Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax-reference.html#position-information">Position Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax-reference.html#configuration">Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api-reference.html#modules-and-projects">Modules and Projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference.html#position-helpers">Position Helpers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference.html#module-zoti_yaml.exceptions">Exceptions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+<p><div class="toctree-wrapper compound">
+</div>
+</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">zoti-yaml</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syntax-reference.html">Syntax Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-yaml">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="tutorial.html" title="next chapter">Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Ericsson S&T.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/index.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

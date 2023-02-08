@@ -1,0 +1,660 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zoti_yaml.core &#8212; zoti-yaml 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for zoti_yaml.core</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePosixPath</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="n">INFO</span> <span class="o">=</span> <span class="s2">&quot;_info&quot;</span>
+<span class="n">POS</span> <span class="o">=</span> <span class="s2">&quot;_pos&quot;</span>
+<span class="n">RESERVED_KWS</span> <span class="o">=</span> <span class="p">[</span><span class="n">INFO</span><span class="p">,</span> <span class="n">POS</span><span class="p">]</span>
+
+<span class="n">ATTR_NAME</span> <span class="o">=</span> <span class="s2">&quot;name&quot;</span>
+<span class="n">ATTR_PATH</span> <span class="o">=</span> <span class="s2">&quot;path&quot;</span>
+<span class="n">ATTR_MODULE</span> <span class="o">=</span> <span class="s2">&quot;module&quot;</span>
+<span class="n">ATTR_IMPORT</span> <span class="o">=</span> <span class="s2">&quot;import&quot;</span>
+<span class="n">ATTR_ALIAS</span> <span class="o">=</span> <span class="s2">&quot;as&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">clean</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RESERVED_KWS</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">node</span>
+
+
+<span class="c1">###############</span>
+<span class="c1">## Positions ##</span>
+<span class="c1">###############</span>
+
+
+<div class="viewcode-block" id="Pos"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.Pos">[docs]</a><span class="k">class</span> <span class="nc">Pos</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for positional information in a YAML file. Depends on</span>
+<span class="sd">    the info from a PyYAML loader.&quot;&quot;&quot;</span>
+
+    <span class="n">line</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;line number&quot;&quot;&quot;</span>
+
+    <span class="n">column</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;column number&quot;&quot;&quot;</span>
+
+    <span class="n">ibegin</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;start index in the text file&quot;&quot;&quot;</span>
+
+    <span class="n">iend</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;end index in the text file&quot;&quot;&quot;</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;location of the source file&quot;&quot;&quot;</span>
+
+    <span class="n">who</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;string for bookkeeping the processing pipeline for this node&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">ibegin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">iend</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&lt;stdio&gt;&quot;</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">line</span> <span class="o">=</span> <span class="n">line</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column</span> <span class="o">=</span> <span class="n">column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ibegin</span> <span class="o">=</span> <span class="n">ibegin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iend</span> <span class="o">=</span> <span class="n">iend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">who</span> <span class="o">=</span> <span class="n">who</span>
+
+<div class="viewcode-block" id="Pos.from_mark"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.Pos.from_mark">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_mark</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">start_mark</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Mark</span><span class="p">,</span> <span class="n">end_mark</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Mark</span><span class="p">,</span>
+                  <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&lt;stdio&gt;&quot;</span><span class="p">,</span> <span class="n">who</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">start_mark</span><span class="o">.</span><span class="n">line</span><span class="p">,</span>
+            <span class="n">start_mark</span><span class="o">.</span><span class="n">column</span><span class="p">,</span>
+            <span class="n">start_mark</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">end_mark</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">path</span><span class="p">,</span>
+            <span class="n">who</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rep</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;in &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;, &#39;</span>
+        <span class="n">rep</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;line </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">line</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">, column </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">rep</span>
+
+<div class="viewcode-block" id="Pos.dump"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.Pos.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dump content to a JSON list of arguments that can be used to</span>
+<span class="sd">        recreate it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ibegin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">who</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Pos.show"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.Pos.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pretty print content. Checks `logging.root.level`.&quot;&quot;&quot;</span>
+        <span class="n">rep</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">level</span> <span class="o">&gt;</span> <span class="n">log</span><span class="o">.</span><span class="n">WARN</span><span class="p">:</span>  <span class="c1"># silent</span>
+            <span class="k">return</span> <span class="n">rep</span>
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">level</span> <span class="o">&lt;</span> <span class="n">log</span><span class="o">.</span><span class="n">WARN</span><span class="p">:</span>  <span class="c1"># verbose</span>
+                    <span class="n">rep</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">who</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="n">rep</span> <span class="o">+=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()[</span><span class="bp">self</span><span class="o">.</span><span class="n">ibegin</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">iend</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rep</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">who</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">  &quot;</span>
+                    <span class="n">rep</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">())[</span><span class="bp">self</span><span class="o">.</span><span class="n">line</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">rep</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  </span><span class="si">{</span><span class="s2">&quot; &quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s1">^&#39;</span>
+        <span class="k">return</span> <span class="n">rep</span></div></div>
+
+
+<div class="viewcode-block" id="PosStack"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.PosStack">[docs]</a><span class="k">class</span> <span class="nc">PosStack</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A stack containing the history of attached positional informations.&quot;&quot;&quot;</span>
+    <span class="n">_stack</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Pos</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stack</span> <span class="o">=</span> <span class="n">stack</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<div class="viewcode-block" id="PosStack.show"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.PosStack.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stack</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">show</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="attach_pos"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.attach_pos">[docs]</a><span class="k">def</span> <span class="nf">attach_pos</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">pos</span><span class="p">:</span> <span class="n">Pos</span><span class="p">,</span> <span class="n">to_head</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to attach position information to an JSON object&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">INFO</span> <span class="ow">in</span> <span class="n">node</span> <span class="ow">and</span> <span class="n">POS</span> <span class="ow">in</span> <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="ow">and</span> <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="n">POS</span><span class="p">]</span> <span class="ow">and</span> <span class="n">to_head</span><span class="p">:</span>
+            <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="n">POS</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pos</span><span class="o">.</span><span class="n">dump</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">INFO</span> <span class="ow">in</span> <span class="n">node</span> <span class="ow">and</span> <span class="n">POS</span> <span class="ow">in</span> <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="ow">and</span> <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="n">POS</span><span class="p">]:</span>
+            <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="n">POS</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">dump</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">INFO</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+            <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="n">POS</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos</span><span class="o">.</span><span class="n">dump</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">POS</span><span class="p">:</span> <span class="p">[</span><span class="n">pos</span><span class="o">.</span><span class="n">dump</span><span class="p">()]}</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">INFO</span><span class="p">):</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="p">{</span><span class="n">INFO</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">INFO</span><span class="p">)}</span>
+        <span class="n">attach_pos</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">INFO</span><span class="p">,</span> <span class="n">tmp</span><span class="p">[</span><span class="n">INFO</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not attach position to object: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1"># def get_pos(node: Dict) -&gt; Optional[Pos]:</span>
+<span class="c1">#     &quot;&quot;&quot;Helper function to retrieve position information from a node, if any.&quot;&quot;&quot;</span>
+<span class="c1">#     try:</span>
+<span class="c1">#         if isinstance(node, dict):</span>
+<span class="c1">#             return Pos(*node[INFO][POS][0])</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             return Pos(*getattr(node, INFO)[POS][0])</span>
+<span class="c1">#     except Exception:</span>
+<span class="c1">#         return None</span>
+<div class="viewcode-block" id="get_pos"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.get_pos">[docs]</a><span class="k">def</span> <span class="nf">get_pos</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PosStack</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to retrieve position information from a JSON node, if any.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PosStack</span><span class="p">([</span><span class="n">Pos</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="n">POS</span><span class="p">]])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PosStack</span><span class="p">([</span><span class="n">Pos</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">INFO</span><span class="p">)[</span><span class="n">POS</span><span class="p">]])</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_all_pos</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Pos</span><span class="p">]]:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Pos</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">node</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="n">POS</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Pos</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">INFO</span><span class="p">)[</span><span class="n">POS</span><span class="p">]]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="c1">##########</span>
+<span class="c1">## !ref ##</span>
+<span class="c1">##########</span>
+
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Ref</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reference to an element in a module. When resolved, this object</span>
+<span class="sd">    contains the qualified name or path to a (unique) element. It may</span>
+<span class="sd">    have the following keyword arguments:</span>
+
+<span class="sd">    *module*: (optional, string)</span>
+<span class="sd">      A module name or an alias. It resolves to an explicit name. If</span>
+<span class="sd">      none is specified it is assumed to be the current module.</span>
+
+<span class="sd">    *path*: (mutually exlusive with *name*, string)</span>
+<span class="sd">      A path to an element in the tree (see :class:`TreePath`).</span>
+
+<span class="sd">    *name*: (mutually exlusive with *path*, string)</span>
+<span class="sd">      An identifier of the element in a certain module.</span>
+
+<span class="sd">    The type of the reference depends on which tool in the downstream</span>
+<span class="sd">    uses it. If the tool works with, e.g. JSON trees (similar to</span>
+<span class="sd">    ZOTI-YAML) then specifying *path* is more reasonable as it is</span>
+<span class="sd">    being constructed into a :class:`TreePath` handler. However, if</span>
+<span class="sd">    the tool works with other type of element identifiers, *name*</span>
+<span class="sd">    should be used, as it preserves the string for downstream</span>
+<span class="sd">    manipulation.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         module: Foo</span>
+<span class="sd">         import: {module: Foo.Bar, as: Baz}</span>
+<span class="sd">         ---</span>
+<span class="sd">         root:</span>
+<span class="sd">           - ref1: !ref {path: ../../ref2}</span>
+<span class="sd">           - ref2: !ref {module: Baz, name: &quot;egg&quot;}</span>
+
+<span class="sd">    resolves to:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         module: Foo</span>
+<span class="sd">         import: {module: Foo.Bar, as: Baz}</span>
+<span class="sd">         ---</span>
+<span class="sd">         root:</span>
+<span class="sd">           - ref1: {module: Foo, path: ../../ref2}</span>
+<span class="sd">           - ref2: {module: Foo.Bar, name: &quot;egg&quot;}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">T</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Either &#39;path&#39; or &#39;name&#39; needs to be provided, but not both.&quot;</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">TreePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">this</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">this</span>
+        <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">TreePath</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - reference resolved: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">TreePath</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple structure used to reference subtrees/nodes using a</span>
+<span class="sd">    sytax similar to::</span>
+
+<span class="sd">        {/path/to/node}</span>
+
+<span class="sd">    The ``{path/to/node}`` part is stored as a PurePosixPath, thus it</span>
+<span class="sd">    can also be a relative path.</span>
+
+<span class="sd">    OBS: dot separator between the module part and the path part is</span>
+<span class="sd">    mandatory even if no module is specified (i.e. current module).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="n">PurePosixPath</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_resolved</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">is_relative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">root</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="s2">&quot;TreePath&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TreePath&quot;</span><span class="p">:</span>
+        <span class="n">glob</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">glob</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">part</span> <span class="o">==</span> <span class="s2">&quot;..&quot;</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                    <span class="k">del</span> <span class="n">glob</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">glob</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="n">PurePosixPath</span><span class="p">(</span><span class="o">*</span><span class="n">glob</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_resolved</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_relative</span><span class="p">():</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_resolved</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">with_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">with_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">))</span>
+
+
+<span class="c1">#############</span>
+<span class="c1">## !attach ##</span>
+<span class="c1">#############</span>
+
+<span class="k">class</span> <span class="nc">Attach</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Attaches a referenced node at the current location. This command</span>
+<span class="sd">    can have any number of keyword arguments, of which one needs to be</span>
+<span class="sd">    *ref*.</span>
+
+<span class="sd">    *ref*: (object)</span>
+<span class="sd">      Qualified :class:`TreePath` reference. The *path* is absolute</span>
+<span class="sd">      (i.e. relative to the root of the *module*) if it starts with a</span>
+<span class="sd">      ``/`` or relative to this node otherwise.</span>
+
+<span class="sd">    *...*: (keyword pairs)</span>
+<span class="sd">      Arbitrary entries passed to the attached node in the following</span>
+<span class="sd">      conditions:</span>
+
+<span class="sd">        - if the attached node is not an object (i.e. dictionary),</span>
+<span class="sd">          these entries are ignored;</span>
+
+<span class="sd">        - if the attached node is an object but does not contain the</span>
+<span class="sd">          said entry, it is ignored;</span>
+
+<span class="sd">        - if the attached node is an object and contains the said</span>
+<span class="sd">          entry, the argument entry replaces the original one. The</span>
+<span class="sd">          original entry is stored at path ``_info/_prev_attrs``</span>
+<span class="sd">          underneath the attached node.</span>
+
+<span class="sd">    *OBS*: If both the parent and referenced nodes contain positional</span>
+<span class="sd">    information, this will be captured in the ``_info/_pos`` entry,</span>
+<span class="sd">    whose head will point to the original position of the referenced</span>
+<span class="sd">    node.</span>
+
+<span class="sd">    *OBS2*: ``!ref`` commands are resolved before ``!attach``, thus</span>
+<span class="sd">    they can be used to construct references.</span>
+
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         module: Foo</span>
+<span class="sd">         ---</span>
+<span class="sd">         root:</span>
+<span class="sd">           !attach</span>
+<span class="sd">           ref: {module: Bar, path: /root[bar]/refd}</span>
+<span class="sd">           a: this replaces the original</span>
+<span class="sd">           b: this is ignored</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         module: Bar</span>
+<span class="sd">         ---</span>
+<span class="sd">         root:</span>
+<span class="sd">           - name: bar</span>
+<span class="sd">             refd:</span>
+<span class="sd">               a: this is replaced</span>
+<span class="sd">               c: this is carried from the original</span>
+
+
+<span class="sd">    resolves to:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         module: Foo</span>
+<span class="sd">         ---</span>
+<span class="sd">         root:</span>
+<span class="sd">           a: this replaces the original</span>
+<span class="sd">           c: this is carried from the original</span>
+
+<span class="sd">    Module ``Bar`` remains unchanged.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">_info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">concat</span><span class="o">=</span><span class="p">[],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">Ref</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;value given is not of &#39;ref&#39; type&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">concat</span> <span class="o">=</span> <span class="n">concat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">who</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pos</span><span class="o">.</span><span class="n">who</span><span class="si">}</span><span class="s2">:!attach&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;!attach &quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">({</span><span class="s2">&quot;ref&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">extra</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modules</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;OBS: Does not add new entries to the attached node!&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Module &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">module</span><span class="si">}</span><span class="s2">&#39; not loaded.&quot;</span><span class="p">)</span>
+        <span class="n">refnode</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">modules</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">module</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refnode</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - attached node: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">refnode</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">concat</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refnode</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - attached node: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">refnode</span>
+
+        <span class="c1"># update metadata of the retreived node</span>
+        <span class="n">attach_pos</span><span class="p">(</span><span class="n">refnode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+        <span class="n">refnode</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="s2">&quot;_prev_attrs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># _merge_dict(refnode, node, replace=True)</span>
+
+        <span class="c1"># update values to the one specified in the &quot;!attach&quot; entry</span>
+        <span class="c1"># store previous values just in case</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">refnode</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                     <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">INFO</span><span class="p">}</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">refnode</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">refnode</span><span class="p">[</span><span class="n">INFO</span><span class="p">][</span><span class="s2">&quot;_prev_attrs&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="c1"># replace node altogether</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - attached node: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">refnode</span>
+
+
+<span class="c1">##############</span>
+<span class="c1">## !default ##</span>
+<span class="c1">##############</span>
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">WithCreate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;See ``!default``.&quot;&quot;&quot;</span>
+
+    <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">WithReplace</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;See ``!default``.&quot;&quot;&quot;</span>
+    <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span>
+
+
+<span class="k">class</span> <span class="nc">Default</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This keyword is followed by a list of exactly 2 YAML objects (e.g.,</span>
+<span class="sd">    trees), *defaults* and *original*. When the document tree is being</span>
+<span class="sd">    resolved, it recursivvely fills in the contents of *original*</span>
+<span class="sd">    according to the values in *defaults* as per the following rules:</span>
+
+<span class="sd">    - both *original* and *defaults* need to be of the same</span>
+<span class="sd">      (recursive) type;</span>
+
+<span class="sd">    - whenever a list is being parsed only the first element of</span>
+<span class="sd">      *defaults* is being considered for defaulting every element of</span>
+<span class="sd">      *original*;</span>
+
+<span class="sd">    - if an object key is found both in *original* and *defaults*:</span>
+
+<span class="sd">      - if the *defaults* entry is a normal object it proceeds with</span>
+<span class="sd">        the recursive resolving as usual.</span>
+
+<span class="sd">      - if the *defaults* entry is preceded by a ``!with_replace``</span>
+<span class="sd">        keyword it completely overwrites the *original* entry.</span>
+
+<span class="sd">    - if an object key is found in *defaults* but not in *original*:</span>
+
+<span class="sd">      - if the *defaults* entry is a normal object it ignores it.</span>
+
+<span class="sd">      - if the *defaults* entry is preceded by a ``!with_create``</span>
+<span class="sd">        keyword it creates the new keyword in *original* and</span>
+<span class="sd">        associates its entry.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         !default</span>
+<span class="sd">         - root:</span>
+<span class="sd">           - foo:</span>
+<span class="sd">               a: this is superseded by original</span>
+<span class="sd">               b: !with_replace this supersedes the original</span>
+<span class="sd">               c: this will be ignored</span>
+<span class="sd">               d: !with_create this is created</span>
+<span class="sd">           - bar: this is ignored (only the first element in a list matters)</span>
+<span class="sd">         - root:</span>
+<span class="sd">           - foo:</span>
+<span class="sd">               a: this supersedes the default value</span>
+<span class="sd">               b: this is superseded by the default value</span>
+<span class="sd">           - foo:</span>
+<span class="sd">               d: this supersedes the default value</span>
+
+<span class="sd">    resolves to:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         root:</span>
+<span class="sd">           - foo:</span>
+<span class="sd">               a: this supersedes the default value</span>
+<span class="sd">               b: this supersedes the original</span>
+<span class="sd">               d: this is created</span>
+<span class="sd">           - foo:</span>
+<span class="sd">               b: this supersedes the original</span>
+<span class="sd">               d: this supersedes the default value</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">original</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">defaults</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">original</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Aguments of !default of different type.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original</span> <span class="o">=</span> <span class="n">original</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;!default</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">pformat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_merge_dict</span><span class="p">(</span><span class="n">orig</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">_merge_val</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">WithReplace</span><span class="p">):</span>
+                    <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+                    <span class="k">return</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">WithCreate</span><span class="p">):</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">obj</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">:</span>
+                        <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                        <span class="k">return</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">:</span>
+                    <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_merge_dict</span><span class="p">(</span><span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">orig</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot merge </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">pformat</span><span class="p">(</span><span class="n">default</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">pformat</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">default</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">_merge_val</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="c1"># if len(default) != 1:</span>
+                <span class="c1">#     err = f&quot;Length of default list should be 1.\n{pformat(default)}&quot;</span>
+                <span class="c1">#     raise ValueError(err)</span>
+                <span class="n">orig</span> <span class="o">=</span> <span class="p">[</span><span class="n">_merge_dict</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">default</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">orig</span><span class="p">:</span>
+                <span class="n">orig</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">orig</span>
+
+        <span class="n">_merge_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="n">clean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - default values applied&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">zoti-yaml</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../syntax-reference.html">Syntax Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api-reference.html">API Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-yaml">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Ericsson S&T.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

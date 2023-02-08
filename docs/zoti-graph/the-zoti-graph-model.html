@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Model Documentation &#8212; zoti-graph 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api-reference.html" />
+    <link rel="prev" title="ZOTI-Graph" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="model-documentation">
+<h1>Model Documentation<a class="headerlink" href="#model-documentation" title="Permalink to this heading">¶</a></h1>
+<p>The ZOTI-Graph model is an internal representation of system-level
+applications as hierarchical graphs of nodes representing
+computations, and edges representing the relations between these
+computations.</p>
+<p>To achieve hierarchy each node is considered as being connected to its
+surroundings via ports, effectively being able to be abstracted as a
+“black-box” component. By adopting this view a node can be itself
+cluster of interconnected nodes, as suggested in the figure below.</p>
+<figure class="align-default">
+<img alt="_images/splash.png" src="_images/splash.png" />
+</figure>
+<p>There is enough consistency between the input format schema and the
+model specification hence we will use the former to document both
+model and input format.</p>
+<p>Notice that there are several types of nodes, as documented in the
+[nodes] section below. These nodes cannot be arranged in any
+arbitrary hierarchy, and there are a set of rules that need to be
+enforced when describing system models. These rules are documented in
+the <span class="xref myst">ZOTI-Tran</span> project which, among others, ensures the
+sanity of a built graph structure, however some “rule-of-thumb”
+guiding principles are listed below in the [Some Composition Rules]
+section.</p>
+<section id="input-schema">
+<h2>Input Schema<a class="headerlink" href="#input-schema" title="Permalink to this heading">¶</a></h2>
+<p>ZOTI-Graphs documents are specified as hierarchical tree-like objects
+where the root is a [nodes] field containing a list of definitions
+representing the top-level node(s). From there systems are described
+in a top-down manner where child nodes are specified within the scope
+of parent nodes (i.e. under the parent’s [nodes] field).</p>
+<p>A graph is loaded from a list of serialized objects (e.g. in JSON
+format) using the <a class="reference internal" href="api-reference.html#zoti_graph.parser.parse" title="zoti_graph.parser.parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">zoti_graph.parser.parse()</span></code></a> method, by passing
+them to its arguments. This list contains both complete graph
+definintion as dictated by the schema below, as well as the metadata
+necessary to establish it (see the API documentation for details).</p>
+<section id="nodes">
+<h3>nodes<a class="headerlink" href="#nodes" title="Permalink to this heading">¶</a></h3>
+<p>A node is the base entity in ZOTI-Graph. All nodes, regardless of
+their type, may have the following entries:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code>: &lt;str&gt; <em>required</em></dt><dd><p>node name. Needs to be unique within the scope of its parent.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">kind:</span></code> &lt;str&gt;</dt><dd><p>denotes the type of node, see <a class="reference internal" href="#node-kinds">Node Kinds</a>. Default
+<code class="docutils literal notranslate"><span class="pre">CompositeNode</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">description</span></code>: &lt;str&gt;</dt><dd><p>free-form text.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">mark</span></code>: &lt;dict&gt;</dt><dd><p>free-form dictionary, markings passed to graph transformer
+(e.g., ZOTI-Tran).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">parameters</span></code>: &lt;dict&gt;</dt><dd><p>directives passed downstream (TODO: redundant, marked for obsoletion)</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">nodes</span></code>: <a class="reference internal" href="#nodes">nodes</a></dt><dd><p>list of child node entries</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ports</span></code>: <a class="reference internal" href="#ports">ports</a></dt><dd><p>list of ports for this node</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">edges</span></code>: <a class="reference internal" href="#edges">edges</a></dt><dd><p>list of edges connecting children’s ports between them or with
+their parent (this node’s ports)</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">primitives</span></code>: <a class="reference internal" href="#primitives">primitives</a></dt><dd><p>list of primitive nodes (TODO: marked for obsoletion)</p>
+</dd>
+</dl>
+<section id="node-kinds">
+<h4>Node Kinds<a class="headerlink" href="#node-kinds" title="Permalink to this heading">¶</a></h4>
+<p>There are several types of nodes, each one denoting a specific part of
+a system. Depending on type, additional fields can be used to
+described specific information, as documented below.</p>
+<section id="compositenode">
+<h5>CompositeNode<a class="headerlink" href="#compositenode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">CompositeNode</span></code> is simply a cluster of nodes. It does not have
+any semantics nor any special field and it is mainly used to group
+sub-systems into (modular) components.</p>
+</section>
+<section id="platformnode">
+<h5>PlatformNode<a class="headerlink" href="#platformnode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">PlatformNode</span></code> denotes a computation platform and is essential
+for determining the synthesis details. As a general rule, all
+components under a platform node will be mapped to the same target
+(e.g. binary, kernel, container or whatever the processing unit of
+the target platform is defined as) It might have the following
+special field:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">target:</span></code> &lt;obj&gt; <em>required</em></dt><dd><p>information on target platform, passd as-is to the graph
+processor downstream, e.g. ZOTI-Tran</p>
+</dd>
+</dl>
+</section>
+<section id="actornode">
+<h5>ActorNode<a class="headerlink" href="#actornode" title="Permalink to this heading">¶</a></h5>
+<p>An <code class="docutils literal notranslate"><span class="pre">ActorNode</span></code> is a behavioral computation unit, and denotes a
+(set of) reactions to the stimuli that arrive to its ports. As a
+modeling element it originates from a model of computation
+process, whose semantics are <em>translated</em> in terms of its
+detector.</p>
+<p><em>NOTE</em>: the detector definition is still under development and is
+likely to change in the future.</p>
+<p>An actor node might contain the following special fields:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">detector:</span></code> &lt;obj&gt;</dt><dd><p>describes a finite state machine (FSM) that determines the
+behavior of this actor. If none is provided, the default
+behavior assumes immediate reaction and run-to-completion for
+every port triger. An FSM is defined using the fields below:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: &lt;list&gt; <em>required</em></dt><dd><p>list of port names to which this actor reacts</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">preproc:</span></code> &lt;str&gt;</dt><dd><p>points to a child (kernel) node which acts as the port
+preprocessor for the inputs mentioned above. If none is
+mentioned the inputs are used as they are.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">states</span></code>: &lt;list&gt;</dt><dd><p>list of state names defined for this FSM. By convention the
+first state in the list is the initial state. If none
+provided, it assumes the actor has unique state, in which case
+it acts as a combinational process.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">scenarios:</span></code> &lt;dict&gt;</dt><dd><p>dictionary associating each state name with a child node
+implementing its scenario. Can be left empty in case of unique
+state, in which case all children constitute this actor’s
+unique scenario.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">expr:</span></code> &lt;dict&gt; <em>required</em></dt><dd><p>dictionary associating each state name with a certain reaction
+described using the fields below:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">cond:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>simple arithmetical and logical expression on the inputs
+which describes the condition that triggers a reaction and a
+state change</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">goto:</span></code> &lt;str&gt;</dt><dd><p>state name active when the previous condition is
+fulfilled. Not necessary in case of unique state.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="kernelnode">
+<h5>KernelNode<a class="headerlink" href="#kernelnode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">KernelNode</span></code> is a leaf computation node, typically representing
+a function in the target platform language. It might have the following
+special field:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">extern:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>Contains the full source code of the kernel as formatted
+text.</p>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+<section id="ports">
+<h3>ports<a class="headerlink" href="#ports" title="Permalink to this heading">¶</a></h3>
+<p>A port is the conduit between a node and an edge and carries
+various functional and behavioral information relevant to
+different abstractions. It is defined using the following
+attributes:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>A unique identifier within the scope of its parent node.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">dir:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>The port direction (in, out, inout).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">port_type:</span></code> &lt;obj&gt;</dt><dd><p>Raw dictionary containing behavioral information relevant when
+generating access glue. If not provided, it should be filled in
+by a port inference mechanism further down in the processing
+pipeline (e.g. ZOTI-Tran).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">data_type:</span></code> &lt;obj&gt;</dt><dd><p>Raw data passed to a type system for generating type glue
+(e.g. ZOTI-FTN). If not provided, it should be inferred using a
+port inference mechanism further down in the processing pipeline
+(e.g., ZOTI-Tran)</p>
+</dd>
+</dl>
+</section>
+<section id="edges">
+<h3>edges<a class="headerlink" href="#edges" title="Permalink to this heading">¶</a></h3>
+<p>An edge connects two node ports and represents a data communication
+medium. It can be described using the fields below:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">kind:</span></code> &lt;str&gt;</dt><dd><p>the role of the edge as a transmission medium. Possible roles
+are: <code class="docutils literal notranslate"><span class="pre">event</span></code> (active, always implies functional or causal
+dependencies), and <code class="docutils literal notranslate"><span class="pre">storage</span></code> (passive, does not always imply a
+dependency between sender and receiver). Default is <code class="docutils literal notranslate"><span class="pre">event</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">edge_type:</span></code> &lt;obj&gt;</dt><dd><p>raw dictionary containing information about the transmission
+medium relevant for generating glue code for it. It is passed
+as-is to the tools downstream. (TODO: marked for obsoletion)</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">connect:</span></code> &lt;list&gt;</dt><dd><p>a 4-tuple containing information about the edge connection:</p>
+<ol class="arabic simple">
+<li><p>&lt;path&gt; to node where the edge originates, relative to this
+edge’s parent node.</p></li>
+<li><p>name of port belonging to the source node. If the source is
+a primitive node then this place is declared <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p></li>
+<li><p>&lt;path&gt; to node where the edge is destined, relative to this
+edge’s parent node.</p></li>
+<li><p>name of port belonging to the destination node. If the
+destination is a primitive node then this place is declared
+<code class="docutils literal notranslate"><span class="pre">none</span></code>.</p></li>
+</ol>
+</dd>
+</dl>
+</section>
+<section id="primitives">
+<h3>primitives<a class="headerlink" href="#primitives" title="Permalink to this heading">¶</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">Primitive</span></code> is a leaf node with a specific function in the
+target platform.</p>
+<dl class="simple">
+<dt><em>NOTE</em>: this element is marked for obsoletion (to be replaced with</dt><dd><p>ports or regular marked nodes),</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code>: &lt;str&gt; <em>required</em></dt><dd><p>node name. Needs to be unique within the scope of its parent.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">type:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>the primitive type. Possible <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, marking a connection to
+the outside world; <code class="docutils literal notranslate"><span class="pre">NULL</span></code> marks that the connection is dropping
+the data.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">parameters</span></code>: &lt;dict&gt;</dt><dd><p>directives passed downstream (TODO: redundant, marked for obsoletion)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="some-composition-rules">
+<h2>Some Composition Rules<a class="headerlink" href="#some-composition-rules" title="Permalink to this heading">¶</a></h2>
+<p>All model composition rules should be documented within the
+<span class="xref myst">ZOTI-Tran</span> project, as they are likely to differ for various
+use cases or platforms. In general it is worth noting that:</p>
+<ul class="simple">
+<li><p>the top node of a project is a <code class="docutils literal notranslate"><span class="pre">CompositeNode</span></code> and all its
+children need to be <code class="docutils literal notranslate"><span class="pre">PlatformNode</span></code>. This means that no function
+nor behavior is left “dangling” without being mapped to a specific
+execution platform.</p></li>
+<li><p>similar to the previous rule, it makes no sense to speak of a
+“function” outside the scope of a “behavior”. In other words any
+<code class="docutils literal notranslate"><span class="pre">KernelNode</span></code> needs to (eventually) be part of an <code class="docutils literal notranslate"><span class="pre">ActorNode</span></code>
+which determines the context in which and the mechanisms with which
+a certain (native) function is being executed.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">zoti-graph</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#input-schema">Input Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#some-composition-rules">Some Composition Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-yaml">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">ZOTI-Graph</a></li>
+      <li>Next: <a href="api-reference.html" title="next chapter">API Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Ericsson S&T.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/the-zoti-graph-model.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

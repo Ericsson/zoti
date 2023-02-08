@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zoti_graph.core &#8212; zoti-graph 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for zoti_graph.core</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Flag</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PurePosixPath</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">zoti_graph.util</span> <span class="kn">import</span> <span class="n">SearchableEnum</span><span class="p">,</span> <span class="n">default_init</span><span class="p">,</span> <span class="n">default_repr</span>
+
+
+<div class="viewcode-block" id="Uid"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid">[docs]</a><span class="k">class</span> <span class="nc">Uid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class denoting unique identifiers for hierarchically organized</span>
+<span class="sd">    entities. Internally is based on ``PurePosixPath`` from `pathlib</span>
+<span class="sd">    &lt;https://docs.python.org/3/library/pathlib.html&gt;`_.</span>
+
+<span class="sd">    :param uid: if ``None`` then the root path ``/`` is assumed</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_uid</span><span class="p">:</span> <span class="n">PurePosixPath</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="k">elif</span> <span class="n">uid</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span> <span class="o">=</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span> <span class="o">=</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_uid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Uid.name"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid.name">[docs]</a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns the (base)name from a path. &quot;&quot;&quot;</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">basename</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">basename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;^&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">basename</span></div>
+
+<div class="viewcode-block" id="Uid.parent"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid.parent">[docs]</a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns the ID of the parent of this entity. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Uid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Uid.withNode"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid.withNode">[docs]</a>    <span class="k">def</span> <span class="nf">withNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Builds a child node ID by appending its name to this path. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Uid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Uid.withPort"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid.withPort">[docs]</a>    <span class="k">def</span> <span class="nf">withPort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Builds a port ID by appending its name to this path. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Uid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;^&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Uid.withPath"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid.withPath">[docs]</a>    <span class="k">def</span> <span class="nf">withPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Builds an ID by appending a given path to this one. if the ``port``</span>
+<span class="sd">        argument is also provided, it creates a port ID.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">newpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">_uid</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;^&quot;</span> <span class="o">+</span> <span class="n">port</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">newpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">_uid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Uid</span><span class="p">(</span><span class="n">newpath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Uid.withSuffix"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid.withSuffix">[docs]</a>    <span class="k">def</span> <span class="nf">withSuffix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; adds only a suffix string to the current id. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Uid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Uid.replaceRoot"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Uid.replaceRoot">[docs]</a>    <span class="k">def</span> <span class="nf">replaceRoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_root</span><span class="p">,</span> <span class="n">new_root</span><span class="p">):</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">old_root</span><span class="o">.</span><span class="n">_uid</span><span class="p">)</span> <span class="ow">and</span> <span class="n">old_root</span><span class="p">:</span>
+            <span class="n">old_root</span> <span class="o">=</span> <span class="n">old_root</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">old_root</span><span class="o">.</span><span class="n">_uid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Uid</span><span class="p">(</span><span class="n">new_root</span><span class="o">.</span><span class="n">_uid</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">path</span><span class="p">))</span></div></div>
+
+
+<span class="c1">##########</span>
+<span class="c1">## EDGE ##</span>
+<span class="c1">##########</span>
+
+
+<div class="viewcode-block" id="Relation"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Relation">[docs]</a><span class="k">class</span> <span class="nc">Relation</span><span class="p">(</span><span class="n">Flag</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">SearchableEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Bitwise flags denoting kinds of edges. &quot;&quot;&quot;</span>
+
+    <span class="n">ONLY_TREE</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># :   0011</span>
+    <span class="n">CHILD</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># :       0001 belongs to tree</span>
+    <span class="n">PORT</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># :        0010 belongs to tree</span>
+    <span class="n">ONLY_GRAPH</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># : 1100</span>
+    <span class="n">EVENT</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># :       0100 belongs to graph</span>
+    <span class="n">STORAGE</span> <span class="o">=</span> <span class="mi">8</span>  <span class="c1"># :     1000 belongs to graph</span>
+    <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># :        0000</span></div>
+
+
+<div class="viewcode-block" id="Edge"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Edge">[docs]</a><span class="k">class</span> <span class="nc">Edge</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for edge entry.&quot;&quot;&quot;</span>
+    <span class="n">edge_type</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Relation</span>
+    <span class="n">mark</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span>
+
+    <span class="nd">@default_init</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">mark</span><span class="p">,</span> <span class="n">_info</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@default_repr</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<span class="c1">##########</span>
+<span class="c1">## PORT ##</span>
+<span class="c1">##########</span>
+
+
+<div class="viewcode-block" id="Dir"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Dir">[docs]</a><span class="k">class</span> <span class="nc">Dir</span><span class="p">(</span><span class="n">Flag</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">SearchableEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Bitwise flags denoting port directions. &quot;&quot;&quot;</span>
+
+    <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># :  00 (for init)</span>
+    <span class="n">IN</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># :    01</span>
+    <span class="n">OUT</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># :   10</span>
+    <span class="n">INOUT</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># : 11</span></div>
+
+
+<div class="viewcode-block" id="Port"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Port">[docs]</a><span class="k">class</span> <span class="nc">Port</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for port entry.&quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">dir</span><span class="p">:</span> <span class="n">Dir</span>
+    <span class="n">port_type</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">data_type</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">mark</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span>
+
+    <span class="nd">@default_init</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">port_type</span><span class="o">=</span><span class="p">{},</span> <span class="n">data_type</span><span class="o">=</span><span class="p">{},</span> <span class="n">mark</span><span class="o">=</span><span class="p">{},</span> <span class="n">_info</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@default_repr</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Port.is_in"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Port.is_in">[docs]</a>    <span class="k">def</span> <span class="nf">is_in</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir</span> <span class="o">&amp;</span> <span class="n">Dir</span><span class="o">.</span><span class="n">IN</span> <span class="o">!=</span> <span class="n">Dir</span><span class="o">.</span><span class="n">NONE</span></div>
+
+<div class="viewcode-block" id="Port.is_out"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Port.is_out">[docs]</a>    <span class="k">def</span> <span class="nf">is_out</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir</span> <span class="o">&amp;</span> <span class="n">Dir</span><span class="o">.</span><span class="n">OUT</span> <span class="o">!=</span> <span class="n">Dir</span><span class="o">.</span><span class="n">NONE</span></div></div>
+
+
+<div class="viewcode-block" id="PrimitiveTy"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.PrimitiveTy">[docs]</a><span class="k">class</span> <span class="nc">PrimitiveTy</span><span class="p">(</span><span class="n">Flag</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">SearchableEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Bitwise flags denoting types of primitives. &quot;&quot;&quot;</span>
+
+    <span class="n">NULL</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">SYSTEM</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">BYPASS</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="Primitive"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Primitive">[docs]</a><span class="k">class</span> <span class="nc">Primitive</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for primitive node entry&quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">PrimitiveTy</span>
+    <span class="n">mark</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span>
+
+    <span class="nd">@default_init</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">mark</span><span class="o">=</span><span class="p">{},</span> <span class="n">_info</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@default_repr</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Primitive.is_type"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Primitive.is_type">[docs]</a>    <span class="k">def</span> <span class="nf">is_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">PrimitiveTy</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="nb">type</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">PrimitiveTy</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span></div></div>
+
+
+<span class="c1">###########</span>
+<span class="c1">## NODES ##</span>
+<span class="c1">###########</span>
+
+
+<div class="viewcode-block" id="NodeABC"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.NodeABC">[docs]</a><span class="k">class</span> <span class="nc">NodeABC</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for a node&quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">mark</span><span class="p">:</span> <span class="n">Dict</span>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span></div>
+
+
+<div class="viewcode-block" id="CompositeNode"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.CompositeNode">[docs]</a><span class="k">class</span> <span class="nc">CompositeNode</span><span class="p">(</span><span class="n">NodeABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for composite node entry&quot;&quot;&quot;</span>
+
+    <span class="nd">@default_init</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">mark</span><span class="o">=</span><span class="p">{},</span> <span class="n">_info</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@default_repr</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PlatformNode"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.PlatformNode">[docs]</a><span class="k">class</span> <span class="nc">PlatformNode</span><span class="p">(</span><span class="n">NodeABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for platform node entry&quot;&quot;&quot;</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">Dict</span>
+
+    <span class="nd">@default_init</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">mark</span><span class="o">=</span><span class="p">{},</span> <span class="n">_info</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@default_repr</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ActorNode"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.ActorNode">[docs]</a><span class="k">class</span> <span class="nc">ActorNode</span><span class="p">(</span><span class="n">NodeABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for actor node entry&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ActorNode.FSM"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.ActorNode.FSM">[docs]</a>    <span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">class</span> <span class="nc">FSM</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+        <span class="n">expr</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span>
+        <span class="n">preproc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">states</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">scenarios</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="n">detector</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FSM</span><span class="p">]</span>
+
+    <span class="nd">@default_init</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">mark</span><span class="o">=</span><span class="p">{},</span> <span class="n">detector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_info</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@default_repr</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="KernelNode"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.KernelNode">[docs]</a><span class="k">class</span> <span class="nc">KernelNode</span><span class="p">(</span><span class="n">NodeABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for kernel node entry&quot;&quot;&quot;</span>
+    <span class="n">extern</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="nd">@default_init</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">extern</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">mark</span><span class="o">=</span><span class="p">{},</span> <span class="n">_info</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@default_repr</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">zoti-graph</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../the-zoti-graph-model.html">Model Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api-reference.html">API Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-yaml">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Ericsson S&T.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

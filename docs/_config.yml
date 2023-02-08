@@ -25,3 +25,5 @@ include:
   - _images
   - _static
   - _sphinx*
+  - _sources
+  - _modules
