@@ -1,11 +1,11 @@
 - title: "Overview"
-  path: /overview/
+  path: overview
   
 - title: "ZOTI-YAML"
-  path: /zoti-yaml/
+  path: zoti-yaml
   
 - title: "ZOTI-Graph"
-  path: /zoti-graph/
+  path: zoti-graph
   
 - title: "ZOTI-FTN"
   path: null
@@ -20,4 +20,4 @@
   path: null
   
 - title: "Acknowledgements"
-  path: /acknowledgements/
+  path: acknowledgements

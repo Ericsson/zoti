@@ -6,10 +6,8 @@ layout: default
 
 TBA
 
-[![ZOTI flow][image]][image]
-
-[image]:/assets/images/zoti_flow.png
-
+{% include image_caption.html url="/assets/images/zoti_flow.png" %}
 
 
 TBA
+

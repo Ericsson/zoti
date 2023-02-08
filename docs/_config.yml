@@ -2,8 +2,9 @@ title: ZOTI
 email: your-email@example.com
 description: >- 
   A generic tool suite for describing code synthesis flows
-# baseurl: "/zoti"
-# url: "https://ericsson.github.io/" 
+repository: "Ericsson/zoti"
+baseurl: "/zoti"
+url: "https://ericsson.github.io" 
 github_username:  "https://github.com/ugeorge"
 #logo: [Location of the logo]
 show_downloads: false

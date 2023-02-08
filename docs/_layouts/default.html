@@ -27,11 +27,11 @@
 	<p class="view">
 	{% for item in site.data.navigation %}
           {% if item.path and item.title %}
-            <li><a href="{{ item.path }}">{{ item.title }}</a></li>
+            <li><a href="{{ item.path | relative_url }}">{{ item.title }}</a></li>
 	  {% else %}
 	    <li>{{ item.title }}</li>
           {% endif %}
-          {% endfor %}
+        {% endfor %}
 	</p>
         {% endif %}
 
@@ -57,7 +57,7 @@
 
       </section>
       <footer>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a> |      {%- if site.github.is_project_page %} See <a href="/acknowledgements/">Acknowneldgements</a> for copyright. {% endif %}
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a> |      {%- if site.github.is_project_page %} See <a href={{ "acknowledgements" | relative_url }}>Acknowneldgements</a> for copyright. {% endif %}
 	</small></p>
       </footer>
     </div>

@@ -1,6 +1,8 @@
+{% assign imgurl = include.url %}
+
 <figure class="image">
-  <a href="{{ include.url }}">    
-    <img src="{{ include.url }}"
+  <a href="{{ imgurl | prepend: site.baseurl }}">    
+    <img src="{{ imgurl | prepend: site.baseurl }}"
 	 alt="{{ include.description }}"
 	 {% if include.scale %} height="{{ include.scale }}"{% endif %}
 	 >
