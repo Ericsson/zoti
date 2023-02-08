@@ -1,10 +1,10 @@
 title: ZOTI
 email: your-email@example.com
-description: >- # this means to ignore newlines until "baseurl:"
+description: >- 
   A generic tool suite for describing code synthesis flows
-# baseurl: ""
-url: "https://ericsson.github.io/zoti/" 
-github_username:  ugeorge
+# baseurl: "/zoti"
+# url: "https://ericsson.github.io/" 
+github_username:  "https://github.com/ugeorge"
 #logo: [Location of the logo]
 show_downloads: false
 
