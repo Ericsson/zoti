@@ -4,31 +4,31 @@ layout: default
 
 # The ZOTI Project
 
-ZOTI stands for Zero-Overhead Topology Infrastructure and is being
-developped as an attempt to tackle the rapidly increasing
-heterogeneity of today's compute platforms in the context of
-high-performance applications. In this sense ZOTI is meant to aid in
-the tedious process of electronic system-level design with one
-concrete task: the generation of *deployable and executable code* from
-a (set of) *declarative specification model(s)*.
+ZOTI stands for Zero-Overhead Topology Infrastructure and is meant to
+aid in the development of high-performance applications on
+heterogeneous platforms with one concrete task: the generation of
+*deployable and executable code* from a (set of) *declarative
+specification model(s)*.
 
-By design ZOTI does *not* promise a one-stop shop solution for generic
-code synthesis, but rather an environment where developers can
-describe and build systematic and traceable transformation flows from
-target-agnostic system models down to implementation. As such, ZOTI is
-offering to fill in an increasingly prominent gap between formal
-design methodologies and commercial platform solutions by addressing
-the *translation* between these two domains.
+By design ZOTI does *not* promise a "one-stop shop solution" for
+generic code synthesis, but rather an environment where developers can
+describe systematic and traceable transformation flows from
+target-agnostic system models down to concrete implementation. As
+such, ZOTI is offering to fill the gap between formal design
+methodologies and commercial platform solutions by addressing the
+*translation* between these two domains.
 
-{% include image_caption.html url="/assets/images/fundamental.png"
-	description="Visualization of the translation problem. The
+{% include image_caption.html
+	url="/assets/images/problem_depiction.png"
+	description="Illustration of the translation problem. The
 	declarative specification model usually depicts a graph-like
-	structure describing components and relations between them. The
-	target structure represents hierarchical blocks of code
-	consistently glued together. Most often the original structure
-	does not resemble to the resulted one, much rather needs to
-	undergo a series of transformations that preserve the declared
-	semantics in terms of target mechanisms."  %}
+	structure describing components and relations between them. On the
+	other hand, the target model shows a structure which represents
+	hierarchical blocks of code consistently glued together. Most
+	often the original structure does not resemble to the resulted
+	one, much rather needs to undergo a series of transformations that
+	preserve the declared semantics in terms of target mechanisms."
+	%}
 
 ## Motivation & Philosophy
 
@@ -43,7 +43,7 @@ performance, such as instruction sets, domain specific languages,
 programming frameworks, runtimes, compilers, synthesizers,
 etc. Designing complex systems based on multi-vendor platforms,
 however, is crippled by a lack of a common design paradigm with proper
-tool support due to various reasons:
+tool support due to various reasons, such as:
 
 - most vendor solutions are designed in-house based on strict, often
   undocumented assumptions on the underlying architecture and/or are
@@ -78,21 +78,20 @@ three key principles:
 
 Abstraction comes at a high price.
 : The effort of describing a transformational synthesis flow from
-  specification components to code is justified when conventional
-  means of abstraction (i.e. technology stacks, runtime libraries,
-  etc.) imply an unacceptable performance loss. Otherwise reusing
-  existing (possibly platform-specific) high-level constructs is
-  advised in favor of "reinventing the wheel".
+   specification to code is justified when conventional means of
+   abstraction (i.e. technology stacks, runtime libraries, etc.) imply
+   an unacceptable performance loss. Otherwise ZOTI should not compete
+   with working (possibly platform-specific) solutions, but rather
+   embrace them by design.
 	
 Be a cog in a larger machinery.
 : In order to be of any use in system design and development, ZOTI
-  focuses on solving a clearly-delimited, relatively small problem:
-  target code generation. That way not only does the methodology
-  become a scrutinizable and validatable process, but it clearly
-  transfers responsibility for decision-making to other components in
-  the larger design flow: model-based design space exploration
-  upstream and platform-speific CAD tools (e.g., compilers)
-  downstream.
+  focuses on solving a relatively small problem: target code
+  generation. That way not only does the methodology become a
+  scrutinizable and validatable process, but it clearly transfers
+  responsibility for decision-making to other components in the larger
+  design flow: model-based design space exploration upstream and
+  platform-speific CAD tools (e.g., compilers) downstream.
 	
 Do one thing and do it well.
 : Although sketched above as a small and well-delimited task, target
@@ -100,18 +99,44 @@ Do one thing and do it well.
   various targets. ZOTI is founded on the reasoning that the strength
   of a methodology lies in the ability to decompose a large problem
   into small and understandable sub-problems. As such, by design, each
-  tool in the ZOTI suite is developed as an independent tool
+  tool in the ZOTI suite is developed independently and is
   ultra-specialized in solving or aiding in one translation
-  sub-problem alone, whereas data is being passed between tools in
-  standard serialized formats (e.g. JSON, YAML).
+  sub-problem, whereas data is being passed between tools in standard
+  serialized formats (e.g. JSON, YAML).
 
+## Some Concrete Cases
+
+To put matters into perspective, code synthesis is an umbrella that
+covers many seemingly scattered use cases, for example:
+
+- implementing a set of intercommunicating tasks on an operating
+  system;
+- downloading a pre-mapped set of interacting functions on a
+  bare-metal multiprocessor SoC;
+- "burning" the functionality of an interacting system on an FPGA
+  platform;
+- deploying a set of containers on a cloud environment;
+- any combination of the above, and many others.
+
+While, admittedly, each of the aforementioned synthesis flows is
+different from one another, they all follow the same underlying
+routine:
+
+1. parse a specification declaring which kind the functional blocks
+   are, how they relate to each other and what resources are being
+   used;
+1. transform this specification into a format that can be bijectively
+   mapped (i.e., one-to-one) on the *target* specification model
+   (e.g., representing a code file) using hand-built components.
+1. gather these components and bind them together into a consistent
+   artifact (e.g., target code file) by generating appropriate
+   glue code.
 
 ## Further Reading
 
 To get a glimpse in the current state of the ZOTI suite, visit the
 [Overview](overview) page, which briefly presents the available tools,
-their role and relation with one another, as well as guidelines on how
-to design code synthesis flows.
+their role and relation with one another.
 
 Each tool is documented individually in its own web page, accessible
 through the navigation menu in the left.
