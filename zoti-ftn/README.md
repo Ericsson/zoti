@@ -1,15 +1,16 @@
+*ATTENTION: this tool is marked for obsoletion and will be replaced
+in the future with a new design. It is only present for the purpose of
+running a [demonstrator example](../example). No further development
+nor documentation outside this scope is planned.*
+
+
 ZOTI-FTN
 ========
 
-This implementation of ZOTI-FTN (Föexible Type Notation) is an early
+This implementation of ZOTI-FTN (Flexible Type Notation) is an early
 prototype for a tool and language for describing and synthesizing code
 for *data types* in the context of a
 [ZOTI](https://ericsson.github.io/zoti) synthesis flow.
-
-*ATTENTION*: this tool is marked for obsoletion and will be replaced
-in the future with a new design. It is only present for the purpose of
-running a [demonstrator example](../example). No further development
-nor documentation outside this scope is planned.
 
 Installation
 ------------

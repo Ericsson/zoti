@@ -39,9 +39,10 @@ templates_path = []
 exclude_patterns = []
 autodoc_member_order = "bysource"
 add_module_names = False
+myst_heading_anchors = 3
 
 github_username = 'Ericsson'
-github_repository = 'zoti/tree/main/zoti-yaml'
+github_repository = 'zoti/tree/main/zoti-graph'
 
 class MyClassDocumenter(autodoc.ClassDocumenter):
     objtype = "simple"

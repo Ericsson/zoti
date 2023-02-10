@@ -56,51 +56,62 @@ class Script:
         with open(path, "wb") as f:
             pickle.dump(self, f)
 
-    def sanity(
-        self,
-        port_rules=[],
-        node_rules=[],
-        primitive_rules=[],
-        edge_rules=[],
-        graph_rules=[],
-    ):
-        """Performs sanity checking on various elements in a ZOTI application
-        graph by applying the rules provided as arguments. Each
-        argument is an iterable containing assertions on the
-        respective AppGraph element.
+    def sanity(self, rules=[]):
+        """Applies sanity checks for a list of *rules* (see
+        :ref:`AppGraph.sanity`). This method groups rules based on
+        their function name:
+        
+        - if the rule name starts with 'port' it will be applied only on ports
+        
+        - if the rule name starts with 'edge' it will be applied only
+          on edges
+
+        - if the rule name starts with 'primitive' it will be applied
+          only on primitives
+
+        - if the rule name starts with 'node' it will be applied only
+          on regular nodes (not primitives)
+
+        - in all other cases it applies the rule on the entire graph
+          (i.e., the root node)
 
         """
         log.info(f"*** Verifying sanity rules for graph {self.G.root}***")
 
-        def _check(collection, element, obj):
+        port_rules=[r for r in rules if r.__name__.startswith("port") ]
+        node_rules=[r for r in rules if r.__name__.startswith("node") ]
+        primitive_rules=[r for r in rules if r.__name__.startswith("primitive") ]
+        edge_rules=[r for r in rules if r.__name__.startswith("edge") ]
+        graph_rules=[r for r in rules if r not in
+                     port_rules + node_rules + primitive_rules + edge_rules]
+
+        def _check(collection, *element):
             for rule in collection:
-                try:
-                    rule(element, self.G)
-                except AssertionError:
-                    msg = f"Sanity check failed for {element}"
-                    raise ScriptError(msg, obj=obj, rule=rule)
+                self.G.sanity(rule, *element)
 
         for edge in self.G.only_graph().edges:
-            _check(edge_rules, edge, self.G.entry(*edge))
-        log.info(f"  - edges passed {[f.__name__ for f in edge_rules]}")
+            _check(edge_rules, *edge)
+        log.info(f"  - passed {[f.__name__ for f in edge_rules]}")
 
         for node in self.G.ir.nodes:
             if isinstance(self.G.entry(node), Port):
-                _check(port_rules, node, self.G.entry(node))
+                _check(port_rules, node,)
             elif isinstance(self.G.entry(node), Primitive):
-                _check(primitive_rules, node, self.G.entry(node))
+                _check(primitive_rules, node)
             else:
-                _check(node_rules, node, self.G.entry(node))
-        log.info(f"  - nodes passed {[f.__name__ for rule in [port_rules, primitive_rules, node_rules] for f in rule]}")
+                _check(node_rules, node)
+        log.info(f"  - passed {[f.__name__ for f in port_rules + primitive_rules + node_rules]}")
 
-        _check(graph_rules, self.G, None)
-        log.info(f"  - graph passed {[f.__name__ for f in graph_rules]}")
+        _check(graph_rules, self.G.root)
+        log.info(f"  - passed {[f.__name__ for f in graph_rules]}")
+            
 
     def transform(self, rules: List[TransSpec]):
         """Applies a sequence of graph transformation rules upon an
         application graph. Each transformation function might generate
         byproduct results which will be stored in the handlers's state
         and passed to all subsequent transformations in the chain,
+
         unless explicitly removed using the :attr:`TransSpec.clean`
         attribute.
 
@@ -166,112 +177,3 @@ class ContextError(Exception):
     def __str__(self):
         return f"{self.context}{self.ctx_pos}\n{self.what}{self.pos}"
 
-
-# ###############################################################
-
-# if __name__ == "__main__":
-#     import os
-
-#     # from pprint import pprint
-#     import yaml
-
-#     # import networkx as nx
-#     import zoti_tran.agnostic.translib as trans
-#     import zoti_tran.unix_c.genspec as genspec
-#     import zoti_tran.unix_c.m2m as c
-#     from zoti_ftn.backend.c import FtnDb
-#     from zoti_ftn.frontend import FtnLoader
-#     from zoti_graph import load, parse
-
-#     os.environ["ZOTI_PATH"] = "test"
-#     pre, doc = load(Path("test/ScheduledCompute.yaml"))
-#     AG = parse(pre, doc)
-#     AG.draw_tree("test/tree.dot")
-#     AG.draw_graph("test/graph.dot",
-#                   port_info=lambda p: str(p.data_type.get("name")))
-#     AG.dump_node_info("test/nodes.txt")
-#     FTN = FtnDb(search_paths=["test/types"], loader=FtnLoader())
-
-#     handler = Script(AG, FTN)
-#     handler.sanity(
-#         port_rules=[
-#             rules.port_dangling_port,
-#         ],
-#         node_rules=[
-#             rules.node_platform_hierarchy,
-#             rules.node_actor_hierarchy,
-#             rules.node_actor_consistency,
-#             rules.node_kernel_hierarchy,
-#         ],
-#         edge_rules=[
-#             rules.edge_direction,
-#             rules.edge_hierarchy,
-#             rules.edge_sibling_kind,
-#         ],
-#     )
-#     handler.transform(
-#         [
-#             TransSpec(
-#                 c.port_inference,
-#                 dump_graph=True,
-#                 dump_graph_args={
-#                     "port_info": lambda p: p.port_type.__class__.__name__,
-#                     "edge_info": lambda e: str(e.kind),
-#                     "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
-#                 },
-#                 dump_prefix="test",
-#             ),
-#             TransSpec(
-#                 trans.flatten,
-#                 dump_tree=True,
-#                 dump_graph=True,
-#                 dump_nodes=True,
-#                 dump_prefix="test",
-#             ),
-#             TransSpec(
-#                 trans.auto_fuse_actors,
-#                 dump_tree=True,
-#                 dump_graph=True,
-#                 dump_nodes=True,
-#                 dump_graph_args={
-#                     "edge_info": lambda e: str(e.kind),
-#                 },
-#                 dump_prefix="test",
-#             ),
-#             TransSpec(
-#                 c.expand_actors,
-#                 dump_tree=True,
-#                 dump_graph=True,
-#                 dump_graph_args={
-#                     "composite_info": lambda c: str(c.mark),
-#                     "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
-#                 },
-#                 dump_prefix="test",
-#             ),
-#             TransSpec(
-#                 c.clean_ports,
-#                 dump_graph=True,
-#                 dump_graph_args={
-#                     "composite_info": lambda c: str(c.mark),
-#                     "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
-#                     # "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
-#                     # "port_info": lambda p: p.port_type.__class__.__name__,
-#                     "port_info": lambda p: p.data_type.__class__.__name__,
-#                 },
-#                 dump_prefix="test",
-#             ),
-#             TransSpec(genspec.genspec),
-#         ]
-#     )
-
-#     typedefs, specs = handler._state["genspec"]
-#     for fname, ftext in typedefs.items():
-#         with open(f"test/gen/{fname}", "w") as f:
-#             f.write(ftext)
-#             f.write("\n")
-
-#     for main, spec in specs.items():
-#         with open(f"test/gen/genspec.{main}.yaml", "w") as f:
-#             f.write(yaml.dump_all(spec, Dumper=genspec.SpecDumper,
-#                                   sort_keys=False,
-#                                   default_flow_style=False,), )

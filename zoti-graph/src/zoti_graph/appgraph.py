@@ -7,6 +7,7 @@ import zoti_graph.core as ty
 import zoti_graph.tokens as tok
 import zoti_graph.util as util
 from zoti_graph.core import Uid
+from zoti_graph.exceptions import EntryError
 
 
 class AppGraph:
@@ -535,3 +536,22 @@ class AppGraph:
             return kind & ty.Relation.ONLY_GRAPH
 
         return nx.subgraph_view(self.ir, filter_node=_nodes, filter_edge=_edges)
+
+    def sanity(self, rule, *element_id):
+        """Performs sanity checking on the graph element identified as
+        *element_id* (single argument for node, double argument for
+        edge).
+
+        *rule* is an assertion function taking as arguments the
+        current graph and *element_id* (see the `Sanity Rules
+        <the-zoti-graph-model.html#sanity-rules>`__)
+
+        """
+        try:
+            rule(self, *element_id)
+        except AssertionError:
+            msg = f"Sanity check failed for "
+            msg += f"node {element_id[0]}" if len(element_id) < 2 else f"edge {tuple(element_id)}"
+            msg += f"during rule '{rule.__name__}':"
+            raise EntryError(msg, obj=self.entry(*element_id))
+

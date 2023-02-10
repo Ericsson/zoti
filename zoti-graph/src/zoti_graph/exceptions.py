@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from yaml import Dumper, dump
-from zoti_yaml import Pos
+from zoti_yaml import Pos, get_pos
 
 
 class PrettyDumper(Dumper):
@@ -28,7 +28,6 @@ class ValidationError(Exception):
 
 class ParseError(Exception):
     def __init__(self, what, pos=None, context="", context_pos=None):
-        print(pos)
         self.what = what
         self.ctx = context
         self.err_pos = pos
@@ -48,3 +47,12 @@ class ParseError(Exception):
         msg += f"  {self.err_pos}\n" if self.err_pos else ""
         msg += f"{self.what}"
         return msg
+
+    
+class EntryError(Exception):
+    def __init__(self, what, obj=None):
+        self.what = what
+        self.pos = f"{get_pos(obj).show()}" if get_pos(obj) else ""
+
+    def __str__(self):
+        return f"{self.pos}\n{self.what}"
