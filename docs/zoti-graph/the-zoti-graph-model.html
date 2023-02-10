@@ -52,25 +52,21 @@ cluster of interconnected nodes, as suggested in the figure below.</p>
 model specification hence we will use the former to document both
 model and input format.</p>
 <p>Notice that there are several types of nodes, as documented in the
-[nodes] section below. These nodes cannot be arranged in any
+<a class="reference internal" href="#nodes"><span class="std std-doc">nodes</span></a> section below. These nodes cannot be arranged in any
 arbitrary hierarchy, and there are a set of rules that need to be
-enforced when describing system models. These rules are documented in
-the <span class="xref myst">ZOTI-Tran</span> project which, among others, ensures the
-sanity of a built graph structure, however some “rule-of-thumb”
-guiding principles are listed below in the [Some Composition Rules]
-section.</p>
+enforced when describing system models, as described in the
+<a class="reference internal" href="#sanity-rules"><span class="std std-doc">Sanity rules</span></a> section below.</p>
 <section id="input-schema">
 <h2>Input Schema<a class="headerlink" href="#input-schema" title="Permalink to this heading">¶</a></h2>
 <p>ZOTI-Graphs documents are specified as hierarchical tree-like objects
-where the root is a [nodes] field containing a list of definitions
+where the root is a <a class="reference internal" href="#nodes"><span class="std std-doc">nodes</span></a> field containing a list of definitions
 representing the top-level node(s). From there systems are described
 in a top-down manner where child nodes are specified within the scope
-of parent nodes (i.e. under the parent’s [nodes] field).</p>
+of parent nodes (i.e. under the parent’s <a class="reference internal" href="#nodes"><span class="std std-doc">nodes</span></a> field).</p>
 <p>A graph is loaded from a list of serialized objects (e.g. in JSON
 format) using the <a class="reference internal" href="api-reference.html#zoti_graph.parser.parse" title="zoti_graph.parser.parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">zoti_graph.parser.parse()</span></code></a> method, by passing
-them to its arguments. This list contains both complete graph
-definintion as dictated by the schema below, as well as the metadata
-necessary to establish it (see the API documentation for details).</p>
+them to its arguments. The <em>document</em> object from these arguments
+needs to be defined following the schema below.</p>
 <section id="nodes">
 <h3>nodes<a class="headerlink" href="#nodes" title="Permalink to this heading">¶</a></h3>
 <p>A node is the base entity in ZOTI-Graph. All nodes, regardless of
@@ -254,11 +250,16 @@ the data.</p>
 </dl>
 </section>
 </section>
-<section id="some-composition-rules">
-<h2>Some Composition Rules<a class="headerlink" href="#some-composition-rules" title="Permalink to this heading">¶</a></h2>
-<p>All model composition rules should be documented within the
-<span class="xref myst">ZOTI-Tran</span> project, as they are likely to differ for various
-use cases or platforms. In general it is worth noting that:</p>
+<section id="sanity-rules">
+<h2>Sanity rules<a class="headerlink" href="#sanity-rules" title="Permalink to this heading">¶</a></h2>
+<p>After parsing and creating an application graph, a set of sanity rules
+need to be enforced. ZOTI-Graph comes with a set of generic callable
+assertion-like functions (using the
+<a class="reference internal" href="api-reference.html#zoti_graph.appgraph.AppGraph.sanity" title="zoti_graph.appgraph.AppGraph.sanity"><code class="xref py py-meth docutils literal notranslate"><span class="pre">zoti_graph.appgraph.AppGraph.sanity()</span></code></a> driver). Depending on the
+use case or on the target platform additional sanity rules might need
+to be defined and enforced, or skipped, this is why it is up to the
+synthesis flow designer to call these rules individually. In general
+it is worth noting that:</p>
 <ul class="simple">
 <li><p>the top node of a project is a <code class="docutils literal notranslate"><span class="pre">CompositeNode</span></code> and all its
 children need to be <code class="docutils literal notranslate"><span class="pre">PlatformNode</span></code>. This means that no function
@@ -268,8 +269,111 @@ execution platform.</p></li>
 “function” outside the scope of a “behavior”. In other words any
 <code class="docutils literal notranslate"><span class="pre">KernelNode</span></code> needs to (eventually) be part of an <code class="docutils literal notranslate"><span class="pre">ActorNode</span></code>
 which determines the context in which and the mechanisms with which
-a certain (native) function is being executed.</p></li>
+a certain (native) function is being executed.”</p></li>
 </ul>
+<p>Following is a list of all sanity rules currently defined by
+ZOTI-Graph. They are not re-exported globally, so they need to be
+imported explicitly from <a class="reference internal" href="#module-zoti_graph.sanity" title="zoti_graph.sanity"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zoti_graph.sanity</span></code></a>.</p>
+<span class="target" id="module-zoti_graph.sanity"></span><dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.edge_direction">
+<span class="sig-name descname"><span class="pre">edge_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#edge_direction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.edge_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edge direction should be consistent with the hierarchy of its connecting elements.</p>
+<dl>
+<dt>forall u,v in edges(G)</dt><dd><div class="line-block">
+<div class="line">u is intrinsic ⇒ v.dir ∈ {IN}</div>
+<div class="line">v is intrinsic ⇒ u.dir ∈ {OUT, INOUT}</div>
+<div class="line">node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, INOUT} &amp; v.dir ∈ {IN, INOUT}</div>
+<div class="line">node(u) is parent for node(v) ⇒ u.dir = v.dir ∈ {IN, INOUT}</div>
+<div class="line">node(u) is child for node(v) ⇒ u.dir = v.dir ∈ {OUT, INOUT}</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.edge_hierarchy">
+<span class="sig-name descname"><span class="pre">edge_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#edge_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.edge_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edges can only connect sibling nodes or child nodes to their parents.</p>
+<dl>
+<dt>forall u,v in edges(G)</dt><dd><div class="line-block">
+<div class="line">node(u) and node(v) have different parents ⇒
+node(u) = node(v).parent ⊻ node(v) = node(u).parent</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.edge_sibling_kind">
+<span class="sig-name descname"><span class="pre">edge_sibling_kind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#edge_sibling_kind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.edge_sibling_kind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interconnected sibling nodes (except intrinsics and ignoring the
+hierarchy of composites) are of the same kind.</p>
+<dl>
+<dt>forall u,v in edges(G) where node(u), node(v) are not intrinsic</dt><dd><div class="line-block">
+<div class="line">node(u) and node(v) have same parent ⇒
+flatten(node(u)) ⋃ flatten(node(v)) are all of the same kind</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.node_platform_hierarchy">
+<span class="sig-name descname"><span class="pre">node_platform_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#node_platform_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.node_platform_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignoring the hierarchy of composites all platform nodes contain
+only actor nodes.</p>
+<dl>
+<dt>forall n in nodes(G) where n is platform node:</dt><dd><div class="line-block">
+<div class="line">⇒ n.parent is composite node</div>
+<div class="line">⇒ all first children which are not composite
+are only intrinsic or actor nodes</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.node_actor_hierarchy">
+<span class="sig-name descname"><span class="pre">node_actor_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#node_actor_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.node_actor_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignoring the hierarchy of composites, all actor nodes belong to a
+platform node and contain only kernel nodes.</p>
+<dl>
+<dt>forall n in nodes(G) where n is actor node:</dt><dd><div class="line-block">
+<div class="line">⇒ the first parent which is not composite is platform node</div>
+<div class="line">⇒ all first children which are not composite are only intrinsic or kernel nodes</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.node_kernel_hierarchy">
+<span class="sig-name descname"><span class="pre">node_kernel_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#node_kernel_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.node_kernel_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignoring the hierarchy of composites, all kernel nodes belong to an
+actor node.</p>
+<dl>
+<dt>forall n in nodes(G) where n is kernel node:</dt><dd><div class="line-block">
+<div class="line">⇒ the immediate parent which is not composite is actor node</div>
+<div class="line">⇒ no child nodes exist</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.port_dangling">
+<span class="sig-name descname"><span class="pre">port_dangling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#port_dangling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.port_dangling" title="Permalink to this definition">¶</a></dt>
+<dd><p>There is no dangling port in the graph.</p>
+<dl>
+<dt>forall p in ports(G):</dt><dd><div class="line-block">
+<div class="line">node(p) is kernel node ⇒ exists e in edges(G) such that p = e.src or p = e.dst</div>
+<div class="line">p is inout port ⇒ exists e1, e2 in edges(G) such that p = e1 ∩ e2</div>
+<div class="line">otherwise ⇒ exists e1, e2 in edges(G) such that p = e1.src and p = e2.dst</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
@@ -293,14 +397,14 @@ a certain (native) function is being executed.</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Model Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#input-schema">Input Schema</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#some-composition-rules">Some Composition Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sanity-rules">Sanity rules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Links</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-yaml">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-graph">GitHub</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
 </ul>
 

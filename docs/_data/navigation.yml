@@ -8,7 +8,8 @@
   path: zoti-graph
   
 - title: "ZOTI-FTN"
-  path: null
+  path: "https://github.com/Ericsson/zoti/tree/main/zoti-ftn"
+  noweb: true
   
 - title: "ZOTI-Tran"
   path: null

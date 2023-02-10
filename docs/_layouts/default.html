@@ -27,7 +27,8 @@
 	<p class="view">
 	{% for item in site.data.navigation %}
           {% if item.path and item.title %}
-            <li><a href="{{ item.path | relative_url }}">{{ item.title }}</a></li>
+	  {% if item.noweb %}{% assign path = item.path | relative_url %}{% else %}{% assign path = item.path %}{% endif %}
+            <li><a href="{{ path }}">{{ item.title }}</a></li>
 	  {% else %}
 	    <li>{{ item.title }}</li>
           {% endif %}

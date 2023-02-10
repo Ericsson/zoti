@@ -48,10 +48,10 @@ represented in the drawing above. As of today, these tools are:
 
 [ZOTI-Tran]({{ "/zoti-tran" | prepend: page.nopage_baseurl }})
 : a minimal set of scripting utilities and general-purpose
-  transformations that needs to be extended by the designer of a
-  synthesis flow. This represents the main playground for describing a
-  target-specific flow from *system spec* to *code blocks
-  spec* using all the available tools.
+  transformations to jumpstart the design of a new synthesis flow.
+  This sets up the main playground for describing a target-specific
+  flow from *system spec* to *code blocks spec* using all the
+  available tools.
 
 [ZOTI-YAML]({{ "/zoti-yaml" | prepend: site.baseurl }})
 : an extension of the YAML language introducing modules, some crude

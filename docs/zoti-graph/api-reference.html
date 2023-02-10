@@ -48,9 +48,10 @@ module below.</p>
 <dd><p>Parses a complete (schema-validated) ZOTI input specification tree
 along with its metadata and returns an application graph that
 can be futher process by a ZOTI tool (e.g. ZOTI-Tran).</p>
-<p><em>module_args</em> is a list of arguments passed to <a class="reference external" href="TODO">zoti_yaml.Module</a> constructor (e.g., as loaded from a JSON or YAML
-file). In this list, the <code class="docutils literal notranslate"><span class="pre">preamble</span></code> argument is expected to have
-a field <code class="docutils literal notranslate"><span class="pre">main-is</span></code> containing the path to the top (i.e. root) node.</p>
+<p><em>module_args</em> is a list of arguments passed to <a class="reference external" href="../zoti-yaml/api-reference">zoti_yaml.Module</a> constructor (e.g., as loaded from a
+JSON or YAML file) and should consist at least of a <em>preamble</em> and
+a <em>document</em>. The <code class="docutils literal notranslate"><span class="pre">preamble</span></code> argument is expected to have a
+field <code class="docutils literal notranslate"><span class="pre">main-is</span></code> containing the path to the top (i.e. root) node.</p>
 <p><strong>ATTENTION:</strong> the design of this library assumes that this
 function is invoked only once per program instance. If for any
 reason you need to call it twice, any previously parsed
@@ -376,6 +377,16 @@ view. <em>with_ports</em> toggles whether ports are included in this view or
 not.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.sanity">
+<span class="sig-name descname"><span class="pre">sanity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rule</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">element_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.sanity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.sanity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs sanity checking on the graph element identified as
+<em>element_id</em> (single argument for node, double argument for
+edge).</p>
+<p><em>rule</em> is an assertion function taking as arguments the
+current graph and <em>element_id</em> (see the <a class="reference external" href="the-zoti-graph-model.html#sanity-rules">Sanity Rules</a>)</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -667,7 +678,7 @@ argument is also provided, it creates a port ID.</p>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Links</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-yaml">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-graph">GitHub</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
 </ul>
 

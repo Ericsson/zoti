@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zoti_graph.sanity &#8212; zoti-graph 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for zoti_graph.sanity</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+
+<span class="kn">import</span> <span class="nn">zoti_graph.core</span> <span class="k">as</span> <span class="nn">ty</span>
+
+
+<span class="k">def</span> <span class="nf">_flatten</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">CompositeNode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">([</span><span class="n">_flatten</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">n</span><span class="p">)]))</span>
+
+
+<span class="k">def</span> <span class="nf">_non_composite_children</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">([</span><span class="n">_flatten</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">n</span><span class="p">)]))</span>
+
+
+<span class="k">def</span> <span class="nf">_non_composite_parent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">parent</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">parent</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">CompositeNode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_non_composite_parent</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parent</span>
+
+
+<div class="viewcode-block" id="edge_direction"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.edge_direction">[docs]</a><span class="k">def</span> <span class="nf">edge_direction</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Edge direction should be consistent with the hierarchy of its connecting elements.</span>
+
+<span class="sd">    forall u,v in edges(G)</span>
+<span class="sd">      | u is intrinsic ⇒ v.dir ∈ {IN}</span>
+<span class="sd">      | v is intrinsic ⇒ u.dir ∈ {OUT, INOUT}</span>
+<span class="sd">      | node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, INOUT} &amp; v.dir ∈ {IN, INOUT}</span>
+<span class="sd">      | node(u) is parent for node(v) ⇒ u.dir = v.dir ∈ {IN, INOUT}</span>
+<span class="sd">      | node(u) is child for node(v) ⇒ u.dir = v.dir ∈ {OUT, INOUT}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">port_u</span><span class="p">,</span> <span class="n">port_v</span> <span class="o">=</span> <span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_u</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_v</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="o">.</span><span class="n">IN</span>  <span class="c1"># in</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_v</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_u</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">dir</span> <span class="o">!=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="o">.</span><span class="n">IN</span>  <span class="c1"># out, inout</span>
+        <span class="k">return</span>
+
+    <span class="n">node_u</span><span class="p">,</span> <span class="n">node_v</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">parent</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">node_u</span> <span class="o">==</span> <span class="n">node_v</span><span class="p">:</span>
+        <span class="c1"># same node, means that the ports are shortcut</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">node_u</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span> <span class="o">==</span> <span class="n">node_v</span><span class="o">.</span><span class="n">parent</span><span class="p">():</span>
+        <span class="c1"># same parent means different directions</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>  <span class="c1"># out, inout</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>  <span class="c1"># in, inout</span>
+    <span class="k">elif</span> <span class="n">node_u</span> <span class="o">&lt;</span> <span class="n">node_v</span><span class="p">:</span>
+        <span class="c1"># different parent means same directions</span>
+        <span class="c1"># assert port_u.dir == ty.Dir.IN  # in</span>
+        <span class="c1"># assert port_v.dir == ty.Dir.IN  # in</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">node_u</span> <span class="o">&gt;</span> <span class="n">node_v</span><span class="p">:</span>
+        <span class="c1"># different parent means same directions</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>  <span class="c1"># out, inout</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>  <span class="c1"># out, inout</span></div>
+
+
+<div class="viewcode-block" id="edge_hierarchy"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.edge_hierarchy">[docs]</a><span class="k">def</span> <span class="nf">edge_hierarchy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Edges can only connect sibling nodes or child nodes to their parents.</span>
+
+<span class="sd">    forall u,v in edges(G)</span>
+<span class="sd">      | node(u) and node(v) have different parents ⇒</span>
+<span class="sd">           node(u) = node(v).parent ⊻ node(v) = node(u).parent</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node_u</span><span class="p">,</span> <span class="n">node_v</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">parent</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">node_u</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span> <span class="o">!=</span> <span class="n">node_v</span><span class="o">.</span><span class="n">parent</span><span class="p">():</span>
+        <span class="c1"># if not the same parent, then they are parent-child</span>
+        <span class="c1"># same rule is true for intrinsics as well</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">node_u</span> <span class="o">==</span> <span class="n">node_v</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span> <span class="o">^</span> <span class="p">(</span><span class="n">node_u</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span> <span class="o">==</span> <span class="n">node_v</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="edge_sibling_kind"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.edge_sibling_kind">[docs]</a><span class="k">def</span> <span class="nf">edge_sibling_kind</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Interconnected sibling nodes (except intrinsics and ignoring the</span>
+<span class="sd">    hierarchy of composites) are of the same kind.</span>
+
+<span class="sd">    forall u,v in edges(G) where node(u), node(v) are not intrinsic</span>
+<span class="sd">      | node(u) and node(v) have same parent ⇒</span>
+<span class="sd">           flatten(node(u)) ⋃ flatten(node(v)) are all of the same kind</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">node_u</span><span class="p">,</span> <span class="n">node_v</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">parent</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">node_u</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span> <span class="o">==</span> <span class="n">node_v</span><span class="o">.</span><span class="n">parent</span><span class="p">():</span>
+        <span class="n">flattened</span> <span class="o">=</span> <span class="n">_flatten</span><span class="p">(</span><span class="n">node_u</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span> <span class="o">+</span> <span class="n">_flatten</span><span class="p">(</span><span class="n">node_v</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flattened</span><span class="p">:</span>
+            <span class="n">first_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">flattened</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">flattened</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">curr_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="k">assert</span> <span class="n">first_type</span> <span class="o">==</span> <span class="n">curr_type</span></div>
+
+
+<div class="viewcode-block" id="node_platform_hierarchy"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.node_platform_hierarchy">[docs]</a><span class="k">def</span> <span class="nf">node_platform_hierarchy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ignoring the hierarchy of composites all platform nodes contain</span>
+<span class="sd">    only actor nodes.</span>
+
+<span class="sd">    forall n in nodes(G) where n is platform node:</span>
+<span class="sd">      | ⇒ n.parent is composite node</span>
+<span class="sd">      | ⇒ all first children which are not composite</span>
+<span class="sd">             are only intrinsic or actor nodes</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">PlatformNode</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">CompositeNode</span><span class="p">)</span>
+
+    <span class="n">children</span> <span class="o">=</span> <span class="n">_non_composite_children</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">child</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">ActorNode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="node_actor_hierarchy"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.node_actor_hierarchy">[docs]</a><span class="k">def</span> <span class="nf">node_actor_hierarchy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ignoring the hierarchy of composites, all actor nodes belong to a</span>
+<span class="sd">    platform node and contain only kernel nodes.</span>
+
+<span class="sd">    forall n in nodes(G) where n is actor node:</span>
+<span class="sd">      | ⇒ the first parent which is not composite is platform node</span>
+<span class="sd">      | ⇒ all first children which are not composite are only intrinsic or kernel nodes</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">ActorNode</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">_non_composite_parent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">PlatformNode</span><span class="p">)</span>
+
+    <span class="n">children</span> <span class="o">=</span> <span class="n">_non_composite_children</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">child</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">KernelNode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="node_kernel_hierarchy"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.node_kernel_hierarchy">[docs]</a><span class="k">def</span> <span class="nf">node_kernel_hierarchy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ignoring the hierarchy of composites, all kernel nodes belong to an</span>
+<span class="sd">    actor node.</span>
+
+<span class="sd">    forall n in nodes(G) where n is kernel node:</span>
+<span class="sd">      | ⇒ the immediate parent which is not composite is actor node</span>
+<span class="sd">      | ⇒ no child nodes exist</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">KernelNode</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">_non_composite_parent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">ActorNode</span><span class="p">)</span>
+
+    <span class="n">children</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">children</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+
+<span class="k">def</span> <span class="nf">node_actor_consistency</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="c1"># checks name consistency</span>
+    <span class="c1"># checks decoupled scenarios</span>
+
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">ActorNode</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">preproc</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">n</span><span class="o">.</span><span class="n">withNode</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">preproc</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">G</span><span class="o">.</span><span class="n">ir</span><span class="o">.</span><span class="n">has_node</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">withPath</span><span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">Uid</span><span class="p">(</span><span class="n">port</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">states</span> <span class="ow">and</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">states</span> <span class="ow">and</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">state</span><span class="p">,</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">states</span>
+            <span class="k">if</span> <span class="s2">&quot;goto&quot;</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">expr</span><span class="p">[</span><span class="s2">&quot;goto&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">states</span>
+    <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">scenarios</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">scen</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">scenarios</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">assert</span> <span class="n">n</span><span class="o">.</span><span class="n">withNode</span><span class="p">(</span><span class="n">scen</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="c1"># TODO: scenarios are decoupled using projection</span>
+
+
+<div class="viewcode-block" id="port_dangling"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.port_dangling">[docs]</a><span class="k">def</span> <span class="nf">port_dangling</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;There is no dangling port in the graph.</span>
+
+<span class="sd">    forall p in ports(G):</span>
+<span class="sd">      | node(p) is kernel node ⇒ exists e in edges(G) such that p = e.src or p = e.dst</span>
+<span class="sd">      | p is inout port ⇒ exists e1, e2 in edges(G) such that p = e1 ∩ e2</span>
+<span class="sd">      | otherwise ⇒ exists e1, e2 in edges(G) such that p = e1.src and p = e2.dst</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">inedges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">port_edges</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">outedges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">port_edges</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">KernelNode</span><span class="p">):</span>
+        <span class="k">pass</span> <span class="c1"># TODO, handle detector preproc</span>
+        <span class="c1"># assert len(inedges) &gt; 0 or len(outedges) &gt; 0</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Port</span><span class="p">)</span> <span class="ow">and</span> <span class="n">port</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="o">.</span><span class="n">INOUT</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inedges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">outedges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inedges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">outedges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">zoti-graph</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../the-zoti-graph-model.html">Model Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api-reference.html">API Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Ericsson/zoti/tree/main/zoti-graph">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Ericsson S&T.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

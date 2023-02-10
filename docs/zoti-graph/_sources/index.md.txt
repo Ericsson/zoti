@@ -1,10 +1,10 @@
 # ZOTI-Graph
 
 ZOTI-Graph is the core format for system models used in the [ZOTI
-project](TODO). Its purpose is to provide a minimal language to
-represent system models with the sole purpose of generating code, as
-well as tools to manipulate this representation during a (scripted)
-code synthesis flow.
+project](https://ericsson.github.io/zoti/). Its purpose is to provide
+a minimal language to represent system models with the sole purpose of
+generating code, as well as tools to manipulate this representation
+during a (scripted) code synthesis flow.
 
 :::{figure} assets/splash.png
 (possible drawing of a ZOTI-Graph model [^id2])
@@ -30,12 +30,14 @@ The main highlights of the ZOTI-Graph representation are:
 >   the compute components.
 
 For an overview discussion on the role of ZOTI-Graph and its position
-in a synthesis flow please refer to the [ZOTI project hub page](TODO).
+in a synthesis flow please refer to the [ZOTI project hub
+page](https://ericsson.github.io/zoti/).
 
 The current implementation of ZOTI-Graph is as a Python library using
 mainly [NetworkX](https://networkx.org/) for internal structure
 representation. For a feature list as well as installation and usage
-instructions, please refer to the project's [GitHub page](TODO).
+instructions, please refer to the project's [GitHub
+page](https://github.com/Ericsson/zoti/tree/main/zoti-graph).
 
 ## Documentation pages
 

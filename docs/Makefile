@@ -28,7 +28,7 @@ sphinx: $(TOOL_DOCS) $(TOOLS)
 	[ -d $(@D) ] && (cd $(@D); pipenv run sphinx-build -M html source build) || echo 
 
 %: ../%/docs/build/html
-	cp -rf $< $@
+	rm -rf $@; cp -rf $< $@
 
 cleansphinx:
 	rm -rf $(TOOLS)
