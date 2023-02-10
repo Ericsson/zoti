@@ -1,22 +1,17 @@
-ZOTI-YAML
+ZOTI-Tran
 =========
 
-A lightweight YAML language extension to support describing document
-trees distributed across several modules. It consists of:
+ZOTI-Tran(sformations) is a simple skeleton project to help getting
+started with building an own transformation-based code synthesis
+flow. It contains some function drivers that may (or may not) be used
+when describing transformation scripts, as well as a small set of
+generic (platform-agnostig)
+[ZOTI-Graph](https://ericsson.github.io/zoti/zoti-graph/)
+transformations.
 
- * special keywords (e.g., `!ref`, `!attach`, `!include`, `!default`)
-   that help constructing document trees with information spread
-   across several files;
- * a module system, i.e. a document preamble structure and a custom
-   loader;
- * a CLI tool to convert ZOTI-YAML modules to regular YAML files;
- * an API to import the loading and building utilities in your own
-   project if needed.
+https://ericsson.github.io/zoti/zoti-tran
 
-This language extensions has been developed as a convenience frontend
-for the [ZOTI]() project and its tools, but can be used independently.
-
-Installation
+Installation & Usage
 ------------
 
 This project is being developed as a
@@ -39,57 +34,34 @@ python3 -m pipx ensurepath
 pipx install pipenv
 ```
 
-### Tool and library
+### Library
 
 In the cloned root folder run the following installation
 commands. Uncomment the `--dev` flag if you plan on developing the
 code or running the test suite.
 
 ```shell
-cd path/to/zoti-yaml
+cd path/to/zoti-tran
 pipenv install # --dev
 pipenv run python3 -m build
-```
-
-To run the CLI tool either call it from inside the Pipenv shell:
-
-```shell
-pipenv shell
-python -m zoti_yaml --help
-```
-
-or from outside it, in the folder where the `Pipfile` resides:
-
-```shell
-pipenv run python3 -m zoti_yaml --help
 ```
 
 The API library can be loaded like any other Python package, e.g., by
 adding the following path to the `PYTHONPATH` variable:
 
 ```
-PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-yaml/src
+PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-tran/src
 ```
+from an environment where its dependencies (see [Pipfile](Pipfile)) are met,
+(e.g. from within this `pipenv` shell). Alternatively, one can build
+the package in the scope of a separate virtual environment:
 
-ideally from within the Pipenv shell which takes care of the
-dependency on PyYAML.
+```
+pipenv install -e </path/to/>zoti-tran
+```
 
 Documentation
 -------------
 
-The ZOTI-YAML syntax, CLI tool usage and API documentation can be
-found on the project [web page](TODO). CLI arguments are also
-documented using the `--help` flag.
-
-An inline documented test example can be found in
-[`zoti-yaml/tests/scenario1`](tests/scenario1). This example is
-thoroughly explained on the [web page](TODO).
-
-Contribution
-------------
-
-Please check the [issues](TODO) page for discussions on current/past
-issues. Contact the main developer if you intend to contribute to this
-project. Keep in mind that the strength of the ZOTI tools lies in
-their simplicity so, sticking to the original vision, adding new
-features _should_ be heavily scrutinized.
+API documentation can be found on the project [web
+page](https://ericsson.github.io/zoti/zoti-tran).

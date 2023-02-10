@@ -10,8 +10,8 @@ document trees distributed across several modules. It consists of:
   loader;
 - a CLI tool to convert ZOTI-YAML modules to regular YAML or JSON
   files;
-- an API to import the loading and building utilities in your own
-  project.
+- an API to import the various utilities in your own project,
+  e.g. query-like path extraction.
 
 ```{code-block} yaml
 ---

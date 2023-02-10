@@ -68,35 +68,12 @@ pipenv install # --dev
 pipenv run python3 -m build
 ```
 
-To run the CLI tool either call it from inside the Pipenv shell:
-
-```shell
-pipenv shell
-python -m zoti_graph --help
-```
-
-or from outside it, in the folder where the `Pipfile` resides:
-
-```shell
-pipenv run python3 -m zoti_graph --help
-```
-
-The API library can be loaded like any other Python package, e.g., by
-adding the following path to the `PYTHONPATH` variable:
-
-```
-PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-graph/src
-```
-
-ideally from within the Pipenv shell which takes care of the library
-dependencies.
-
 ### Testing the library
 
 To run the test suite, call from within a `--dev` Pipenv environment:
 
 ```shell
-pytest # --cov
+pipenv run pytest # --cov
 ```
 
 ### Generating the API documentation locally
@@ -115,10 +92,68 @@ where `[target]` is one of the targets documented when typing
 sphinx-build -M help source build
 ```
 
+Usage
+-----
+
+### CLI tool
+
+To run the CLI tool either call it from inside the Pipenv shell:
+
+```shell
+pipenv shell
+python -m zoti_graph --help
+```
+
+or from outside it, in the folder where the `Pipfile` resides:
+
+```shell
+pipenv run python3 -m zoti_graph --help
+```
+
+CLI arguments documented with the `--help` command can be also passed
+via a `zoticonf.toml` file situated in the same path where the tool is
+being invoked. Arguments need to be defined under a section called
+`[zoti.graph]` and need to follow [TOML](https://toml.io/en/v1.0.0)
+syntax, e.g.:
+
+```toml
+[zoti]
+
+# global configuration variables, read by all tools. Unused.
+
+[zoti.graph]
+
+# configuration variables for ZOTI-Graph. Overrides global ones
+
+output = "gen/graph/app.json"
+dump_out = "gen/dbg"
+dump_graph = true
+dump_args.root: "/Sys/Platform1"
+dump_args.depth: 3
+```
+
+### API Library
+
+The API library can be loaded like any other Python package, e.g., by
+adding the following path to the `PYTHONPATH` variable:
+
+```
+PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-graph/src
+```
+
+from an environment where its dependencies (see [](Pipfile)) are met,
+(e.g. from within this `pipenv` shell). Alternatively, one can build
+the package in the scope of a separate virtual environment:
+
+```
+pipenv install -e </path/to/>zoti-graph
+```
+
+or even in the global scope using `pip` (not recommended yet).
+
 Documentation
 -------------
 
-The ZOTI-Graph input syntax, CLI tool usage and API documentation can
-be found on the project [web
+Model and API documentation can be found on the project [web
 page](https://ericsson.github.io/zoti/zoti-graph). CLI arguments are
 also documented using the `--help` flag.
