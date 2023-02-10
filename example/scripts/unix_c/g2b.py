@@ -7,9 +7,9 @@ from pathlib import Path
 from importlib.metadata import distribution
 
 import zoti_graph as graph
+import zoti_graph.sanity as sanity
 import zoti_ftn.backend.c as ftn
 import zoti_tran as tran
-import zoti_tran.sanitylib as sanity
 import zoti_tran.translib as agnostic
 
 sys.path.insert(0, pathlib.Path(__file__).parent.resolve())
@@ -66,22 +66,16 @@ T = ftn.FtnDb({doc[0]["module"]: doc[1]["entries"] for doc in ftn_srcs})
 debug = {} if args.debug else None
 script = tran.Script(G, T, dump_prefix=args.prefix)
 
-script.sanity(
-    port_rules=[
-        sanity.port_dangling,
-    ],
-    node_rules=[
-        sanity.node_platform_hierarchy,
-        sanity.node_actor_hierarchy,
-        sanity.node_actor_consistency,
-        sanity.node_kernel_hierarchy,
-    ],
-    edge_rules=[
-        sanity.edge_direction,
-        sanity.edge_hierarchy,
-        sanity.edge_sibling_kind,
-    ],
-)
+script.sanity([
+    sanity.port_dangling,
+    sanity.node_platform_hierarchy,
+    sanity.node_actor_hierarchy,
+    sanity.node_actor_consistency,
+    sanity.node_kernel_hierarchy,
+    sanity.edge_direction,
+    sanity.edge_hierarchy,
+    sanity.edge_sibling_kind,
+])
 
 script.transform([
     tran.TransSpec(

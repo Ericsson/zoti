@@ -18,27 +18,23 @@ model specification hence we will use the former to document both
 model and input format.
 
 Notice that there are several types of nodes, as documented in the
-[nodes] section below. These nodes cannot be arranged in any
+[](#nodes) section below. These nodes cannot be arranged in any
 arbitrary hierarchy, and there are a set of rules that need to be
-enforced when describing system models. These rules are documented in
-the [ZOTI-Tran](TODO) project which, among others, ensures the
-sanity of a built graph structure, however some "rule-of-thumb"
-guiding principles are listed below in the [Some Composition Rules]
-section.
+enforced when describing system models, as described in the
+[](#sanity-rules) section below.
 
 ## Input Schema
 
 ZOTI-Graphs documents are specified as hierarchical tree-like objects
-where the root is a [nodes] field containing a list of definitions
+where the root is a [](#nodes) field containing a list of definitions
 representing the top-level node(s). From there systems are described
 in a top-down manner where child nodes are specified within the scope
-of parent nodes (i.e. under the parent's [nodes] field).
+of parent nodes (i.e. under the parent's [](#nodes) field).
 
 A graph is loaded from a list of serialized objects (e.g. in JSON
 format) using the {meth}`zoti_graph.parser.parse` method, by passing
-them to its arguments. This list contains both complete graph
-definintion as dictated by the schema below, as well as the metadata
-necessary to establish it (see the API documentation for details).
+them to its arguments. The *document* object from these arguments
+needs to be defined following the schema below.
 
 ### nodes
 
@@ -97,11 +93,16 @@ described specific information, as documented below.
 
 ```
 
-## Some Composition Rules
+## Sanity rules
 
-All model composition rules should be documented within the
-[ZOTI-Tran](TODO) project, as they are likely to differ for various
-use cases or platforms. In general it is worth noting that:
+After parsing and creating an application graph, a set of sanity rules
+need to be enforced. ZOTI-Graph comes with a set of generic callable
+assertion-like functions (using the
+{meth}`zoti_graph.appgraph.AppGraph.sanity` driver). Depending on the
+use case or on the target platform additional sanity rules might need
+to be defined and enforced, or skipped, this is why it is up to the
+synthesis flow designer to call these rules individually. In general
+it is worth noting that:
 
 - the top node of a project is a `CompositeNode` and all its
   children need to be `PlatformNode`. This means that no function
@@ -111,4 +112,14 @@ use cases or platforms. In general it is worth noting that:
   "function" outside the scope of a "behavior". In other words any
   `KernelNode` needs to (eventually) be part of an `ActorNode`
   which determines the context in which and the mechanisms with which
-  a certain (native) function is being executed.
+  a certain (native) function is being executed."
+
+Following is a list of all sanity rules currently defined by
+ZOTI-Graph. They are not re-exported globally, so they need to be
+imported explicitly from {mod}`zoti_graph.sanity`.
+
+```{eval-rst}
+.. automodule:: zoti_graph.sanity
+	:members:
+
+```

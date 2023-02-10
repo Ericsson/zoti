@@ -446,9 +446,10 @@ def parse(*module_args) -> AppGraph:
     can be futher process by a ZOTI tool (e.g. ZOTI-Tran).
 
     *module_args* is a list of arguments passed to `zoti_yaml.Module
-    <TODO>`_ constructor (e.g., as loaded from a JSON or YAML
-    file). In this list, the ``preamble`` argument is expected to have
-    a field ``main-is`` containing the path to the top (i.e. root) node.
+    <../zoti-yaml/api-reference>`_ constructor (e.g., as loaded from a
+    JSON or YAML file) and should consist at least of a *preamble* and
+    a *document*. The ``preamble`` argument is expected to have a
+    field ``main-is`` containing the path to the top (i.e. root) node.
 
     **ATTENTION:** the design of this library assumes that this
     function is invoked only once per program instance. If for any
