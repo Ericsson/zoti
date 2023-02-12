@@ -12,7 +12,7 @@
   noweb: true
   
 - title: "ZOTI-Tran"
-  path: null
+  path: zoti-tran
 
 - title: "ZOTI-Gen"
   path: null

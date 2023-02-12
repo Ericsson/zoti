@@ -1,4 +1,4 @@
-TOOLS = zoti-yaml zoti-graph # zoti-ftn zoti-gen zoti-tran
+TOOLS = zoti-yaml zoti-graph zoti-tran # zoti-gen
 
 HUB = ..
 
@@ -32,6 +32,9 @@ sphinx: $(TOOL_DOCS) $(TOOLS)
 
 cleansphinx:
 	rm -rf $(TOOLS)
+
+serve:
+	bundle exec jekyll serve --baseurl='/zoti'
 
 .PHONY: dists cleandists sphinx cleansphinx
 

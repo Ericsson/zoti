@@ -10,8 +10,8 @@ document trees distributed across several modules. It consists of:
   loader;
 - a CLI tool to convert ZOTI-YAML modules to regular YAML or JSON
   files;
-- an API to import the loading and building utilities in your own
-  project.
+- an API to import the various utilities in your own project,
+  e.g. query-like path extraction.
 
 ```{code-block} yaml
 ---
@@ -48,8 +48,8 @@ import:
 ```
 
 This language extensions has been developed as a convenience frontend
-for the [ZOTI](TODO) project and its tools, but can also be used as an
-independent tool.
+for the [ZOTI](https://ericsson.github.io/zoti/) project and its
+tools, but can also be used as an independent tool.
 
 
 ## Documentation pages
@@ -69,11 +69,3 @@ api-reference
 - {ref}`genindex`
 - {ref}`modindex`
 - {ref}`search`
-
-
-```{eval-rst}
-.. sidebar-links::
-	:github:
-	
-	ZOTI <https://ericsson.github.io/zoti/>
-```

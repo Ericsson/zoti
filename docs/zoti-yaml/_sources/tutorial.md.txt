@@ -135,7 +135,8 @@ the information into one cohesive JSON tree. In turn, this should
 enable any tool downstream to focus on parsing the right information
 and construct its core objects irrespective to where information
 originated, while also bookkeeping metadata for debugging purposes. As
-further shown in the [complete ZOTI tutorial](TODO), these
-capabilities can be used to (minimally) emulate a component framework
-where parameters and interfaces can be specified after loading core
+further shown in the [ZOTI Toy
+Example](https://ericsson.github.io/zoti/example), these capabilities
+can be used to (minimally) emulate a component framework where
+parameters and interfaces can be specified after loading core
 components from designated libraries.
