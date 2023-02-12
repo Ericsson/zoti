@@ -58,16 +58,17 @@ action.add_argument(
     help=("Draws a dot file representing the hierarchy of the loaded application."),
 )
 action.add_argument(
-    "--args", type=str,
-    help="""Arguments passed to --graph and --tree commands as dictionary.""",
+    "--dump-args", type=str, metavar="DICT",
+    help="""Arguments passed to --dump-graph and --dump-tree commands as key-value\n"""
+    """pairs. Only specified via 'zoticonf.toml'""",
 )
 action.add_argument(
-    "--debug-out", type=str, metavar="PATH",
+    "--dump-out", type=str, metavar="PATH",
     help="""Path where debug byproducts are dumped. Default is '.' """,
 )
 default_args = {
     "out": None,
-    "args": "{}"
+    "args": {}
 }
 
 # Parsing and forming arguments
@@ -77,10 +78,12 @@ try:
                     format='%(levelname)s: %(message)s', stream=sys.stderr)
     conf = _mu.load_config("zoti.graph", args, default_args)
     log.info(f"{conf}")
-    dpath = Path(conf["debug_out"]) if conf["debug_out"] else Path()
-    dumpargs = yaml.load(conf['args'], Loader=yaml.SafeLoader)
-    if dumpargs:
-        log.info("Drawing arguments found:", dumpargs)
+    dpath = Path(conf["dump_out"]) if conf["dump_out"] else Path()
+    # dumpargs = yaml.load(conf['args'], Loader=yaml.SafeLoader)
+    dumpargs = conf['args']
+    assert isinstance(dumpargs, dict)
+    # if dumpargs:
+    #     log.info("Drawing arguments found:", dumpargs)
 
     # Reading input
     i_ext = ("".join(Path(args.input.name).suffixes)
