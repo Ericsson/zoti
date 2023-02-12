@@ -17,8 +17,8 @@ def flatten(G: AppGraph, **kwargs):
       | n.parent is actor node ⇒ n is kernel node or composite node marked "scenario"
       | n.parent is composite node ⇒ n is kernel node (i.e., belongs to a scenario)
 
-    NOTE: node IDs remain unchanged, regardless of the new hierarchy.
-    TODO: schould be done after actor expansion, has a clearer view what is a scenario
+    *NOTE*: node IDs remain unchanged, regardless of the new
+    hierarchy.
 
     """
     # Mark scenario nodes to ignore
@@ -60,7 +60,7 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
         => e.kind = STORAGE
       | => (inputs(a) in p) is disjoint from (inputs(b) in p)
 
-    TODO: check if fusing on Relation.EVENT is appropriate
+    *TODO*: check if fusing on ``Relation.EVENT`` is appropriate
 
     """
     def _fuse_children(proj, _nodes, _edges, msg, under=[]):
@@ -80,17 +80,16 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
                 fused_id = under[0]
             else:
                 fused_id, _ = list(depgraph.edges)[0]
-            parsed_dep = list(nx.edge_bfs(depgraph, fused_id, orientation="ignore"))
-            # print("%%%%%%%%%%%%%%%%%%%%%%%%%", depgraph.edges)
+            parsed_dep = list(nx.edge_bfs(
+                depgraph, fused_id, orientation="ignore"))
             log.info(f"{msg} {cluster} under {fused_id}")
             for u, v, orientation in parsed_dep:
-                # print("!!!!!!!!!!!!!!", u, v, orientation, proj[u][v]["ports"])
                 if orientation == "forward":
                     G.fuse_nodes(fused_id, v, proj[u][v]["ports"])
                 else:
                     G.fuse_nodes(fused_id, u, proj[u][v]["ports"])
             yield fused_id
-    
+
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
         proj = G.node_projection(pltf, with_parent=False)
         fused_actors = _fuse_children(
@@ -107,9 +106,9 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
             if len(fsms) > 1:
                 log.info(f"  - fusing FSMs {fsms}")
                 raise NotImplementedError  # TODO
-            
+
             # Fusing scenarios (OBS: force yield)
-            sc_proj = G.node_projection(actor, with_parent=True) #!!!
+            sc_proj = G.node_projection(actor, with_parent=True)  # !!!
             list(_fuse_children(
                 sc_proj,
                 _nodes=lambda n: G.get_mark("scenario", n),

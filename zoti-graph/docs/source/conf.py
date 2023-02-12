@@ -12,7 +12,7 @@ from zoti_graph import __version__
 
 
 project = "zoti-graph"
-copyright = "2022, Ericsson S&T"
+copyright = "2022-2023 Ericsson"
 author = "George Ungureanu"
 
 # The full version, including alpha/beta/rc tags
@@ -24,8 +24,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "myst_parser",
-    'sphinx_toolbox.sidebar_links',
-    'sphinx_toolbox.github',
 ]
 
 myst_enable_extensions = [
@@ -35,14 +33,22 @@ myst_enable_extensions = [
     "html_image",
 ]
 
+html_theme_options = {
+    'github_button': True,
+    'github_user': 'Ericsson',
+    'github_repo': 'zoti',
+    'extra_nav_links': {
+        "ZOTI": "https://ericsson.github.io/zoti/",
+        "GitHub": "https://github.com/Ericsson/zoti/tree/main/zoti-graph",
+    }
+}
+
 templates_path = []
 exclude_patterns = []
 autodoc_member_order = "bysource"
 add_module_names = False
 myst_heading_anchors = 3
 
-github_username = 'Ericsson'
-github_repository = 'zoti/tree/main/zoti-graph'
 
 class MyClassDocumenter(autodoc.ClassDocumenter):
     objtype = "simple"
