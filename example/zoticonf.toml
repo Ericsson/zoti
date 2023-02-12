@@ -16,7 +16,7 @@ ext = [".zoc"]
 pathvar = ["gen/genspec"]
 
 [zoti.graph]
-debug_out = "gen/dbg"
+dump_out = "gen/dbg"
 
 [zoti.gen]
 lib = ["templatelib"]

@@ -22,7 +22,6 @@ black = "*"
 types-pyyaml = "*"
 license-sh = "*"
 virtualenv = "*"
-sphinx-toolbox = "*"
 
 [requires]
 python_version = "3.10"

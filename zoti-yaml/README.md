@@ -14,7 +14,10 @@ trees distributed across several modules. It consists of:
    project if needed.
 
 This language extensions has been developed as a convenience frontend
-for the [ZOTI](TODO) project and its tools, but can be used independently.
+for the [ZOTI](https://ericsson.github.io/zoti/) project and its
+tools, but can be used independently.
+
+https://ericsson.github.io/zoti/zoti-yaml
 
 Installation
 ------------
@@ -51,29 +54,6 @@ pipenv install # --dev
 pipenv run python3 -m build
 ```
 
-To run the CLI tool either call it from inside the Pipenv shell:
-
-```shell
-pipenv shell
-python -m zoti_yaml --help
-```
-
-or from outside it, in the folder where the `Pipfile` resides:
-
-```shell
-pipenv run python3 -m zoti_yaml --help
-```
-
-The API library can be loaded like any other Python package, e.g., by
-adding the following path to the `PYTHONPATH` variable:
-
-```
-PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-yaml/src
-```
-
-ideally from within the Pipenv shell which takes care of the
-dependency on PyYAML.
-
 ### Generating the API documentation locally
 
 To generate the API documentation you need the `sphinx-build` tool,
@@ -90,22 +70,79 @@ where `[target]` is one of the targets documented when typing
 sphinx-build -M help source build
 ```
 
+Usage
+-----
+
+### CLI tool
+
+To run the CLI tool either call it from inside the Pipenv shell:
+
+```shell
+pipenv shell
+python -m zoti_yaml --help
+```
+
+or from outside it, in the folder where the `Pipfile` resides:
+
+```shell
+pipenv run python3 -m zoti_yaml --help
+```
+
+CLI arguments documented with the `--help` command can be also passed
+via a `zoticonf.toml` file situated in the same path where the tool is
+being invoked. Arguments need to be defined under a section called
+`[zoti.yaml]` and need to follow [TOML](https://toml.io/en/v1.0.0)
+syntax, e.g.:
+
+```toml
+[zoti]
+
+# global configuration variables, read by all tools. Unused.
+
+[zoti.yaml]
+
+# configuration variables for ZOTI-YAML. override global ones
+
+[zoti.yaml.<class>]
+
+# specialized configuration loaded with:
+#
+#      $(ZOTI_YAML) --spec <class>
+#
+# where <class> is replaced with an arbitrary name. Overrides 
+# variables in [zoti.yaml]
+```
+
+### API library
+
+The API library can be loaded like any other Python package, e.g., by
+adding the following path to the `PYTHONPATH` variable:
+
+```
+PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-yaml/src
+```
+
+ideally from within the Pipenv shell which takes care of the
+dependency on PyYAML. Alternatively, one can build
+the package in the scope of a separate virtual environment:
+
+```
+pipenv install -e </path/to/>zoti-yaml
+```
+
+or even in the global scope using `pip` (not recommended yet).
+
 Documentation
 -------------
 
 The ZOTI-YAML syntax, CLI tool usage and API documentation can be
-found on the project [web page](TODO). CLI arguments are also
-documented using the `--help` flag.
+found on the project [web
+page](https://ericsson.github.io/zoti/zoti-yaml). CLI arguments are
+also documented using the `--help` flag.
 
 An inline documented test example can be found in
 [`zoti-yaml/tests/scenario1`](tests/scenario1). This example is
-thoroughly explained on the [web page](TODO).
+thoroughly explained on the [web
+page](https://ericsson.github.io/zoti/zoti-yaml/tutorial).
 
-Contribution
-------------
 
-Please check the [issues](TODO) page for discussions on current/past
-issues. Contact the main developer if you intend to contribute to this
-project. Keep in mind that the strength of the ZOTI tools lies in
-their simplicity so, sticking to the original vision, adding new
-features _should_ be scrutinized.
