@@ -22,8 +22,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "myst_parser",
-    'sphinx_toolbox.sidebar_links',
-    'sphinx_toolbox.github',
 ]
 
 myst_enable_extensions = [
@@ -34,18 +32,22 @@ myst_enable_extensions = [
     "html_image",
 ]
 
+html_theme_options = {
+    'github_button': True,
+    'github_user': 'Ericsson',
+    'github_repo': 'zoti',
+    'extra_nav_links': {
+        "ZOTI": "https://ericsson.github.io/zoti/",
+        "GitHub": "https://github.com/Ericsson/zoti/tree/main/zoti-yaml",
+    }
+}
+
 exclude_patterns = []
 # html_static_path = ["_static"]
-
-
 autodoc_member_order = "bysource"
 add_module_names = False
 autodoc_inherit_docstrings = False
 myst_heading_anchors = 3
-
-github_username = 'Ericsson'
-github_repository = 'zoti/tree/main/zoti-yaml'
-
 
 
 class SimpleClassDocumenter(autodoc.ClassDocumenter):

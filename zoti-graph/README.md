@@ -128,8 +128,8 @@ syntax, e.g.:
 output = "gen/graph/app.json"
 dump_out = "gen/dbg"
 dump_graph = true
-dump_args.root: "/Sys/Platform1"
-dump_args.depth: 3
+dump_args.root = "/Sys/Platform1"
+dump_args.depth = 3
 ```
 
 ### API Library

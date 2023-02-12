@@ -5,7 +5,7 @@ ZOTI-Tran(sformations) is a simple skeleton project to help getting
 started with building an own transformation-based code synthesis
 flow. It contains some function drivers that may (or may not) be used
 when describing transformation scripts, as well as a small set of
-generic (platform-agnostig)
+generic (platform-agnostic)
 [ZOTI-Graph](https://ericsson.github.io/zoti/zoti-graph/)
 transformations.
 

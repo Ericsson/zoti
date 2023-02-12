@@ -48,8 +48,8 @@ import:
 ```
 
 This language extensions has been developed as a convenience frontend
-for the [ZOTI](TODO) project and its tools, but can also be used as an
-independent tool.
+for the [ZOTI](https://ericsson.github.io/zoti/) project and its
+tools, but can also be used as an independent tool.
 
 
 ## Documentation pages
@@ -69,11 +69,3 @@ api-reference
 - {ref}`genindex`
 - {ref}`modindex`
 - {ref}`search`
-
-
-```{eval-rst}
-.. sidebar-links::
-	:github:
-	
-	ZOTI <https://ericsson.github.io/zoti/>
-```
