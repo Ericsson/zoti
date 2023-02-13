@@ -64,7 +64,8 @@ class JinjaExtensions:
             prefix = glue.get("prefix", "") if glue else ""
             name = prefix + context["label"][lab]["name"]
             expargs = ",".join([name] + list(args))
-            expr = JinjaExtensions.find(glue, path)["_get"] if path else glue["_get"]
+            expr = JinjaExtensions.find(
+                glue, path)["_get"] if path else glue["_get"]
             return f"{expr}({expargs})"
         except Exception as e:
             from pprint import pformat
@@ -82,7 +83,8 @@ class JinjaExtensions:
             prefix = glue.get("prefix", "") if glue else ""
             name = prefix + context["label"][lab]["name"]
             expargs = ",".join([name] + list(args))
-            expr = JinjaExtensions.find(glue, path)["_set"] if path else glue["_set"]
+            expr = JinjaExtensions.find(
+                glue, path)["_set"] if path else glue["_set"]
             return f"{expr}({expargs})"
         except Exception as e:
             from pprint import pformat
@@ -117,13 +119,5 @@ def code(template, labels={}, params={}, blocks={}, info=None) -> str:
         while exc_tb and "template code" not in exc_tb.tb_frame.f_code.co_name:
             exc_tb = exc_tb.tb_next
         lineno = exc_tb.tb_lineno if exc_tb else -2
-        raise TemplateError(template, err_line=lineno, err_string=repr(msg), info=info)
-
-#######################
-
-# >>> x
-# '{{ (param.d | find(param)).b | eval }}'
-# >>> ctx
-# {'a': {'b': 'HALLÅ {{param.c}}'}, 'c': 'WÖRLD!', 'd': 'a'}
-# >>> r.code(x, params=ctx)
-# 'HALLÅ WÖRLD!'
+        raise TemplateError(template, err_line=lineno,
+                            err_string=repr(msg), info=info)
