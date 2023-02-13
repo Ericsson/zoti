@@ -18,21 +18,41 @@ from zoti_gen.exceptions import ModelError, ParseError, ValidationError
 
 
 class ProjHandler:
+    """This handler takes care of loading input specifications, templates,
+    building and dumping target code artifacts.
+
+    :arg main: the qualified name of the main module (containing a
+      ``top`` entry in preamble which points to the project's top
+      block)
+
+    :arg srcs: a list of initialized `zoti_yaml.Module
+      <../zoti-yaml>`_ containing all the raw input
+      specifications. Used for their qualified name queries.
+
+    :arg annotations: `formatted string
+      <https://www.w3schools.com/python/ref_string_format.asp>`_ for
+      printing :class:`Block` information (before, after) the template
+      expansion. In the formatting, the variable ``comp`` represents
+      the current :class:`Block` object.
+
+    """
     _mods: Dict
     _blks: Dict
 
-    main: Dict
-    """ Qualified name of top component """
+    main: ty.Ref
+    """ Constructed path to the top (i.e., main) block """
 
     requs: Requirement
-    """Available only after calling :meth:`ProjHandler.resolve()`"""
+    """Resolved dependencies. Available only after calling
+    :meth:`resolve()`."""
 
     decls: List
-    """ List of component declarations (e.g., declared functions) """
+    """ List of component declared at top level. Available only after
+    calling :meth:`resolve()`."""
 
-    def __init__(self, main: str, srcs: List[Module], annotation=(None, None)):        
+    def __init__(self, main: str, srcs: List[Module], annotation=(None, None)):
         # self.main = main
-        self._annot_begin , self._annot_end = annotation
+        self._annot_begin, self._annot_end = annotation
         if not srcs:
             raise ImportError("No input sources provided.")
         modules = {mod.name: mod for mod in srcs}
@@ -51,11 +71,20 @@ class ProjHandler:
         self.decls = []
 
     def get(self, ref=None, caller=None) -> Block:
-        """Gets a Block object using its qualified name. If the said object
-        has not been parsed yet, it parses it and loads in in the
-        internal representation.
+        """Gets a :class:`Block` object using its qualified name. If the the
+        block has been parsed before it returns the
+        previously-constructed block, otherwise it follows the
+        decision flow:
+
+             | it searches the specifications 
+             | if it refers to a library template
+             |   | it imports the base constructor using `importlib <https://docs.python.org/3/library/importlib.html>`_
+             | else
+             |   | uses :class:`Block` base constructor
+             | parses the specifications and constructs the block
+
         """
-        
+
         def _get_spec(module, name):
             spec = importlib.util.find_spec(module)
             if spec is None:
@@ -108,10 +137,14 @@ class ProjHandler:
         return comp
 
     def parse(self):
-        """Parses a loaded project and creates the (hidden) internal
-        representation"""
+        """Recursively parses a loaded project (i.e., containing input
+        specifications) and creates the (hidden) internal
+        representation starting from the main block inwards.
+
+        """
 
         log.info(f"*** Loading all components related to '{self.main}' ***")
+
         def _recursive(ref, caller):
             comp = self.get(ref, caller)
             log.info(f"  - Loaded '{ref}'")
@@ -127,11 +160,13 @@ class ProjHandler:
         structure of each respective block entry."""
 
         log.info(f"*** Resolving bindings and expanding templates ***")
+
         def _check_attr(obj, *attrlist):
             missing = [attr for attr in attrlist if getattr(obj, attr) is None]
             if missing:
                 msg = f"{type(obj).__name__} is missing attribute(s): {missing}"
-                name = getattr(obj, "name") if hasattr(obj, "name") else util.qualname(obj)
+                name = getattr(obj, "name") if hasattr(
+                    obj, "name") else util.qualname(obj)
                 raise ModelError(msg, name, get_pos(obj))
 
         def _self_check(comp, context):
@@ -242,7 +277,7 @@ class ProjHandler:
 
             params = {**comp.param, **b_params}
             log.info(f"  - Updated params {list(params.keys())}")
-            
+
             labels = OrderedDict({**comp.label, **b_labels})
             for k, label in labels.items():
                 if k not in b_labels:
@@ -253,7 +288,8 @@ class ProjHandler:
                         params=params,
                         info=get_pos(label),
                     )
-            log.info(f"  - Updated parent label bindings {list(labels.keys())}")
+            log.info(
+                f"  - Updated parent label bindings {list(labels.keys())}")
 
             comp.param = params
             comp.label = labels
@@ -272,13 +308,13 @@ class ProjHandler:
             if comp.requirement is not None:
                 self.requs.update(comp.requirement)
                 log.info(f"  - Updated global requirements")
-                
+
             code = (self._annot_begin.format(comp=comp)
                     if self._annot_begin else "\n")
             code += render.code(comp.code, comp.label, comp.param,
                                 rinst, get_pos(comp))
             code += (self._annot_end.format(comp=comp)
-                    if self._annot_end else "\n")
+                     if self._annot_end else "\n")
             comp.code = code
             log.info(f"  - rendered code")
 
@@ -294,6 +330,7 @@ class ProjHandler:
         self.decls.append(self.main)
 
     def dump_yaml(self, path):
+        """Dumps all parsed blocks up to this point as a YAML file."""
         with open(path, "w") as f:
             doc = {k: Block.Schema().dump(v) for k, v in self._blks.items()}
             f.write(yaml.dump(doc,
@@ -301,11 +338,12 @@ class ProjHandler:
                               default_flow_style=None))
             log.info(f"  * Dumped yaml spec at '{f.name}'")
 
-            
     def dump_graph(self, dot_file, rankdir="LR") -> None:
+        """Dumps a DOT graph representation of the current block structure
+        starting from the top block inwards."""
         def _mangle(module, name):
             return f"{module}.{name}"
-        
+
         def _recursive(parent, name, comp, fill=False):
             style = {
                 "style": "filled",
@@ -341,7 +379,8 @@ class ProjHandler:
                     elif bind.func == "usage_to_label":
                         p.add_node(pydot.Node(
                             bind.args["usage"].template, shape="plain"))
-                        p.add_edge(pydot.Edge(bind.args["usage"].template, bname))
+                        p.add_edge(pydot.Edge(
+                            bind.args["usage"].template, bname))
                     else:
                         pname = f"{name}-{bind.args['parent']}"
                         p.add_edge(pydot.Edge(bname, pname))
