@@ -8,26 +8,26 @@ import marshmallow as mm
 import networkx as nx
 import zoti_yaml as zoml
 
-ATTR_NAME   = "name"
-ATTR_BLOCK  = "block"
-ATTR_TYPE   = "type"
-ATTR_PH     = "placeholder"
-ATTR_CODE   = "code"
-ATTR_PROTO  = "prototype"
-ATTR_USAGE  = "usage"
+ATTR_NAME = "name"
+ATTR_BLOCK = "block"
+ATTR_TYPE = "type"
+ATTR_PH = "placeholder"
+ATTR_CODE = "code"
+ATTR_PROTO = "prototype"
+ATTR_USAGE = "usage"
 
 PRAGMA_PASS = "pass"
-PRAGMA_NEW  = "new"
-PRAGMA_EXP  = "expand"
+PRAGMA_NEW = "new"
+PRAGMA_EXP = "expand"
 
-FUN_CHECK   = "check"           # member of library component
-FUN_LTOL    = "label_to_label"  # member of ProjHandler.resolve._map_bindings
-FUN_UTOL    = "usage_to_label"  # member of ProjHandler.resolve._map_bindings
-FUN_PTOP    = "param_to_param"  # member of ProjHandler.resolve._map_bindings
-FUN_VTOP    = "value_to_param"  # member of ProjHandler.resolve._map_bindings
+FUN_CHECK = "check"           # member of library component
+FUN_LTOL = "label_to_label"  # member of ProjHandler.resolve._map_bindings
+FUN_UTOL = "usage_to_label"  # member of ProjHandler.resolve._map_bindings
+FUN_PTOP = "param_to_param"  # member of ProjHandler.resolve._map_bindings
+FUN_VTOP = "value_to_param"  # member of ProjHandler.resolve._map_bindings
 
 KEYS_PRAGMA = [PRAGMA_PASS, PRAGMA_NEW, PRAGMA_EXP]
-KEYS_BIND   = [FUN_LTOL, FUN_UTOL, FUN_PTOP, FUN_VTOP]
+KEYS_BIND = [FUN_LTOL, FUN_UTOL, FUN_PTOP, FUN_VTOP]
 
 
 class Nested(mm.fields.Nested):
@@ -78,11 +78,13 @@ class TemplateFun:
 class TemplateFunField(mm.fields.Field):
     def _deserialize(self, node, attr, data, **kwargs):
         if not isinstance(node, list):
-            raise mm.ValidationError("Expected TemplateFun arguments as a list.")
+            raise mm.ValidationError(
+                "Expected TemplateFun arguments as a list.")
         if not len(node):
-            raise mm.ValidationError("Expected at least one argument to TemplateFun")
+            raise mm.ValidationError(
+                "Expected at least one argument to TemplateFun")
         return TemplateFun(attr, *node)
-    
+
     def _serialize(self, obj, attr, data, **kwargs):
         return obj.args + [obj.template]
 
@@ -135,6 +137,13 @@ class Requirement:
 
 
 class RequirementSchema(mm.Schema):
+    """Illustrates prerequisites for the parent element. It may contain
+    the following entries:
+
+    :include: a list of files or modules to be included in the
+              preamble of the generated target artifact
+
+    """
 
     include = mm.fields.List(mm.fields.Str())
 
@@ -158,14 +167,16 @@ class Ref:
     def __hash__(self):
         return hash("{self.module}{self.name}")
 
+
 class RefSchema(mm.Schema):
     module = mm.fields.String(required=True)
     name = mm.fields.String(required=True)
-    
+
     @mm.post_load
     def make_ref(self, data, **kwargs):
         return Ref(**data)
-    
+
+
 @dataclass
 class Bind:
     func: str
@@ -174,6 +185,21 @@ class Bind:
 
 
 class BindSchema(mm.Schema):
+    """A binding between one of the labels or parameters of the parent
+    block and a label or parameter of the referenced block. It may
+    contain one of the following entries:
+
+    :label_to_label: with entries ``parent`` (str), ``child`` (str)
+        and ``usage`` (`Template Function <#template-function>`_)
+
+    :usage_to_label: with entries ``child`` (str) and ``usage``
+        (`Template Function <#template-function>`_)
+
+    :param_to_param: with entries ``parent`` (str), ``child`` (str)
+
+    :value_to_param: with entries ``child`` (str), ``value`` (str)
+    """
+
     label_to_label = mm.fields.Nested(
         mm.Schema.from_dict(
             {
@@ -228,9 +254,9 @@ class BindSchema(mm.Schema):
 
 @dataclass  # (init=False)
 class Instance:
-    """
-    Composite entry binding a placeholder in the parent's template
-    code to another block.
+    """Entry binding a placeholder in the parent's template code to
+    another block.
+
     """
 
     placeholder: Optional[str]
@@ -246,11 +272,41 @@ class Instance:
 
     usage: TemplateFun
     """ Target-dependent template passed by type system """
-    
+
     _info: Dict = field(default_factory=lambda: {})
 
 
 class InstanceSchema(mm.Schema):
+    """Refers to another block and (at minimum) triggers its evaluation by
+    the the `Rendering <rendering>`_ engine. It can define an
+    inclusion relation between the parent and the referenced blocks,
+    in which case the referenced one would occupy the space pointed
+    out by a *placeholder* markup in the parent's
+    template. Furthermore, the relation between the two blocks can be
+    enforced by a set of *bindings* that connects the labels and
+    parameters of the two blocks.
+
+    To define a block instance within the parent block the following
+    entries might be used:
+
+    :block: a `Reference <#reference>`_ entry pointing to an existing
+        (i.e. loaded) block.
+
+    :placeholder: the name of the placeholder, as it appears in the
+        parent's `Code Template <#code-template>`_.
+
+    :directive: a list of directive strings passed to the `Rendering
+        <rendering>`_ engine.
+
+    :`bind <#bind>`_: list of bindings between the labels and
+        parameters of the parent block and those of the referenced block.
+
+    :usage: a `Template Function <#template-function>`_ defining how
+        this block is being instantiated in case it is not expanded inline
+        (e.g., as function call). The template string is defined by the
+        type system.
+
+    """
     placeholder = mm.fields.String(required=True, allow_none=True)
     block = mm.fields.Nested(RefSchema, required=True, allow_none=True)
     directive = mm.fields.List(
@@ -288,13 +344,25 @@ class Label:
 
     _info: Dict = field(default_factory=lambda: {})
 
-    
+
 class LabelSchema(mm.Schema):
+    """A label is the low-level code equivalent of a 'port'. Its function is to
+    provide a name which can be used in bindings and glue generation.
+
+    :name: unique ID in the scope of the parent block
+    :usage: a `Template Function <#template-function>`_ defining how
+        this label is to be expanded in the code. Provided by the type
+        system.
+    :glue: a dictionary of glue code tailored for various
+        circumstances, provided by the type system and accessible from
+        within the code template using the `label.<port_id>.glue` key.
+
+    """
     name = mm.fields.Str(required=True)
     usage = TemplateFunField(required=True)
     glue = mm.fields.Mapping(
         keys=mm.fields.String(
-            required=True, # , validate=mm.validate.NoneOf(["name"])
+            required=True,  # , validate=mm.validate.NoneOf(["name"])
         ),
         # values=TemplateFunField(),  # TODO
         values=mm.fields.Raw(),
@@ -341,6 +409,28 @@ class Block:
     """ Base class for block structure. """
 
     class Schema(mm.Schema):
+        """A block describes a unit of code that might be related to other
+        blocks through bindings and might contain a template. Blocks
+        are described using the following entries;
+
+        :name: (mandatory) the unique ID of the block
+        :type: a `Reference <#reference>`_ pointing to an
+            externally-defined library template which would fill in
+            the corresponding entries below, as documented in
+            `Template Libraries <template-libs>`_ page.
+        :`requirement <#requirement>`_: block prerequisites
+        :`label <#label>`_: list of label entries, each with a unique name
+        :param: a dictionary of generic parameters passed as-is to the template
+            renderer, accessed with the `param` key.
+        :`instance <#instance>`_: a list of other blocks somehow related to
+            this one.
+        :code: a string containing this block's
+            `Code Template <#code-template>`_
+        :prototype: a `Template Function <#template-function>`_ defining this
+            block's type signature, as provided from a type system.
+
+        """
+
         name = mm.fields.String(required=True)
         requirement = mm.fields.Nested(RequirementSchema)
         label = LabelListField()
@@ -361,7 +451,7 @@ class Block:
     """ Target dependent function signature provided by the type system """
 
     requirement: Optional[Requirement] = None
-    """ Block prerequisites. """
+    """ Block prerequisites."""
 
     label: OrderedDict[str, Label] = field(
         default_factory=lambda: OrderedDict())

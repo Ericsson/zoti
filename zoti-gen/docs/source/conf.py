@@ -9,7 +9,7 @@ from docutils.statemachine import StringList
 
 sys.path.insert(0, os.path.abspath("../../src/"))
 
-project = "zoti-tran"
+project = "zoti-gen"
 copyright = "2022-2023 Ericsson"
 author = "George Ungureanu"
 
@@ -28,6 +28,7 @@ myst_enable_extensions = [
     "fieldlist",
     "html_admonition",
     "html_image",
+    "deflist",
 ]
 
 html_theme_options = {
@@ -50,3 +51,23 @@ myst_heading_anchors = 3
 
 autodoc_typehints_format = 'fully-qualified'
 autodoc_unqualified_typehints = True
+
+
+class SimpleClassDocumenter(autodoc.ClassDocumenter):
+    objtype = "simple"
+    priority = autodoc.ClassDocumenter.priority - 10
+    option_spec = dict(autodoc.ClassDocumenter.option_spec)
+
+    # do not indent the content
+    content_indent = ""
+
+    def format_args(self):
+        return None
+
+    # do not add a header to the docstring
+    def add_directive_header(self, sig):
+        pass
+
+
+def setup(app):
+    app.add_autodocumenter(SimpleClassDocumenter)
