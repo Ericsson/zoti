@@ -24,6 +24,8 @@ input-format
 
 template-libs
 
+rendering
+
 tutorial
 
 api-reference

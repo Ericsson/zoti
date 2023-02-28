@@ -11,25 +11,53 @@ from zoti_gen.exceptions import TemplateError
 
 
 class JinjaExtensions:
-    """Namespace class gathering all functions that are extending the
-    Jinja syntax during template evaluation."""
+    """Apart from the `Jinja2 builtin functions
+    <https://jinja.palletsprojects.com/en/3.1.x/templates/#list-of-builtin-filters>`_,
+    ZOTI-Gen adds the following functions that can be called from
+    within code templates.
+
+    """
 
     @staticmethod
-    def find(json: Dict, path: str):
-        """Returns the element with (the dot-separated) **path** in a
-        **json** dictionary."""
+    def find(json: Dict, path: str) -> Any:
+        """Returns the element with (the dot-separated) *path* in a *json*
+        dictionary, where *path* is specified as a string. E.g.
+
+        .. code-block:: jinja
+
+            {# considering the context {'a': None, 'b':{'foo':{'bar': 'baz'}}} #}
+
+            { b | find("foo.bar") }
+
+            {# is the same as #}
+
+            { b.foo.bar }
+
+        both rendering ``baz``.
+
+        """
+
         return reduce(operator.getitem, path.split("."), json)
 
     @staticmethod
     def setdefaults(json: Any, defaults: Dict) -> Dict:
-        """For every direct child of the given **json** element it (possibly
-        recursively) sets the **defaults** values if undefined. E.g.:
+        """For every direct child of the given *json* element it (possibly
+        recursively) sets the *defaults* values if undefined. E.g.:
 
-            >>> json = {'a': None, 'b':{'foo':'bar'}}
-            >>> defaults {'foo':'biff', 'baz':'buzz'}
-            >>> setdefaults(json, defaults)
+        .. code-block:: jinja
+
+            {% set json = {'a': None, 'b':{'foo':'bar'}} %}
+            {% set defaults = {'foo':'biff', 'baz':'buzz'} %}
+            {% set example = setdefaults(json, defaults) %}
+
+        results in ``example`` containing the dictionary
+
+        .. code-block:: python
+
             {'a': {'foo':'biff', 'baz':'buzz'}, 'b':{'foo':'bar', 'baz':'buzz'}}
+
         """
+
         newdict = {}
         if isinstance(json, dict):
             newdict = json.copy()
@@ -47,17 +75,32 @@ class JinjaExtensions:
 
     @staticmethod
     @pass_context
-    def eval(context, value):
+    def eval(context: Dict, string: str) -> str:
+        """Renders a Jinja2 string within a *context*. Useful if both *string*
+        and *context* are passed to the current template context."""
         return Template(value).render(context)
 
     @staticmethod
-    def error(msg: str, *args):
-        """TODO"""
+    def error(msg: str, *args) -> None:
+        """Raise an exception from within the template logic."""
         raise Exception(msg.format(*args))
 
     @staticmethod
     @pass_context
-    def getter(context, elem, *args):
+    def getter(context, elem, *args) -> str:
+        """ZOTI-Gen specific formatter that retrieves the type getter macro
+        created by ZOTI-FTN and stored in each label's ``glue``
+        entry and creates an access expresion based on it:
+
+        .. code-block:: jinja
+
+            {{ getter("data.data.LEN") }}
+
+            {# is equivalent to #}
+
+            {{ label.data.glue.data.LEN._get }}({{ label.data.name }})
+
+        """
         lab, path = (elem.split(".", 1) + [''])[:2]
         try:
             glue = context["label"][lab]["glue"]
@@ -76,7 +119,20 @@ class JinjaExtensions:
 
     @staticmethod
     @pass_context
-    def setter(context, elem, *args):
+    def setter(context, elem, *args) -> str:
+        """ZOTI-Gen specific formatter that retrieves the type setter macro
+        created by ZOTI-FTN and stored in each label's ``glue``
+        entry and creates an access expression based on it:
+
+        .. code-block:: jinja
+
+            {{ setter("data.data.c", "i", "x" }}
+
+            {# is equivalent to #}
+
+            {{ label.data.glue.data.c._set }}({{ label.data.name }}, i, x)
+
+        """
         lab, path = (elem.split(".", 1) + [''])[:2]
         try:
             glue = context["label"][lab]["glue"]
