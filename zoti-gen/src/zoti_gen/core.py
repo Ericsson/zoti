@@ -45,8 +45,13 @@ class Nested(mm.fields.Nested):
 
 class TemplateFun:
     template: Optional[str]
+    """formatted string template"""
+
     args: List[str]
+    """template arguments"""
+
     attr: str
+    """name of the parent node containing this template function (for debugging)"""
 
     def __init__(self, attr, *args):
         self.attr = attr
@@ -76,6 +81,31 @@ class TemplateFun:
 
 
 class TemplateFunField(mm.fields.Field):
+    """A template function is a Shell-like formatted string where all the
+    variables are exposed as arguments. This function is meant to be
+    called by the `Rendering <rendering>`_ engine which would fill in
+    the arguments.
+
+    As entry to an input specification node, a template function is
+    provided as a list of strings, where the first elements are the
+    arguments and the last argument is the formatted string. For
+    example the YAML entry:
+
+    ..  code-block:: yaml
+
+        [a, b, c, "text with $a, then $b and also $c!"]
+
+    is parsed internally to a lambda function as follows:
+
+    ..  code-block:: python
+
+        lambda a, b, c: "text with $a, then $b and also $c!"
+
+    The formatted string syntax is documented `here
+    <https://docs.python.org/3/library/string.html#template-strings>`_.
+
+    """
+
     def _deserialize(self, node, attr, data, **kwargs):
         if not isinstance(node, list):
             raise mm.ValidationError(
@@ -96,7 +126,7 @@ class TemplateFunField(mm.fields.Field):
 
 class Requirement:
     """
-    Illustrates prerquisites. Stors input iterables (e.g., lists) as
+    Illustrates prerquisites. Stores input iterables (e.g., lists) as
     dependency graphs.
 
     :param requirement: dictionary of iterables.
@@ -189,15 +219,15 @@ class BindSchema(mm.Schema):
     block and a label or parameter of the referenced block. It may
     contain one of the following entries:
 
-    :label_to_label: with entries ``parent`` (str), ``child`` (str)
+    :label_to_label: with sub-entries ``parent`` (str), ``child`` (str)
         and ``usage`` (`Template Function <#template-function>`_)
 
-    :usage_to_label: with entries ``child`` (str) and ``usage``
+    :usage_to_label: with sub-entries ``child`` (str) and ``usage``
         (`Template Function <#template-function>`_)
 
-    :param_to_param: with entries ``parent`` (str), ``child`` (str)
+    :param_to_param: with sub-entries ``parent`` (str), ``child`` (str)
 
-    :value_to_param: with entries ``child`` (str), ``value`` (str)
+    :value_to_param: with sub-entries ``child`` (str), ``value`` (str)
     """
 
     label_to_label = mm.fields.Nested(

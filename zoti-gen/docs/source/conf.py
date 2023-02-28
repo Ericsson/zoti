@@ -45,7 +45,7 @@ templates_path = []
 exclude_patterns = []
 autodoc_member_order = "bysource"
 add_module_names = True
-myst_heading_anchors = 3
+myst_heading_anchors = 4
 # autodoc_typehints = "description"
 
 
