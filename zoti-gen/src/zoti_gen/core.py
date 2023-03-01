@@ -20,7 +20,7 @@ PRAGMA_PASS = "pass"
 PRAGMA_NEW = "new"
 PRAGMA_EXP = "expand"
 
-FUN_CHECK = "check"           # member of library component
+FUN_CHECK = "check"          # member of library component
 FUN_LTOL = "label_to_label"  # member of ProjHandler.resolve._map_bindings
 FUN_UTOL = "usage_to_label"  # member of ProjHandler.resolve._map_bindings
 FUN_PTOP = "param_to_param"  # member of ProjHandler.resolve._map_bindings
@@ -44,6 +44,8 @@ class Nested(mm.fields.Nested):
 
 
 class TemplateFun:
+    """Container for a template function."""
+
     template: Optional[str]
     """formatted string template"""
 
@@ -51,7 +53,7 @@ class TemplateFun:
     """template arguments"""
 
     attr: str
-    """name of the parent node containing this template function (for debugging)"""
+    """name of the parent node  of this template function (for debugging)"""
 
     def __init__(self, attr, *args):
         self.attr = attr
@@ -167,11 +169,12 @@ class Requirement:
 
 
 class RequirementSchema(mm.Schema):
-    """Illustrates prerequisites for the parent element. It may contain
-    the following entries:
+    """Illustrates prerequisites for the parent element. Internally it is
+    represented using a :class:`zoti_gen.core.Requirement` class. It may
+    contain the following entries:
 
-    :include: a list of files or modules to be included in the
-              preamble of the generated target artifact
+    :include: (list) files or modules to be included in the preamble
+              of the generated target artifact
 
     """
 
@@ -188,8 +191,13 @@ class RequirementSchema(mm.Schema):
 
 @dataclass(repr=False)
 class Ref:
+    """Hashable reference to a user block or a library component."""
+
     module: str
+    """qualified name of module"""
+
     name: str
+    """name of block"""
 
     def __repr__(self):
         return f"{self.module}.{self.name}"
@@ -199,6 +207,24 @@ class Ref:
 
 
 class RefSchema(mm.Schema):
+    """A reference is an entry pointing to an object by its qualified name
+    and/or path. Since ZOTI-Gen documents are flat (i.e., they consist
+    in a flat list of block descriptions), and the only objects
+    referenced in ZOTI-Gen are blocks, the only access mechanism
+    implemented is referencing by (block) name. Hence, every reference
+    entry will have the following mandatory fields:
+
+    :module: *(string)* the full (dot-separated) name of module
+      containing the referenced block, even if that means the current
+      module.
+
+    :name: *(string)* the name of the referenced block.
+
+    For less verbose reference syntax one could check the ``!ref``
+    keyword in the `ZOTI-YAML <../zoti-yaml>`_ language extension and
+    pre-processor.
+
+    """
     module = mm.fields.String(required=True)
     name = mm.fields.String(required=True)
 
@@ -209,25 +235,47 @@ class RefSchema(mm.Schema):
 
 @dataclass
 class Bind:
+    """Deserialized version of a binding, containing directily bind
+    resolver arguments."""
+
     func: str
+    """name of the binding function (see schema entries)"""
+
     args: Dict
+    """arguments passed to the binding function"""
+
     _info: Dict = field(default_factory=lambda: {})
 
 
 class BindSchema(mm.Schema):
     """A binding between one of the labels or parameters of the parent
-    block and a label or parameter of the referenced block. It may
-    contain one of the following entries:
+    block and a label or parameter of the referenced block.
+    Internally it is represented using a :class:`zoti_gen.core.Bind`
+    class. It may contain one of the following entries:
 
-    :label_to_label: with sub-entries ``parent`` (str), ``child`` (str)
-        and ``usage`` (`Template Function <#template-function>`_)
+    :label_to_label: (dict)
 
-    :usage_to_label: with sub-entries ``child`` (str) and ``usage``
-        (`Template Function <#template-function>`_)
+        :parent: (str)
+        :child: (str)
+        :usage: (`Template Function <#template-function>`_)
 
-    :param_to_param: with sub-entries ``parent`` (str), ``child`` (str)
+    :usage_to_label: (dict)
 
-    :value_to_param: with sub-entries ``child`` (str), ``value`` (str)
+        :child: (str)
+        :usage: (`Template Function <#template-function>`_)
+
+
+    :param_to_param: (dict)
+
+        :parent: (str)
+        :child: (str)
+
+
+    :value_to_param: (dict)
+
+        :value: (str)
+        :child: (str) 
+
     """
 
     label_to_label = mm.fields.Nested(
@@ -314,27 +362,29 @@ class InstanceSchema(mm.Schema):
     out by a *placeholder* markup in the parent's
     template. Furthermore, the relation between the two blocks can be
     enforced by a set of *bindings* that connects the labels and
-    parameters of the two blocks.
+    parameters of the two blocks. Internally, aln instance is
+    represented using a :class:`zoti_gen.core.Instance` class.
 
     To define a block instance within the parent block the following
     entries might be used:
 
-    :block: a `Reference <#reference>`_ entry pointing to an existing
+    :block: (`Reference <#reference>`_) points to an existing
         (i.e. loaded) block.
 
-    :placeholder: the name of the placeholder, as it appears in the
-        parent's `Code Template <#code-template>`_.
+    :placeholder: (string) the name of the placeholder, as it appears
+        in the parent's `Code Template <#code-template>`_.
 
-    :directive: a list of directive strings passed to the `Rendering
-        <rendering>`_ engine.
+    :directive: (list of strings) directive flags passed to the
+        `Rendering <rendering>`_ engine.
 
-    :`bind <#bind>`_: list of bindings between the labels and
-        parameters of the parent block and those of the referenced block.
+    :`bind <#bind>`_: (list) bindings between the labels and
+        parameters of the parent block and those of the referenced
+        block.
 
-    :usage: a `Template Function <#template-function>`_ defining how
-        this block is being instantiated in case it is not expanded inline
-        (e.g., as function call). The template string is defined by the
-        type system.
+    :usage: (`Template Function <#template-function>`_) defines how
+        this block is being instantiated in case it is not expanded
+        inline (e.g., as function call). The template string is
+        defined by the type system.
 
     """
     placeholder = mm.fields.String(required=True, allow_none=True)
@@ -376,14 +426,18 @@ class Label:
 
 
 class LabelSchema(mm.Schema):
-    """A label is the low-level code equivalent of a 'port'. Its function is to
-    provide a name which can be used in bindings and glue generation.
+    """A label is the low-level code equivalent of a 'port'. Its function
+    is to provide a name which can be used in bindings and glue
+    generation. Internally it is represented using a
+    :class:`zoti_gen.core.Label` class.
 
-    :name: unique ID in the scope of the parent block
-    :usage: a `Template Function <#template-function>`_ defining how
+    :name: (string) unique ID in the scope of the parent block
+
+    :usage: (`Template Function <#template-function>`_) defines how
         this label is to be expanded in the code. Provided by the type
         system.
-    :glue: a dictionary of glue code tailored for various
+
+    :glue: (dict) entries with glue code tailored for various
         circumstances, provided by the type system and accessible from
         within the code template using the `label.<port_id>.glue` key.
 
@@ -440,24 +494,35 @@ class Block:
 
     class Schema(mm.Schema):
         """A block describes a unit of code that might be related to other
-        blocks through bindings and might contain a template. Blocks
-        are described using the following entries;
+        blocks through bindings and might contain a
+        template. Internally it is represented using a
+        :class:`zoti_gen.core.Block` class. Blocks are described using
+        the following entries;
 
-        :name: (mandatory) the unique ID of the block
-        :type: a `Reference <#reference>`_ pointing to an
+        :name: (mandatory, string) the unique ID of the block
+
+        :type: (`Reference <#reference>`_) points to an
             externally-defined library template which would fill in
             the corresponding entries below, as documented in
             `Template Libraries <template-libs>`_ page.
-        :`requirement <#requirement>`_: block prerequisites
-        :`label <#label>`_: list of label entries, each with a unique name
-        :param: a dictionary of generic parameters passed as-is to the template
+
+        :`requirement <#requirement>`_: (dict) block prerequisites
+
+        :`label <#label>`_: (list) label entries, each with a
+            unique name
+
+        :param: (dict) generic parameters passed as-is to the template
             renderer, accessed with the `param` key.
-        :`instance <#instance>`_: a list of other blocks somehow related to
-            this one.
-        :code: a string containing this block's
-            `Code Template <#code-template>`_
-        :prototype: a `Template Function <#template-function>`_ defining this
-            block's type signature, as provided from a type system.
+
+        :`instance <#instance>`_: (list) other blocks instantiated
+            from this one.
+
+        :code: (string) containing this block's `Code Template
+            <#code-template>`_
+
+        :prototype: (`Template Function <#template-function>`_) defines
+            this block's type signature, as provided from a type
+            system.
 
         """
 

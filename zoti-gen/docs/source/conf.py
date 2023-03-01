@@ -18,6 +18,7 @@ release = "0.1.0"
 
 extensions = [
     "sphinx.ext.todo",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "myst_parser",

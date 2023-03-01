@@ -73,25 +73,11 @@ documnentation to document the entry schemas.
 
 ## Reference
 
-A reference is an entry pointing to an object by its qualified name
-and/or path. Since ZOTI-Gen documents are flat (i.e., they consist in
-a flat list of block descriptions), and the only objects referenced in
-ZOTI-Gen are blocks, the only access mechanism implemented is
-referencing by (block) name. Hence every reference entry will have the
-following mandatory fields:
-
-`module` *(string)*
-: the full (dot-separated) name of module containing the referenced
-  block, even if that means the current module.
-  
-`name` *(string)*
-: the name of the referenced block.
-
-For less verbose reference syntax one could check the `!ref` keyword
-in the [ZOTI-YAML][zoti-yaml] language extension and pre-processor.
+```{eval-rst}
+.. autosimple:: zoti_gen.core.RefSchema
+```
 
 ## Template Function
-
 
 ```{eval-rst}
 .. autosimple:: zoti_gen.core.TemplateFunField

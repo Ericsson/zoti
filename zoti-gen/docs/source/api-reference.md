@@ -20,6 +20,37 @@ respective page.
 .. autofunction:: zoti_gen.render.code
 ```
 
+## The Core Representation
+
+All core types are re-exported by `zoti_gen` and are meant to be used
+when defining template components.
+
+```{eval-rst}
+.. autoclass:: zoti_gen.core.Block
+	:members:	
+	:exclude-members: Schema
+
+.. autoclass:: zoti_gen.core.Requirement
+	:members:	
+
+.. autoclass:: zoti_gen.core.Label
+	:members:	
+
+.. autoclass:: zoti_gen.core.Instance
+	:members:	
+
+.. autoclass:: zoti_gen.core.Bind
+	:members:	
+
+.. autoclass:: zoti_gen.core.Ref
+	:members:	
+
+.. autoclass:: zoti_gen.core.TemplateFun
+	:members:
+	
+```
+
+
 ## Exceptions
 
 ```{eval-rst}
