@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Template Libraries &#8212; zoti-gen 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Rendering" href="rendering.html" />
+    <link rel="prev" title="Input Specification" href="input-format.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="template-libraries">
+<h1>Template Libraries<a class="headerlink" href="#template-libraries" title="Permalink to this heading">¶</a></h1>
+<p>Template libraries are a key part of ZOTI-Gen and enable the
+collaborative development, organization and usage of templates from
+different sources and for different target platforms.</p>
+<section id="template-modules">
+<h2>Template Modules<a class="headerlink" href="#template-modules" title="Permalink to this heading">¶</a></h2>
+<p>Instead of providing an own library management system, ZOTI-Gen chooses
+to “piggyback” on the already-established <a class="reference external" href="https://docs.python.org/3/tutorial/modules.html">module and package
+system</a> of
+Python. Hence ZOTI-Gen template libraries are developed as regular
+Python packages, taking advantage of the following features:</p>
+<ul class="simple">
+<li><p>the ability to organize components containing templates into modules
+and sub-modules according to a certain design classification;</p></li>
+<li><p>both the <a class="reference external" href="https://wiki.python.org/moin/DocumentationTools">API
+documentation</a> tool
+ecosystem for Python projects and the CI/CD features that come with
+developing a software project.</p></li>
+<li><p>the ability to define different packages of components under various
+MIT-compatible licenses (both open-source and proprietary) and use
+them together in the same code generation flow;</p></li>
+<li><p>the ability to enhance template components (whose principal purpose
+is to contain specification data) with custom program logic used for
+various purposes, e.g., to verify the sanity of the importer.</p></li>
+</ul>
+<p>In short, ZOTI-Gen template libraries are <a class="reference external" href="https://docs.python.org/3/tutorial/modules.html">Python
+packages</a> exporting
+user-defined <em>template components</em>. Each template component is a child
+class inheriting the <a class="reference internal" href="api-reference.html#zoti_gen.core.Block" title="zoti_gen.core.Block"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_gen.core.Block</span></code></a> base class and
+partially defining its members.</p>
+</section>
+<section id="using-template-components">
+<h2>Using Template Components<a class="headerlink" href="#using-template-components" title="Permalink to this heading">¶</a></h2>
+<p>A template component can be instantiated from the ZOTI-Gen input
+specification through the <code class="docutils literal notranslate"><span class="pre">type</span></code> entry of blocks. For example,
+consider the <code class="docutils literal notranslate"><span class="pre">Baz</span></code> component defined in module <code class="docutils literal notranslate"><span class="pre">Foo.Bar</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># module Foo.Bar</span>
+
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Requirement</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Baz</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+	<span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Hello {{ param.world }}!&quot;</span>
+    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;stdio.h&gt;&quot;</span><span class="p">]})</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>Provided that <code class="docutils literal notranslate"><span class="pre">Foo.Bar</span></code> is accessible from the ZOTI-Gen tool (e.g., by
+including its root to PYTHONPATH), then the specification</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">block</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">baz</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Foo.Bar&quot;</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Baz&quot;</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">param</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">world</span><span class="p">:</span><span class="w"> </span><span class="nv">World</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p>is equivalent to</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">block</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">baz</span>
+<span class="w">  </span><span class="nt">param</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">world</span><span class="p">:</span><span class="w"> </span><span class="nv">World</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">code</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">Hello {{ param.world }}!</span>
+<span class="w">  </span><span class="nt">requirement</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">include</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;&lt;stdio.h&gt;&quot;</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+<section id="developing-template-components">
+<h2>Developing Template Components<a class="headerlink" href="#developing-template-components" title="Permalink to this heading">¶</a></h2>
+<p><em>NOTE: All utilities in this section are re-exported by <code class="docutils literal notranslate"><span class="pre">zoti_gen</span></code>.</em></p>
+<section id="auto-generated-mandatory-schema">
+<h3>Auto-Generated (Mandatory) Schema<a class="headerlink" href="#auto-generated-mandatory-schema" title="Permalink to this heading">¶</a></h3>
+<p>Since each component is a different class, we need to use separate
+schemas for input deserialization and validation. Luckily ZOTI-Gen
+provides a class wrapper for inheriting a base schema with default
+definition;</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_gen.util.with_schema">
+<span class="sig-prename descclassname"><span class="pre">zoti_gen.util.</span></span><span class="sig-name descname"><span class="pre">with_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_base_class</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/util.html#with_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.util.with_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper which creates a sub-class <code class="docutils literal notranslate"><span class="pre">Schema</span></code> under the current
+class, as a (default) child of <em>schema_base_class</em></p>
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ReadArray</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>will create a class <code class="docutils literal notranslate"><span class="pre">ReadArray.Schema</span></code> which is used whenever
+instantiating this class with data from the input specification
+file.</p>
+</dd></dl>
+
+<p>Alternatively, if a custom validation schema is required, it should be
+defined accordingly.</p>
+</section>
+<section id="including-code-from-external-sources">
+<h3>Including code from external sources<a class="headerlink" href="#including-code-from-external-sources" title="Permalink to this heading">¶</a></h3>
+<p>The main reason to have template libraries is not to have to deal with
+target-specific code during the synthesis process, but rather to
+“pick-and-place” from a set of pre-written (and ideally pre-validated)
+components. As such, most of the time the main reason to define a
+template component would be for its <code class="docutils literal notranslate"><span class="pre">code</span></code> member. Since Python
+strings are not ideal for developing in target-specific syntax,
+ZOTI-Gen provides the following utility:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_gen.util.read_template">
+<span class="sig-prename descclassname"><span class="pre">zoti_gen.util.</span></span><span class="sig-name descname"><span class="pre">read_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('\\</span> <span class="pre">*Template:</span> <span class="pre">*{name}',</span> <span class="pre">'\\</span> <span class="pre">*End:</span> <span class="pre">*{name}')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/util.html#read_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.util.read_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a template string from a (possibly formatted) external
+source file. A source file may contain multiple templates, hence
+this method returns only the one between <code class="docutils literal notranslate"><span class="pre">delimiter</span></code> for
+<code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> – name of Python module relative to which the source
+file is found (e.g. can use <code class="docutils literal notranslate"><span class="pre">__name__</span></code> if it is in the same
+path as the current file)</p></li>
+<li><p><strong>filename</strong> – full name of the source file, including extension.</p></li>
+<li><p><strong>name</strong> – name of the current component, used as delimiter marker
+in case multiple components are defined in the same file.</p></li>
+<li><p><strong>delimiters</strong> – tuple containing the begin and end marker for the
+issued template, formatted as regular expressions where
+<code class="docutils literal notranslate"><span class="pre">{name}</span></code> is replaced with <strong>name</strong>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="n">read_template</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;ReadArray.C&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="validator-hook">
+<h3>Validator hook<a class="headerlink" href="#validator-hook" title="Permalink to this heading">¶</a></h3>
+<p>While schema validation is important, it does not suffice when the the
+current component has some specific dependencies based on its context
+and relation with other blocks. Hence the developer can define a
+member function <code class="docutils literal notranslate"><span class="pre">check</span></code> which is called by the renderer after
+resolving the entire code blocks structure, for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="k">assert</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+	<span class="k">assert</span> <span class="s2">&quot;arg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+</pre></div>
+</div>
+</section>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h3>
+<p>Do not forget to use
+<a class="reference external" href="https://www.programiz.com/python-programming/docstrings">docstrings</a>
+and an <a class="reference external" href="https://wiki.python.org/moin/DocumentationTools">API
+documentation</a> tool
+of your choice to document your template libraries. A library is not
+of much use if no one can use it. Make sure you mark clearly and
+visibly what is the purpose, content and requirements for each
+component in order to facilitate its finding and proper usage in
+synthesis flows.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">zoti-gen</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="input-format.html">Input Specification</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Template Libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#template-modules">Template Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-template-components">Using Template Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#developing-template-components">Developing Template Components</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rendering.html">Rendering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-tran">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="input-format.html" title="previous chapter">Input Specification</a></li>
+      <li>Next: <a href="rendering.html" title="next chapter">Rendering</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/template-libs.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

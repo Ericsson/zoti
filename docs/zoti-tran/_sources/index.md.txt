@@ -15,8 +15,8 @@ procedures to manipulate the internal structure of an application
 graph based on its specification and its target. Since currently
 ZOTI-Graph is written in Python, it naturally follows that a
 full-scale ZOTI-Tran tool would also be written in Python and make use
-of the graph API. Other such obvious inter-dependency is not present
-by design, other tools being able to share their information via
+of the graph API. No other obvious inter-dependency is present by
+design, other tools being able to share their information via
 serialization formats.
 
 ## Documentation pages
@@ -33,11 +33,3 @@ api-reference
 - {ref}`genindex`
 - {ref}`modindex`
 - {ref}`search`
-
-
-<!-- ```{eval-rst} -->
-<!-- .. sidebar-links:: -->
-<!-- 	:github: -->
-	
-<!-- 	ZOTI <https://ericsson.github.io/zoti/> -->
-<!-- ``` -->

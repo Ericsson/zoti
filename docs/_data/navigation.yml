@@ -15,7 +15,7 @@
   path: zoti-tran
 
 - title: "ZOTI-Gen"
-  path: null
+  path: zoti-gen
 
 - title: "Toy Example"
   path: null

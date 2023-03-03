@@ -1,5 +1,4 @@
 // Template: ShiftFarm.C
-{# set iterate_over = param.iterate_over|setdefaults({"offset": "0", "range": "type.size" }) #}
 {% set iterate_over = param.iterate_over|setdefaults({"offset": "0", "range": "name" }) %}
 
 {% macro itrange() -%}

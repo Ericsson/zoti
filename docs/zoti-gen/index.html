@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>ZOTI-Gen &#8212; zoti-gen 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Input Specification" href="input-format.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="zoti-gen">
+<h1>ZOTI-Gen<a class="headerlink" href="#zoti-gen" title="Permalink to this heading">¶</a></h1>
+<p>ZOTI-Gen(erator) is a ligtweight template-based code generator. It
+builds upon</p>
+<ol class="arabic simple">
+<li><p>Python’s
+<a class="reference external" href="https://realpython.com/python-modules-packages/">packaging</a> and
+distribution ecosystem for defining maintainable libraries of
+templates; and</p></li>
+<li><p><a class="reference external" href="https://jinja.palletsprojects.com">Jinja2</a>’s templating capabilities
+for gluing together these templates.</p></li>
+</ol>
+<p>to define a minimalistic component-based framework for describing code
+in a language- and target-agnostic manner. It is meant to serve as a
+backend in a generic code synthesis flow, and has been developed in
+the context of the <a class="reference external" href="https://ericsson.github.io/zoti">ZOTI</a> project.</p>
+<section id="documentation-pages">
+<h2>Documentation pages<a class="headerlink" href="#documentation-pages" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="input-format.html">Input Specification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="input-format.html#format-schema">Format Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input-format.html#reference">Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input-format.html#template-function">Template Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input-format.html#code-template">Code Template</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="template-libs.html">Template Libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="template-libs.html#template-modules">Template Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="template-libs.html#using-template-components">Using Template Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="template-libs.html#developing-template-components">Developing Template Components</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rendering.html">Rendering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rendering.html#code-blocks-structure">Code Blocks Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rendering.html#controlling-block-instantiation">Controlling Block Instantiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rendering.html#rendering-engine">Rendering Engine</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#specification-files">Specification Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#bindings-and-names">Bindings and Names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#library-components">Library Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#output-artifacts">Output Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api-reference.html#module-zoti_gen.handler">The Project Handler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference.html#the-code-renderer">The Code Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference.html#the-core-representation">The Core Representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference.html#module-zoti_gen.exceptions">Exceptions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">zoti-gen</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="input-format.html">Input Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-libs.html">Template Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rendering.html">Rendering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-tran">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="input-format.html" title="next chapter">Input Specification</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/index.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

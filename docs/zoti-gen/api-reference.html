@@ -1,0 +1,474 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>API Reference &#8212; zoti-gen 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading">¶</a></h1>
+<p>Unlike most other ZOTI tools the API of ZOTI-Gen is not particularly
+interesting, since it is meant to be used mainly as a CLI tool. More
+important, though, is its exported core representation used when
+creating <a class="reference internal" href="template-libs.html"><span class="doc std std-doc">Template Libraries</span></a>, documented in its
+respective page.</p>
+<section id="module-zoti_gen.handler">
+<span id="the-project-handler"></span><h2>The Project Handler<a class="headerlink" href="#module-zoti_gen.handler" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.handler.</span></span><span class="sig-name descname"><span class="pre">ProjHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srcs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">zoti_yaml.module.Module</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(None,</span> <span class="pre">None)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/handler.html#ProjHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.handler.ProjHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>This handler takes care of loading input specifications, templates,
+building and dumping target code artifacts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>main</strong> – the qualified name of the main module (containing a
+<code class="docutils literal notranslate"><span class="pre">top</span></code> entry in preamble which points to the project’s top
+block)</p></li>
+<li><p><strong>srcs</strong> – a list of initialized <a class="reference external" href="../zoti-yaml">zoti_yaml.Module</a> containing all the raw input
+specifications. Used for their qualified name queries.</p></li>
+<li><p><strong>annotations</strong> – <a class="reference external" href="https://www.w3schools.com/python/ref_string_format.asp">formatted string</a> for
+printing <code class="xref py py-class docutils literal notranslate"><span class="pre">Block</span></code> information (before, after) the template
+expansion. In the formatting, the variable <code class="docutils literal notranslate"><span class="pre">comp</span></code> represents
+the current <code class="xref py py-class docutils literal notranslate"><span class="pre">Block</span></code> object.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.main">
+<span class="sig-name descname"><span class="pre">main</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_gen.core.Ref" title="zoti_gen.core.Ref"><span class="pre">zoti_gen.core.Ref</span></a></em><a class="headerlink" href="#zoti_gen.handler.ProjHandler.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructed path to the top (i.e., main) block</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.requs">
+<span class="sig-name descname"><span class="pre">requs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_gen.core.Requirement" title="zoti_gen.core.Requirement"><span class="pre">zoti_gen.core.Requirement</span></a></em><a class="headerlink" href="#zoti_gen.handler.ProjHandler.requs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolved dependencies. Available only after calling
+<a class="reference internal" href="#zoti_gen.handler.ProjHandler.resolve" title="zoti_gen.handler.ProjHandler.resolve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">resolve()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.decls">
+<span class="sig-name descname"><span class="pre">decls</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span></em><a class="headerlink" href="#zoti_gen.handler.ProjHandler.decls" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of component declared at top level. Available only after
+calling <a class="reference internal" href="#zoti_gen.handler.ProjHandler.resolve" title="zoti_gen.handler.ProjHandler.resolve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">resolve()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">caller</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_gen.core.Block" title="zoti_gen.core.Block"><span class="pre">zoti_gen.core.Block</span></a></span></span><a class="reference internal" href="_modules/zoti_gen/handler.html#ProjHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.handler.ProjHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a <code class="xref py py-class docutils literal notranslate"><span class="pre">Block</span></code> object using its qualified name. If the the
+block has been parsed before it returns the
+previously-constructed block, otherwise it follows the
+decision flow:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">it searches the specifications </div>
+<div class="line">if it refers to a library template</div>
+<div class="line-block">
+<div class="line">| it imports the base constructor using <a class="reference external" href="https://docs.python.org/3/library/importlib.html">importlib</a></div>
+</div>
+<div class="line">else</div>
+<div class="line-block">
+<div class="line">| uses <code class="xref py py-class docutils literal notranslate"><span class="pre">Block</span></code> base constructor</div>
+</div>
+<div class="line">parses the specifications and constructs the block</div>
+</div>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.parse">
+<span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/handler.html#ProjHandler.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.handler.ProjHandler.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively parses a loaded project (i.e., containing input
+specifications) and creates the (hidden) internal
+representation starting from the main block inwards.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.resolve">
+<span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/handler.html#ProjHandler.resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.handler.ProjHandler.resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves names/bindings and renders code. OBS: alters the internal
+structure of each respective block entry.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.dump_yaml">
+<span class="sig-name descname"><span class="pre">dump_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/handler.html#ProjHandler.dump_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.handler.ProjHandler.dump_yaml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dumps all parsed blocks up to this point as a YAML file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_gen.handler.ProjHandler.dump_graph">
+<span class="sig-name descname"><span class="pre">dump_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dot_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LR'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_gen/handler.html#ProjHandler.dump_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.handler.ProjHandler.dump_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dumps a DOT graph representation of the current block structure
+starting from the top block inwards.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="the-code-renderer">
+<h2>The Code Renderer<a class="headerlink" href="#the-code-renderer" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_gen.render.code">
+<span class="sig-prename descclassname"><span class="pre">zoti_gen.render.</span></span><span class="sig-name descname"><span class="pre">code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/render.html#code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.render.code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the <strong>template</strong> in the context of <strong>label</strong>, <strong>param</strong>, and the
+(previously) rendered <strong>blocks</strong> that will fit inside the <cite>placeholder</cite>.</p>
+<p>Side-effect: prints <strong>template</strong> to the debug logger before trying to render it.</p>
+</dd></dl>
+
+</section>
+<section id="the-core-representation">
+<h2>The Core Representation<a class="headerlink" href="#the-core-representation" title="Permalink to this heading">¶</a></h2>
+<p>All core types are re-exported by <code class="docutils literal notranslate"><span class="pre">zoti_gen</span></code> and are meant to be used
+when defining template components.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.core.Block">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.core.</span></span><span class="sig-name descname"><span class="pre">Block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prototype:</span> <span class="pre">zoti_gen.core.TemplateFun</span> <span class="pre">=</span> <span class="pre">()</span> <span class="pre">-&gt;</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requirement:</span> <span class="pre">typing.Optional[zoti_gen.core.Requirement]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label:</span> <span class="pre">collections.OrderedDict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoti_gen.core.Label]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param:</span> <span class="pre">typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code:</span> <span class="pre">typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance:</span> <span class="pre">typing.List[zoti_gen.core.Instance]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info:</span> <span class="pre">typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#Block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for block structure.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Block.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_gen.core.Block.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique ID of block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Block.prototype">
+<span class="sig-name descname"><span class="pre">prototype</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_gen.core.TemplateFun" title="zoti_gen.core.TemplateFun"><span class="pre">zoti_gen.core.TemplateFun</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span> <span class="pre">-&gt;</span> <span class="pre">None</span></em><a class="headerlink" href="#zoti_gen.core.Block.prototype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Target dependent function signature provided by the type system</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Block.requirement">
+<span class="sig-name descname"><span class="pre">requirement</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_gen.core.Requirement" title="zoti_gen.core.Requirement"><span class="pre">zoti_gen.core.Requirement</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_gen.core.Block.requirement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Block prerequisites.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Block.label">
+<span class="sig-name descname"><span class="pre">label</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">collections.OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#zoti_gen.core.Label" title="zoti_gen.core.Label"><span class="pre">zoti_gen.core.Label</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.Block.label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ordered dictionary of labels</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Block.param">
+<span class="sig-name descname"><span class="pre">param</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_gen.core.Block.param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic parameters</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Block.code">
+<span class="sig-name descname"><span class="pre">code</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_gen.core.Block.code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Target code for block, either as Jinja template or as raw text</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Block.instance">
+<span class="sig-name descname"><span class="pre">instance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_gen.core.Instance" title="zoti_gen.core.Instance"><span class="pre">zoti_gen.core.Instance</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.Block.instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of instances that bind template (code) placeholders to other
+blocks</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.core.Requirement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.core.</span></span><span class="sig-name descname"><span class="pre">Requirement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requirement</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#Requirement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Requirement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Illustrates prerquisites. Stores input iterables (e.g., lists) as
+dependency graphs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>requirement</strong> – dictionary of iterables.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Requirement.requirement">
+<span class="sig-name descname"><span class="pre">requirement</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">networkx.classes.digraph.DiGraph</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.Requirement.requirement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of dependency graphs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_gen.core.Requirement.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_gen.core.Requirement" title="zoti_gen.core.Requirement"><span class="pre">zoti_gen.core.Requirement</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#Requirement.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Requirement.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>merges two <code class="docutils literal notranslate"><span class="pre">Requirement</span></code> entries updating the dependency
+graphs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_gen.core.Requirement.dep_list">
+<span class="sig-name descname"><span class="pre">dep_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference internal" href="_modules/zoti_gen/core.html#Requirement.dep_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Requirement.dep_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with the solved dependencies for a certain
+requirement type.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.core.Label">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.core.</span></span><span class="sig-name descname"><span class="pre">Label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage:</span> <span class="pre">zoti_gen.core.TemplateFun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">glue:</span> <span class="pre">typing.Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info:</span> <span class="pre">typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#Label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Carries information about labels (filled in by type system)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Label.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_gen.core.Label.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique name in the scope of a block</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Label.usage">
+<span class="sig-name descname"><span class="pre">usage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_gen.core.TemplateFun" title="zoti_gen.core.TemplateFun"><span class="pre">zoti_gen.core.TemplateFun</span></a></em><a class="headerlink" href="#zoti_gen.core.Label.usage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default usage template. Called on top-level (non-binding) instances.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Label.glue">
+<span class="sig-name descname"><span class="pre">glue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_gen.core.Label.glue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of templates passed from the type system.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.core.Instance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.core.</span></span><span class="sig-name descname"><span class="pre">Instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">placeholder:</span> <span class="pre">typing.Optional[str],</span> <span class="pre">block:</span> <span class="pre">typing.Optional[typing.Dict],</span> <span class="pre">directive:</span> <span class="pre">typing.List[str],</span> <span class="pre">bind:</span> <span class="pre">typing.List[zoti_gen.core.Bind],</span> <span class="pre">usage:</span> <span class="pre">zoti_gen.core.TemplateFun,</span> <span class="pre">_info:</span> <span class="pre">typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#Instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry binding a placeholder in the parent’s template code to
+another block.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Instance.placeholder">
+<span class="sig-name descname"><span class="pre">placeholder</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.Instance.placeholder" title="Permalink to this definition">¶</a></dt>
+<dd><p>ID for the template placeholder</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Instance.block">
+<span class="sig-name descname"><span class="pre">block</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.Instance.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>ID of the block referenced to fill the placeholder</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Instance.bind">
+<span class="sig-name descname"><span class="pre">bind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_gen.core.Bind" title="zoti_gen.core.Bind"><span class="pre">zoti_gen.core.Bind</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.Instance.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of bindings between the parent block and referenced block</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Instance.usage">
+<span class="sig-name descname"><span class="pre">usage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_gen.core.TemplateFun" title="zoti_gen.core.TemplateFun"><span class="pre">zoti_gen.core.TemplateFun</span></a></em><a class="headerlink" href="#zoti_gen.core.Instance.usage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Target-dependent template passed by type system</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.core.Bind">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.core.</span></span><span class="sig-name descname"><span class="pre">Bind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args:</span> <span class="pre">typing.Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info:</span> <span class="pre">typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#Bind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialized version of a binding, containing directily bind
+resolver arguments.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Bind.func">
+<span class="sig-name descname"><span class="pre">func</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_gen.core.Bind.func" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the binding function (see schema entries)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Bind.args">
+<span class="sig-name descname"><span class="pre">args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_gen.core.Bind.args" title="Permalink to this definition">¶</a></dt>
+<dd><p>arguments passed to the binding function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.core.Ref">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.core.</span></span><span class="sig-name descname"><span class="pre">Ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#Ref"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.Ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hashable reference to a user block or a library component.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Ref.module">
+<span class="sig-name descname"><span class="pre">module</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_gen.core.Ref.module" title="Permalink to this definition">¶</a></dt>
+<dd><p>qualified name of module</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.Ref.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_gen.core.Ref.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of block</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_gen.core.TemplateFun">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.core.</span></span><span class="sig-name descname"><span class="pre">TemplateFun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/core.html#TemplateFun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.core.TemplateFun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for a template function.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.TemplateFun.attr">
+<span class="sig-name descname"><span class="pre">attr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_gen.core.TemplateFun.attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the parent node  of this template function (for debugging)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.TemplateFun.args">
+<span class="sig-name descname"><span class="pre">args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.TemplateFun.args" title="Permalink to this definition">¶</a></dt>
+<dd><p>template arguments</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_gen.core.TemplateFun.template">
+<span class="sig-name descname"><span class="pre">template</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_gen.core.TemplateFun.template" title="Permalink to this definition">¶</a></dt>
+<dd><p>formatted string template</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-zoti_gen.exceptions">
+<span id="exceptions"></span><h2>Exceptions<a class="headerlink" href="#module-zoti_gen.exceptions" title="Permalink to this heading">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="zoti_gen.exceptions.ValidationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.exceptions.</span></span><span class="sig-name descname"><span class="pre">ValidationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">what</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/exceptions.html#ValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.exceptions.ValidationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised during the validation of the ZOTI schema.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="zoti_gen.exceptions.ParseError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.exceptions.</span></span><span class="sig-name descname"><span class="pre">ParseError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">what</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/exceptions.html#ParseError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.exceptions.ParseError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="zoti_gen.exceptions.ModelError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.exceptions.</span></span><span class="sig-name descname"><span class="pre">ModelError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">what</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/exceptions.html#ModelError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.exceptions.ModelError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="zoti_gen.exceptions.TemplateError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoti_gen.exceptions.</span></span><span class="sig-name descname"><span class="pre">TemplateError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">err_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">err_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Jinja</span> <span class="pre">raised</span> <span class="pre">error</span> <span class="pre">when</span> <span class="pre">processing</span> <span class="pre">template'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_gen/exceptions.html#TemplateError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.exceptions.TemplateError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps a Jinja template error into a friendlier message.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">zoti-gen</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="input-format.html">Input Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-libs.html">Template Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rendering.html">Rendering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-zoti_gen.handler">The Project Handler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-code-renderer">The Code Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-core-representation">The Core Representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-zoti_gen.exceptions">Exceptions</a></li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-tran">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="tutorial.html" title="previous chapter">Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/api-reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,688 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zoti_gen.core &#8212; zoti-gen 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for zoti_gen.core</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">Template</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">marshmallow</span> <span class="k">as</span> <span class="nn">mm</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">zoti_yaml</span> <span class="k">as</span> <span class="nn">zoml</span>
+
+<span class="n">ATTR_NAME</span> <span class="o">=</span> <span class="s2">&quot;name&quot;</span>
+<span class="n">ATTR_BLOCK</span> <span class="o">=</span> <span class="s2">&quot;block&quot;</span>
+<span class="n">ATTR_TYPE</span> <span class="o">=</span> <span class="s2">&quot;type&quot;</span>
+<span class="n">ATTR_PH</span> <span class="o">=</span> <span class="s2">&quot;placeholder&quot;</span>
+<span class="n">ATTR_CODE</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+<span class="n">ATTR_PROTO</span> <span class="o">=</span> <span class="s2">&quot;prototype&quot;</span>
+<span class="n">ATTR_USAGE</span> <span class="o">=</span> <span class="s2">&quot;usage&quot;</span>
+
+<span class="n">PRAGMA_PASS</span> <span class="o">=</span> <span class="s2">&quot;pass&quot;</span>
+<span class="n">PRAGMA_NEW</span> <span class="o">=</span> <span class="s2">&quot;new&quot;</span>
+<span class="n">PRAGMA_EXP</span> <span class="o">=</span> <span class="s2">&quot;expand&quot;</span>
+
+<span class="n">FUN_CHECK</span> <span class="o">=</span> <span class="s2">&quot;check&quot;</span>          <span class="c1"># member of library component</span>
+<span class="n">FUN_LTOL</span> <span class="o">=</span> <span class="s2">&quot;label_to_label&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
+<span class="n">FUN_UTOL</span> <span class="o">=</span> <span class="s2">&quot;usage_to_label&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
+<span class="n">FUN_PTOP</span> <span class="o">=</span> <span class="s2">&quot;param_to_param&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
+<span class="n">FUN_VTOP</span> <span class="o">=</span> <span class="s2">&quot;value_to_param&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
+
+<span class="n">KEYS_PRAGMA</span> <span class="o">=</span> <span class="p">[</span><span class="n">PRAGMA_PASS</span><span class="p">,</span> <span class="n">PRAGMA_NEW</span><span class="p">,</span> <span class="n">PRAGMA_EXP</span><span class="p">]</span>
+<span class="n">KEYS_BIND</span> <span class="o">=</span> <span class="p">[</span><span class="n">FUN_LTOL</span><span class="p">,</span> <span class="n">FUN_UTOL</span><span class="p">,</span> <span class="n">FUN_PTOP</span><span class="p">,</span> <span class="n">FUN_VTOP</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">Nested</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nested</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Nested</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">nested</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Nested</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_deserialize</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">zoml</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                <span class="n">error</span><span class="o">.</span><span class="n">messages</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">zoml</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(</span><span class="n">node</span><span class="p">)),</span> <span class="n">error</span><span class="o">.</span><span class="n">messages</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">error</span>
+
+
+<div class="viewcode-block" id="TemplateFun"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.TemplateFun">[docs]</a><span class="k">class</span> <span class="nc">TemplateFun</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for a template function.&quot;&quot;&quot;</span>
+
+    <span class="n">template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;formatted string template&quot;&quot;&quot;</span>
+
+    <span class="n">args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;template arguments&quot;&quot;&quot;</span>
+
+    <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;name of the parent node  of this template function (for debugging)&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="p">[],</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">) -&gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot render empty template for field &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">args</span><span class="p">)),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">)</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">TemplateFunField</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A template function is a Shell-like formatted string where all the</span>
+<span class="sd">    variables are exposed as arguments. This function is meant to be</span>
+<span class="sd">    called by the `Rendering &lt;rendering&gt;`_ engine which would fill in</span>
+<span class="sd">    the arguments.</span>
+
+<span class="sd">    As entry to an input specification node, a template function is</span>
+<span class="sd">    provided as a list of strings, where the first elements are the</span>
+<span class="sd">    arguments and the last argument is the formatted string. For</span>
+<span class="sd">    example the YAML entry:</span>
+
+<span class="sd">    ..  code-block:: yaml</span>
+
+<span class="sd">        [a, b, c, &quot;text with $a, then $b and also $c!&quot;]</span>
+
+<span class="sd">    is parsed internally to a lambda function as follows:</span>
+
+<span class="sd">    ..  code-block:: python</span>
+
+<span class="sd">        lambda a, b, c: &quot;text with $a, then $b and also $c!&quot;</span>
+
+<span class="sd">    The formatted string syntax is documented `here</span>
+<span class="sd">    &lt;https://docs.python.org/3/library/string.html#template-strings&gt;`_.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;Expected TemplateFun arguments as a list.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;Expected at least one argument to TemplateFun&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TemplateFun</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="o">*</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">args</span> <span class="o">+</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">template</span><span class="p">]</span>
+
+
+<span class="c1">###############</span>
+<span class="c1"># REQUIREMENT #</span>
+<span class="c1">###############</span>
+
+
+<div class="viewcode-block" id="Requirement"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Requirement">[docs]</a><span class="k">class</span> <span class="nc">Requirement</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Illustrates prerquisites. Stores input iterables (e.g., lists) as</span>
+<span class="sd">    dependency graphs.</span>
+
+<span class="sd">    :param requirement: dictionary of iterables.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">requirement</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Dictionary of dependency graphs. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requirement</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">requirement</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">pformat</span><span class="p">({</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">graph</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requirement</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Requirement(</span><span class="si">{</span><span class="n">ret</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+<div class="viewcode-block" id="Requirement.update"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Requirement.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Requirement&quot;</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;merges two ``Requirement`` entries updating the dependency</span>
+<span class="sd">        graphs.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">graph</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">requirement</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requirement</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">requirement</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">requirement</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">graph</span></div>
+
+<div class="viewcode-block" id="Requirement.dep_list"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Requirement.dep_list">[docs]</a>    <span class="k">def</span> <span class="nf">dep_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a list with the solved dependencies for a certain</span>
+<span class="sd">        requirement type.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">dfs_preorder_nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requirement</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span></div>
+
+    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dep_list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requirement</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span></div>
+
+
+<span class="k">class</span> <span class="nc">RequirementSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Illustrates prerequisites for the parent element. Internally it is</span>
+<span class="sd">    represented using a :class:`zoti_gen.core.Requirement` class. It may</span>
+<span class="sd">    contain the following entries:</span>
+
+<span class="sd">    :include: (list) files or modules to be included in the preamble</span>
+<span class="sd">              of the generated target artifact</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">include</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Str</span><span class="p">())</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
+    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Requirement</span><span class="p">(</span><span class="n">requirement</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="c1">############</span>
+<span class="c1"># INSTANCE #</span>
+<span class="c1">############</span>
+
+<div class="viewcode-block" id="Ref"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Ref">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Ref</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hashable reference to a user block or a library component.&quot;&quot;&quot;</span>
+
+    <span class="n">module</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;qualified name of module&quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;name of block&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{self.module}{self.name}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">RefSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A reference is an entry pointing to an object by its qualified name</span>
+<span class="sd">    and/or path. Since ZOTI-Gen documents are flat (i.e., they consist</span>
+<span class="sd">    in a flat list of block descriptions), and the only objects</span>
+<span class="sd">    referenced in ZOTI-Gen are blocks, the only access mechanism</span>
+<span class="sd">    implemented is referencing by (block) name. Hence, every reference</span>
+<span class="sd">    entry will have the following mandatory fields:</span>
+
+<span class="sd">    :module: *(string)* the full (dot-separated) name of module</span>
+<span class="sd">      containing the referenced block, even if that means the current</span>
+<span class="sd">      module.</span>
+
+<span class="sd">    :name: *(string)* the name of the referenced block.</span>
+
+<span class="sd">    For less verbose reference syntax one could check the ``!ref``</span>
+<span class="sd">    keyword in the `ZOTI-YAML &lt;../zoti-yaml&gt;`_ language extension and</span>
+<span class="sd">    pre-processor.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
+    <span class="k">def</span> <span class="nf">make_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Ref</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Bind"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Bind">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Bind</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deserialized version of a binding, containing directily bind</span>
+<span class="sd">    resolver arguments.&quot;&quot;&quot;</span>
+
+    <span class="n">func</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;name of the binding function (see schema entries)&quot;&quot;&quot;</span>
+
+    <span class="n">args</span><span class="p">:</span> <span class="n">Dict</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;arguments passed to the binding function&quot;&quot;&quot;</span>
+
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span></div>
+
+
+<span class="k">class</span> <span class="nc">BindSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A binding between one of the labels or parameters of the parent</span>
+<span class="sd">    block and a label or parameter of the referenced block.</span>
+<span class="sd">    Internally it is represented using a :class:`zoti_gen.core.Bind`</span>
+<span class="sd">    class. It may contain one of the following entries:</span>
+
+<span class="sd">    :label_to_label: (dict)</span>
+
+<span class="sd">        :parent: (str)</span>
+<span class="sd">        :child: (str)</span>
+<span class="sd">        :usage: (`Template Function &lt;#template-function&gt;`_)</span>
+
+<span class="sd">    :usage_to_label: (dict)</span>
+
+<span class="sd">        :child: (str)</span>
+<span class="sd">        :usage: (`Template Function &lt;#template-function&gt;`_)</span>
+
+
+<span class="sd">    :param_to_param: (dict)</span>
+
+<span class="sd">        :parent: (str)</span>
+<span class="sd">        :child: (str)</span>
+
+
+<span class="sd">    :value_to_param: (dict)</span>
+
+<span class="sd">        :value: (str)</span>
+<span class="sd">        :child: (str) </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">label_to_label</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;parent&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">usage_to_label</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">param_to_param</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;parent&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">value_to_param</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="s2">&quot;_info&quot;</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
+    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">func</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">KEYS_BIND</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Bind</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;_info&quot;</span><span class="p">])</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_dump</span><span class="p">(</span><span class="n">pass_original</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">dump_bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">orig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">orig</span><span class="o">.</span><span class="n">func</span><span class="p">:</span> <span class="n">orig</span><span class="o">.</span><span class="n">args</span><span class="p">}</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">validates_schema</span>
+    <span class="k">def</span> <span class="nf">validate_bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">allowed</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">KEYS_BIND</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">allowed</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Only one of the following key is allowed: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">KEYS_BIND</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Instance"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Instance">[docs]</a><span class="nd">@dataclass</span>  <span class="c1"># (init=False)</span>
+<span class="k">class</span> <span class="nc">Instance</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Entry binding a placeholder in the parent&#39;s template code to</span>
+<span class="sd">    another block.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">placeholder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; ID for the template placeholder &quot;&quot;&quot;</span>
+
+    <span class="n">block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; ID of the block referenced to fill the placeholder &quot;&quot;&quot;</span>
+
+    <span class="n">directive</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="n">bind</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Bind</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; list of bindings between the parent block and referenced block &quot;&quot;&quot;</span>
+
+    <span class="n">usage</span><span class="p">:</span> <span class="n">TemplateFun</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Target-dependent template passed by type system &quot;&quot;&quot;</span>
+
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span></div>
+
+
+<span class="k">class</span> <span class="nc">InstanceSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Refers to another block and (at minimum) triggers its evaluation by</span>
+<span class="sd">    the the `Rendering &lt;rendering&gt;`_ engine. It can define an</span>
+<span class="sd">    inclusion relation between the parent and the referenced blocks,</span>
+<span class="sd">    in which case the referenced one would occupy the space pointed</span>
+<span class="sd">    out by a *placeholder* markup in the parent&#39;s</span>
+<span class="sd">    template. Furthermore, the relation between the two blocks can be</span>
+<span class="sd">    enforced by a set of *bindings* that connects the labels and</span>
+<span class="sd">    parameters of the two blocks. Internally, aln instance is</span>
+<span class="sd">    represented using a :class:`zoti_gen.core.Instance` class.</span>
+
+<span class="sd">    To define a block instance within the parent block the following</span>
+<span class="sd">    entries might be used:</span>
+
+<span class="sd">    :block: (`Reference &lt;#reference&gt;`_) points to an existing</span>
+<span class="sd">        (i.e. loaded) block.</span>
+
+<span class="sd">    :placeholder: (string) the name of the placeholder, as it appears</span>
+<span class="sd">        in the parent&#39;s `Code Template &lt;#code-template&gt;`_.</span>
+
+<span class="sd">    :directive: (list of strings) directive flags passed to the</span>
+<span class="sd">        `Rendering &lt;rendering&gt;`_ engine.</span>
+
+<span class="sd">    :`bind &lt;#bind&gt;`_: (list) bindings between the labels and</span>
+<span class="sd">        parameters of the parent block and those of the referenced</span>
+<span class="sd">        block.</span>
+
+<span class="sd">    :usage: (`Template Function &lt;#template-function&gt;`_) defines how</span>
+<span class="sd">        this block is being instantiated in case it is not expanded</span>
+<span class="sd">        inline (e.g., as function call). The template string is</span>
+<span class="sd">        defined by the type system.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">placeholder</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span><span class="n">RefSchema</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">directive</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">validate</span><span class="o">=</span><span class="n">mm</span><span class="o">.</span><span class="n">validate</span><span class="o">.</span><span class="n">OneOf</span><span class="p">(</span><span class="n">KEYS_PRAGMA</span><span class="p">)),</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">[]</span>
+    <span class="p">)</span>
+    <span class="n">bind</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">Nested</span><span class="p">(</span><span class="n">BindSchema</span><span class="p">),</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">[])</span>
+    <span class="c1"># usage = mm.fields.String(required=False)</span>
+    <span class="n">usage</span> <span class="o">=</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">load_default</span><span class="o">=</span><span class="n">TemplateFun</span><span class="p">(</span><span class="s2">&quot;instance/usage&quot;</span><span class="p">))</span>
+    <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="s2">&quot;_info&quot;</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
+    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Instance</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="c1">#########</span>
+<span class="c1"># LABEL #</span>
+<span class="c1">#########</span>
+
+
+<div class="viewcode-block" id="Label"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Label">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Label</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Carries information about labels (filled in by type system) &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Unique name in the scope of a block&quot;&quot;&quot;</span>
+
+    <span class="n">usage</span><span class="p">:</span> <span class="n">TemplateFun</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Default usage template. Called on top-level (non-binding) instances.&quot;&quot;&quot;</span>
+
+    <span class="n">glue</span><span class="p">:</span> <span class="n">Dict</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dictionary of templates passed from the type system.&quot;&quot;&quot;</span>
+
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span></div>
+
+
+<span class="k">class</span> <span class="nc">LabelSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A label is the low-level code equivalent of a &#39;port&#39;. Its function</span>
+<span class="sd">    is to provide a name which can be used in bindings and glue</span>
+<span class="sd">    generation. Internally it is represented using a</span>
+<span class="sd">    :class:`zoti_gen.core.Label` class.</span>
+
+<span class="sd">    :name: (string) unique ID in the scope of the parent block</span>
+
+<span class="sd">    :usage: (`Template Function &lt;#template-function&gt;`_) defines how</span>
+<span class="sd">        this label is to be expanded in the code. Provided by the type</span>
+<span class="sd">        system.</span>
+
+<span class="sd">    :glue: (dict) entries with glue code tailored for various</span>
+<span class="sd">        circumstances, provided by the type system and accessible from</span>
+<span class="sd">        within the code template using the `label.&lt;port_id&gt;.glue` key.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Str</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">usage</span> <span class="o">=</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">glue</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span>
+        <span class="n">keys</span><span class="o">=</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># , validate=mm.validate.NoneOf([&quot;name&quot;])</span>
+        <span class="p">),</span>
+        <span class="c1"># values=TemplateFunField(),  # TODO</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(),</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
+    <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="s2">&quot;_info&quot;</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
+    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Label</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">LabelListField</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">Nested</span><span class="p">(</span><span class="n">LabelSchema</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LabelListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdict</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pdict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">_serialize</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pdict</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pdict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plist</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">plist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plist</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;Duplicate names in label list&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">OrderedDict</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">_deserialize</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">plist</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plist</span>
+        <span class="p">])</span>
+
+
+<span class="c1">#########</span>
+<span class="c1"># BLOCK #</span>
+<span class="c1">#########</span>
+
+
+<div class="viewcode-block" id="Block"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Block">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Block</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Base class for block structure. &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">Schema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A block describes a unit of code that might be related to other</span>
+<span class="sd">        blocks through bindings and might contain a</span>
+<span class="sd">        template. Internally it is represented using a</span>
+<span class="sd">        :class:`zoti_gen.core.Block` class. Blocks are described using</span>
+<span class="sd">        the following entries;</span>
+
+<span class="sd">        :name: (mandatory, string) the unique ID of the block</span>
+
+<span class="sd">        :type: (`Reference &lt;#reference&gt;`_) points to an</span>
+<span class="sd">            externally-defined library template which would fill in</span>
+<span class="sd">            the corresponding entries below, as documented in</span>
+<span class="sd">            `Template Libraries &lt;template-libs&gt;`_ page.</span>
+
+<span class="sd">        :`requirement &lt;#requirement&gt;`_: (dict) block prerequisites</span>
+
+<span class="sd">        :`label &lt;#label&gt;`_: (list) label entries, each with a</span>
+<span class="sd">            unique name</span>
+
+<span class="sd">        :param: (dict) generic parameters passed as-is to the template</span>
+<span class="sd">            renderer, accessed with the `param` key.</span>
+
+<span class="sd">        :`instance &lt;#instance&gt;`_: (list) other blocks instantiated</span>
+<span class="sd">            from this one.</span>
+
+<span class="sd">        :code: (string) containing this block&#39;s `Code Template</span>
+<span class="sd">            &lt;#code-template&gt;`_</span>
+
+<span class="sd">        :prototype: (`Template Function &lt;#template-function&gt;`_) defines</span>
+<span class="sd">            this block&#39;s type signature, as provided from a type</span>
+<span class="sd">            system.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">requirement</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span><span class="n">RequirementSchema</span><span class="p">)</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">LabelListField</span><span class="p">()</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">prototype</span> <span class="o">=</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">Nested</span><span class="p">(</span><span class="n">InstanceSchema</span><span class="p">),</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="s2">&quot;_info&quot;</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
+
+        <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
+        <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Block</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Unique ID of block. &quot;&quot;&quot;</span>
+
+    <span class="n">prototype</span><span class="p">:</span> <span class="n">TemplateFun</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">TemplateFun</span><span class="p">(</span><span class="s2">&quot;prototype&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Target dependent function signature provided by the type system &quot;&quot;&quot;</span>
+
+    <span class="n">requirement</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Requirement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Block prerequisites.&quot;&quot;&quot;</span>
+
+    <span class="n">label</span><span class="p">:</span> <span class="n">OrderedDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Label</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">OrderedDict</span><span class="p">())</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Ordered dictionary of labels &quot;&quot;&quot;</span>
+
+    <span class="n">param</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generic parameters &quot;&quot;&quot;</span>
+
+    <span class="n">code</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Target code for block, either as Jinja template or as raw text &quot;&quot;&quot;</span>
+
+    <span class="n">instance</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[])</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;list of instances that bind template (code) placeholders to other</span>
+<span class="sd">    blocks&quot;&quot;&quot;</span>
+
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">zoti-gen</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../input-format.html">Input Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../template-libs.html">Template Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rendering.html">Rendering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api-reference.html">API Reference</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-tran">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

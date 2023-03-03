@@ -1,0 +1,843 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Tutorial &#8212; zoti-gen 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api-reference.html" />
+    <link rel="prev" title="Rendering" href="rendering.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this heading">¶</a></h1>
+<p>This tutorial goes through a simple example generating a C file from an
+input block specification.  For this example the running sources are
+found in the <code class="docutils literal notranslate"><span class="pre">tests/inputs</span></code> folder of the ZOTI-Gen project root.</p>
+<p>The target file which we are trying to obtain in this tutorial is a C
+file representing the sequential implementation of a moving-average
+algorithm applied on a sequence of numbers. It consists in a composite
+pattern described functionally as</p>
+<div class="math notranslate nohighlight">
+\[mav_1 (x) = \mathtt{ShiftMap}(\mathtt{MapReduce}(\mathtt{mulacc}))(x)\]</div>
+<section id="specification-files">
+<h2>Specification Files<a class="headerlink" href="#specification-files" title="Permalink to this heading">¶</a></h2>
+<p>We define the code blocks structure for the implemented system in the
+files <code class="docutils literal notranslate"><span class="pre">main.yaml</span></code> representing module <code class="docutils literal notranslate"><span class="pre">main</span></code> and <code class="docutils literal notranslate"><span class="pre">genspec_leafs.yaml</span></code>
+representing module <code class="docutils literal notranslate"><span class="pre">genspec_leafs</span></code>.</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">main.yaml</span><a class="headerlink" href="#id3" title="Permalink to this code">¶</a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+<span class="linenos"> 2</span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0.1.0&#39;</span>
+<span class="linenos"> 3</span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Source for tutorial</span>
+<span class="linenos"> 4</span><span class="nt">top</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+<span class="linenos"> 5</span><span class="nn">---</span>
+<span class="linenos"> 6</span><span class="nt">block</span><span class="p">:</span>
+<span class="linenos"> 7</span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+<span class="linenos"> 8</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">Generic</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">Infinite</span><span class="p p-Indicator">}</span>
+<span class="linenos"> 9</span><span class="w">  </span><span class="nt">prototype</span><span class="p">:</span>
+<span class="linenos">10</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;name&quot;</span>
+<span class="linenos">11</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="linenos">12</span><span class="w">      </span><span class="no">int $name(void) {</span>
+<span class="linenos">13</span><span class="w">        </span><span class="no">int input[10];</span>
+<span class="linenos">14</span><span class="w">        </span><span class="no">int output[10];</span>
+<span class="linenos">15</span><span class="w">        </span><span class="no">int COEF[4] = {1, 2, 2, 1};</span>
+<span class="linenos">16</span><span class="w">        </span><span class="no">{{placeholder[&#39;code&#39;]}}</span>
+<span class="linenos">17</span><span class="w">      </span><span class="no">} </span>
+<span class="linenos">18</span><span class="w">  </span><span class="nt">label</span><span class="p">:</span>
+<span class="linenos">19</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">input</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">20</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">output</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">21</span><span class="w">  </span><span class="nt">param</span><span class="p">:</span>
+<span class="linenos">22</span><span class="w">    </span><span class="nt">schedule</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;readio&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;exec&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;writeio&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">23</span><span class="w">    </span><span class="nt">myformat</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;\&quot;%d\&quot;&quot;</span><span class="w"> </span><span class="c1"># TEST</span>
+<span class="linenos">24</span><span class="w">  </span><span class="nt">instance</span><span class="p">:</span>
+<span class="linenos">25</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">placeholder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readio</span>
+<span class="linenos">26</span><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">Generic.IO</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">ReadArray</span><span class="p p-Indicator">}</span>
+<span class="linenos">27</span><span class="w">    </span><span class="nt">directive</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;expand&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">28</span><span class="w">    </span><span class="nt">bind</span><span class="p">:</span>
+<span class="linenos">29</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">value_to_param</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;\&quot;%d\&quot;&quot;</span><span class="p p-Indicator">,</span><span class="nt"> child</span><span class="p">:</span><span class="w"> </span><span class="nv">format</span><span class="p p-Indicator">}</span>
+<span class="linenos">30</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">value_to_param</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10&quot;</span><span class="p p-Indicator">,</span><span class="nt"> child</span><span class="p">:</span><span class="w"> </span><span class="nv">size</span><span class="p p-Indicator">}</span>
+<span class="linenos">31</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">parent</span><span class="p">:</span><span class="w"> </span><span class="nv">input</span><span class="p p-Indicator">,</span><span class="nt"> child</span><span class="p">:</span><span class="w"> </span><span class="nv">arg</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">32</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">placeholder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">writeio</span>
+<span class="linenos">33</span><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">Generic.IO</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">PrintArray</span><span class="p p-Indicator">}</span>
+<span class="linenos">34</span><span class="w">    </span><span class="nt">directive</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;expand&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">35</span><span class="w">    </span><span class="nt">bind</span><span class="p">:</span>
+<span class="linenos">36</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">value_to_param</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10&quot;</span><span class="p p-Indicator">,</span><span class="nt"> child</span><span class="p">:</span><span class="w"> </span><span class="nv">size</span><span class="p p-Indicator">}</span>
+<span class="linenos">37</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">param_to_param</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">format</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">myformat</span><span class="p p-Indicator">}</span>
+<span class="linenos">38</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">arg</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">output</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">39</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">placeholder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">exec</span>
+<span class="linenos">40</span><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">main</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">mav_1</span><span class="p p-Indicator">}</span>
+<span class="linenos">41</span><span class="w">    </span><span class="nt">directive</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;expand&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">42</span><span class="w">    </span><span class="nt">bind</span><span class="p">:</span><span class="w"> </span>
+<span class="linenos">43</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">in1</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">input</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">44</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">out1</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">output</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">45</span><span class="w">    </span><span class="nt">usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;int</span><span class="nv"> </span><span class="s">_it;\nint</span><span class="nv"> </span><span class="s">_range;\n{{placeholder[&#39;code&#39;]}}&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">46</span>
+<span class="linenos">47</span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mav_1</span>
+<span class="linenos">48</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">Skeleton.Compute</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">ShiftFarm</span><span class="p p-Indicator">}</span>
+<span class="linenos">49</span><span class="w">  </span><span class="nt">label</span><span class="p">:</span>
+<span class="linenos">50</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">in1</span><span class="p p-Indicator">,</span><span class="nt">    usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">51</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">out1</span><span class="p p-Indicator">,</span><span class="nt">   usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">52</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">COEF</span><span class="p p-Indicator">,</span><span class="nt">   usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">53</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">_it</span><span class="p p-Indicator">,</span><span class="nt">    usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span><span class="w"> </span>
+<span class="linenos">54</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">_range</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">55</span><span class="w">  </span><span class="nt">param</span><span class="p">:</span>
+<span class="linenos">56</span><span class="w">    </span><span class="nt">iterate_over</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">in1</span><span class="p p-Indicator">]</span>
+<span class="linenos">57</span><span class="w">  </span><span class="nt">instance</span><span class="p">:</span>
+<span class="linenos">58</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">placeholder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">f</span>
+<span class="linenos">59</span><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">main</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">fred_1</span><span class="p p-Indicator">}</span>
+<span class="linenos">60</span><span class="w">    </span><span class="nt">directive</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;expand&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">61</span><span class="w">    </span><span class="nt">bind</span><span class="p">:</span>
+<span class="linenos">62</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span>
+<span class="linenos">63</span><span class="w">        </span><span class="p p-Indicator">{</span><span class="nt">parent</span><span class="p">:</span><span class="w"> </span><span class="nv">in1</span><span class="p p-Indicator">,</span><span class="nt"> child</span><span class="p">:</span><span class="w"> </span><span class="nv">in1</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}+{{label._it.name}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">64</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">in2</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">COEF</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">65</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">size1</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">_range</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">66</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span>
+<span class="linenos">67</span><span class="w">        </span><span class="p p-Indicator">{</span><span class="nt">parent</span><span class="p">:</span><span class="w"> </span><span class="nv">out1</span><span class="p p-Indicator">,</span><span class="nt"> child</span><span class="p">:</span><span class="w"> </span><span class="nv">out1</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}[{{label._it.name}}]&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">68</span><span class="w">    </span><span class="nt">usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;int</span><span class="nv"> </span><span class="s">_it0;\nint</span><span class="nv"> </span><span class="s">_acc;\n{{placeholder[&#39;code&#39;]}}&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">69</span>
+<span class="linenos">70</span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_1</span>
+<span class="linenos">71</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">Skeleton.Compute</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">FarmRed_Acc</span><span class="p p-Indicator">}</span>
+<span class="linenos">72</span><span class="w">  </span><span class="nt">label</span><span class="p">:</span>
+<span class="linenos">73</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">in1</span><span class="p p-Indicator">,</span><span class="nt">   usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">74</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">in2</span><span class="p p-Indicator">,</span><span class="nt">   usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">75</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">size1</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">76</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">out1</span><span class="p p-Indicator">,</span><span class="nt">  usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">77</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">_acc</span><span class="p p-Indicator">,</span><span class="nt">  usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">78</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">_it</span><span class="p p-Indicator">,</span><span class="nt">   usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">79</span><span class="w">  </span><span class="nt">param</span><span class="p">:</span>
+<span class="linenos">80</span><span class="w">    </span><span class="nt">iterate_over</span><span class="p">:</span>
+<span class="linenos">81</span><span class="w">      </span><span class="nt">size1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> range</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p p-Indicator">}</span>
+<span class="linenos">82</span><span class="w">      </span><span class="nt">in2</span><span class="p">:</span>
+<span class="linenos">83</span><span class="w">  </span><span class="nt">instance</span><span class="p">:</span>
+<span class="linenos">84</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">placeholder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">f</span>
+<span class="linenos">85</span><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">genspec_leafs</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">mulacc</span><span class="p p-Indicator">}</span>
+<span class="linenos">86</span><span class="w">    </span><span class="c1"># directive: [&quot;expand&quot;]</span>
+<span class="linenos">87</span><span class="w">    </span><span class="nt">usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">name</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">i1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">i2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">acc</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">o</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;$name({{label.$i1.name}},</span><span class="nv"> </span><span class="s">{{label.$i2.name}},</span><span class="nv"> </span><span class="s">{{label.$acc.name}},</span><span class="nv"> </span><span class="s">{{label.$o.name}})&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">88</span><span class="w">    </span><span class="nt">bind</span><span class="p">:</span>
+<span class="linenos">89</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span>
+<span class="linenos">90</span><span class="w">        </span><span class="nt">parent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">in1</span>
+<span class="linenos">91</span><span class="w">        </span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">in1</span>
+<span class="linenos">92</span><span class="w">        </span><span class="nt">usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;({{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}})[{{label._it.name}}]&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">93</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span>
+<span class="linenos">94</span><span class="w">        </span><span class="nt">parent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">in2</span>
+<span class="linenos">95</span><span class="w">        </span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">in2</span>
+<span class="linenos">96</span><span class="w">        </span><span class="nt">usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}[{{label._it.name}}]&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">97</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">acc</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">_acc</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">98</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">label_to_label</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">child</span><span class="p">:</span><span class="w"> </span><span class="nv">out</span><span class="p p-Indicator">,</span><span class="nt"> parent</span><span class="p">:</span><span class="w"> </span><span class="nv">_acc</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+</pre></div>
+</div>
+</div>
+<p>Notice the definition of <code class="docutils literal notranslate"><span class="pre">mav_1</span></code> which is an implementation of
+component <code class="docutils literal notranslate"><span class="pre">Skeleton.Compute.ShiftFarm</span></code> (i.e., the shift-map pattern)
+and instantiates block <code class="docutils literal notranslate"><span class="pre">fred_1</span></code> which is an implementation of
+<code class="docutils literal notranslate"><span class="pre">Skeleton.Compute.FarmRed_Acc</span></code> (i.e., the map-reduce pattern with an
+accumulator). The latter instantiates <code class="docutils literal notranslate"><span class="pre">mulacc</span></code> defined below as a
+regular block, containing the “native” kernel code in its <code class="docutils literal notranslate"><span class="pre">code</span></code>
+entry. Also note that the top block <code class="docutils literal notranslate"><span class="pre">main</span></code> implements a
+<code class="docutils literal notranslate"><span class="pre">Generic.Infinite</span></code> template (i.e., an infinite loop) scheduling three
+placeholders as of its <code class="docutils literal notranslate"><span class="pre">param/schedule</span></code>: <code class="docutils literal notranslate"><span class="pre">readio</span></code> (for reading a
+stream of input numbers), <code class="docutils literal notranslate"><span class="pre">exec</span></code> (expanding the <code class="docutils literal notranslate"><span class="pre">mav_1</span></code> block) and
+<code class="docutils literal notranslate"><span class="pre">writeio</span></code> (for printing the results to the terminal).</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">genspec_leafs.yaml</span><a class="headerlink" href="#id4" title="Permalink to this code">¶</a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">genspec_leafs</span>
+<span class="linenos"> 2</span><span class="nt">top</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mulacc</span>
+<span class="linenos"> 3</span><span class="nn">---</span>
+<span class="linenos"> 4</span><span class="nt">block</span><span class="p">:</span>
+<span class="linenos"> 5</span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mulacc</span>
+<span class="linenos"> 6</span><span class="w">  </span><span class="nt">label</span><span class="p">:</span>
+<span class="linenos"> 7</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">in1</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos"> 8</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">in2</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos"> 9</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">acc</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">10</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">out</span><span class="p p-Indicator">,</span><span class="nt"> usage</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;p&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">label.$p.name</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="p p-Indicator">]}</span>
+<span class="linenos">11</span><span class="w">  </span><span class="nt">prototype</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">name</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">i1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">i2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">acc</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">o</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;void</span><span class="nv"> </span><span class="s">$name($i1,</span><span class="nv"> </span><span class="s">$i2,</span><span class="nv"> </span><span class="s">$acc,</span><span class="nv"> </span><span class="s">&amp;$o)</span><span class="nv"> </span><span class="s">{\n</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">placeholder[&#39;code&#39;]</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">\n};&quot;</span><span class="p p-Indicator">]</span>
+<span class="linenos">12</span><span class="w">  </span><span class="nt">code</span><span class="p">:</span>
+<span class="linenos">13</span><span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">out = acc + in1 * in2;</span>
+</pre></div>
+</div>
+</div>
+<p>Notice that the input specification is as verbose as it needs to be to
+facilitate the parsing of data. This is because these files are not
+meant to be written by humans, much rather generated by upstream
+tools<a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. Also, the convenient information in the <code class="docutils literal notranslate"><span class="pre">usage</span></code> and
+<code class="docutils literal notranslate"><span class="pre">prototype</span></code> entries is also meant to be provided by an upstream
+pre-processor with the help of a type system, but this is outside the
+scope of ZOTI-Gen.</p>
+</section>
+<section id="bindings-and-names">
+<h2>Bindings and Names<a class="headerlink" href="#bindings-and-names" title="Permalink to this heading">¶</a></h2>
+<p>After resolving the structure here is how the block components look
+like. Pay attention to the label bindings, as well as their resolved
+names, as compared to their initial description.</p>
+<div class="graphviz"><img src="_images/graphviz-f8712fd096d0331bbe75ce15dca5a3389428b4cb.png" alt="digraph G {
+	graph [bb=&quot;0,0,966.29,1040&quot;,
+		fontname=Verdana,
+		rankdir=LR
+	];
+	node [label=&quot;\N&quot;];
+	subgraph &quot;cluster_cluster_main.main&quot; {
+		graph [bb=&quot;0.15274,8,958.29,1032&quot;,
+			color=black,
+			fillcolor=white,
+			label=&quot;main : Generic.Generic.Infinite&quot;,
+			lheight=0.21,
+			lp=&quot;479.22,1020.5&quot;,
+			lwidth=2.96,
+			shape=record,
+			style=filled
+		];
+		subgraph &quot;cluster_cluster_main.main.ReadArray&quot; {
+			graph [bb=&quot;586.2,16,837.08,145&quot;,
+				fillcolor=lightgrey,
+				label=&quot;ReadArray : Generic.IO.ReadArray&quot;,
+				lheight=0.21,
+				lp=&quot;711.64,133.5&quot;,
+				lwidth=3.26,
+				shape=record,
+				style=filled
+			];
+			&quot;main.main.ReadArray-arg&quot;	[height=0.5,
+				label=input,
+				pos=&quot;711.14,96&quot;,
+				shape=oval,
+				width=0.97491];
+			&quot;main.main.ReadArray-format&quot;	[height=0.5,
+				label=format,
+				pos=&quot;711.14,42&quot;,
+				shape=parallelogram,
+				width=1.7206];
+		}
+		subgraph &quot;cluster_cluster_main.main.PrintArray&quot; {
+			graph [bb=&quot;296.31,872,543.19,1001&quot;,
+				fillcolor=lightgrey,
+				label=&quot;PrintArray : Generic.IO.PrintArray&quot;,
+				lheight=0.21,
+				lp=&quot;419.75,989.5&quot;,
+				lwidth=3.21,
+				shape=record,
+				style=filled
+			];
+			&quot;main.main.PrintArray-arg&quot;	[height=0.5,
+				label=output,
+				pos=&quot;419.25,898&quot;,
+				shape=oval,
+				width=1.1555];
+			&quot;main.main.PrintArray-format&quot;	[height=0.5,
+				label=format,
+				pos=&quot;419.25,952&quot;,
+				shape=parallelogram,
+				width=1.7206];
+		}
+		subgraph &quot;cluster_cluster_main.main.mav_1&quot; {
+			graph [bb=&quot;8.1527,153,757.49,864&quot;,
+				fillcolor=lightgrey,
+				label=&quot;mav_1 : Skeleton.Compute.ShiftFarm&quot;,
+				lheight=0.21,
+				lp=&quot;382.82,852.5&quot;,
+				lwidth=3.56,
+				shape=record,
+				style=filled
+			];
+			subgraph &quot;cluster_cluster_main.main.mav_1.fred_1&quot; {
+				graph [bb=&quot;16.153,261,481.19,735&quot;,
+					color=black,
+					fillcolor=white,
+					label=&quot;fred_1 : Skeleton.Compute.FarmRed_Acc&quot;,
+					lheight=0.21,
+					lp=&quot;248.67,723.5&quot;,
+					lwidth=3.89,
+					shape=record,
+					style=filled
+				];
+				subgraph &quot;cluster_cluster_main.main.mav_1.fred_1.mulacc&quot; {
+					graph [bb=&quot;24.153,369,237.15,606&quot;,
+						fillcolor=lightgrey,
+						label=&quot;mulacc : zoti_gen.core.Block&quot;,
+						lheight=0.21,
+						lp=&quot;130.65,594.5&quot;,
+						lwidth=2.74,
+						shape=record,
+						style=filled
+					];
+					&quot;main.main.mav_1.fred_1.mulacc-in1&quot;	[height=0.5,
+						label=in1,
+						pos=&quot;130.15,395&quot;,
+						shape=oval,
+						width=0.75];
+					&quot;main.main.mav_1.fred_1.mulacc-in2&quot;	[height=0.5,
+						label=in2,
+						pos=&quot;130.15,449&quot;,
+						shape=oval,
+						width=0.75];
+					&quot;main.main.mav_1.fred_1.mulacc-acc&quot;	[height=0.5,
+						label=acc,
+						pos=&quot;130.15,557&quot;,
+						shape=oval,
+						width=0.75];
+					&quot;main.main.mav_1.fred_1.mulacc-out&quot;	[height=0.5,
+						label=out,
+						pos=&quot;130.15,503&quot;,
+						shape=oval,
+						width=0.75];
+				}
+				&quot;main.main.mav_1.fred_1-in1&quot;	[height=0.5,
+					label=&quot;input+_it&quot;,
+					pos=&quot;419.25,341&quot;,
+					shape=oval,
+					width=1.4985];
+				&quot;main.main.mav_1.fred_1-in2&quot;	[height=0.5,
+					label=COEF,
+					pos=&quot;419.25,449&quot;,
+					shape=oval,
+					width=1.0652];
+				&quot;main.main.mav_1.fred_1-size1&quot;	[height=0.5,
+					label=_range,
+					pos=&quot;130.15,632&quot;,
+					shape=oval,
+					width=1.1735];
+				&quot;main.main.mav_1.fred_1-out1&quot;	[height=0.5,
+					label=&quot;output[_it]&quot;,
+					pos=&quot;130.15,686&quot;,
+					shape=oval,
+					width=1.661];
+				&quot;main.main.mav_1.fred_1-_acc&quot;	[height=0.5,
+					label=_acc,
+					pos=&quot;419.25,530&quot;,
+					shape=oval,
+					width=0.84854];
+				&quot;main.main.mav_1.fred_1-_it&quot;	[height=0.5,
+					label=_it0,
+					pos=&quot;130.15,341&quot;,
+					shape=oval,
+					width=0.77632];
+				&quot;main.main.mav_1.fred_1-iterate_over&quot;	[height=0.5,
+					label=iterate_over,
+					pos=&quot;130.15,287&quot;,
+					shape=parallelogram,
+					width=2.7265];
+				&quot;main.main.mav_1.fred_1.mulacc-in1&quot; -&gt; &quot;main.main.mav_1.fred_1-in1&quot;	[pos=&quot;e,371.88,349.72 156.38,390.26 202.07,381.66 299.54,363.33 361.82,351.61&quot;];
+				&quot;main.main.mav_1.fred_1.mulacc-in2&quot; -&gt; &quot;main.main.mav_1.fred_1-in2&quot;	[pos=&quot;e,380.52,449 157.39,449 205.68,449 309.25,449 370.36,449&quot;];
+				&quot;main.main.mav_1.fred_1.mulacc-acc&quot; -&gt; &quot;main.main.mav_1.fred_1-_acc&quot;	[pos=&quot;e,388.71,532.78 157.14,554.56 207.53,549.82 318.81,539.35 378.53,533.73&quot;];
+				&quot;main.main.mav_1.fred_1.mulacc-out&quot; -&gt; &quot;main.main.mav_1.fred_1-_acc&quot;	[pos=&quot;e,388.71,527.22 157.14,505.44 207.53,510.18 318.81,520.65 378.53,526.27&quot;];
+			}
+			&quot;main.main.mav_1-in1&quot;	[height=0.5,
+				label=input,
+				pos=&quot;711.14,287&quot;,
+				shape=oval,
+				width=0.97491];
+			&quot;main.main.mav_1-out1&quot;	[height=0.5,
+				label=output,
+				pos=&quot;419.25,815&quot;,
+				shape=oval,
+				width=1.1555];
+			&quot;main.main.mav_1-COEF&quot;	[height=0.5,
+				label=COEF,
+				pos=&quot;711.14,449&quot;,
+				shape=oval,
+				width=1.0652];
+			&quot;main.main.mav_1-_it&quot;	[height=0.5,
+				label=_it,
+				pos=&quot;130.15,233&quot;,
+				shape=oval,
+				width=0.75];
+			&quot;main.main.mav_1-_range&quot;	[height=0.5,
+				label=_range,
+				pos=&quot;419.25,761&quot;,
+				shape=oval,
+				width=1.1735];
+			&quot;main.main.mav_1-iterate_over&quot;	[height=0.5,
+				label=iterate_over,
+				pos=&quot;130.15,179&quot;,
+				shape=parallelogram,
+				width=2.7265];
+			&quot;main.main.mav_1.fred_1-in1&quot; -&gt; &quot;main.main.mav_1-in1&quot;	[pos=&quot;e,678.16,293.25 467.27,332.73 490.18,328.66 518.14,323.64 543.19,319 585.79,311.11 634.44,301.74 668.18,295.19&quot;];
+			&quot;main.main.mav_1.fred_1-in2&quot; -&gt; &quot;main.main.mav_1-COEF&quot;	[pos=&quot;e,672.61,449 457.85,449 510.2,449 605.06,449 662.36,449&quot;];
+			&quot;main.main.mav_1.fred_1-size1&quot; -&gt; &quot;main.main.mav_1-_range&quot;	[pos=&quot;e,376.82,761.05 171.56,635.74 192.54,639.23 217.77,645.97 237.15,659 273.85,683.67 258.75,715.65 296.31,739 317.14,751.95 343.61,\
+757.73 366.56,760.16&quot;];
+			&quot;main.main.mav_1.fred_1-out1&quot; -&gt; &quot;main.main.mav_1-out1&quot;	[pos=&quot;e,379.35,809.8 152.84,702.74 183.24,725.39 241.04,765.57 296.31,788 319.48,797.41 346.52,803.82 369.25,808.02&quot;];
+		}
+		&quot;main.main-input&quot;	[height=0.5,
+			label=input,
+			pos=&quot;915.19,191&quot;,
+			shape=oval,
+			width=0.97491];
+		&quot;main.main-output&quot;	[height=0.5,
+			label=output,
+			pos=&quot;711.14,894&quot;,
+			shape=oval,
+			width=1.1555];
+		&quot;main.main-schedule&quot;	[height=0.5,
+			label=schedule,
+			pos=&quot;130.15,79&quot;,
+			shape=parallelogram,
+			width=2.1176];
+		&quot;main.main-myformat&quot;	[height=0.5,
+			label=myformat,
+			pos=&quot;711.14,952&quot;,
+			shape=parallelogram,
+			width=2.2765];
+		&quot;main.main.ReadArray-arg&quot; -&gt; &quot;main.main-input&quot;	[pos=&quot;e,891.21,177.72 739.78,106.82 765.33,117.04 804.2,133.12 837.08,149 852.14,156.27 868.45,165.02 882.17,172.65&quot;];
+		&quot;%3&quot;	[height=0.20833,
+			pos=&quot;419.25,42&quot;,
+			shape=plain,
+			width=0.31944];
+		&quot;%3&quot; -&gt; &quot;main.main.ReadArray-format&quot;	[pos=&quot;e,661.8,42 430.91,42 466.15,42 580.7,42 651.67,42&quot;];
+		&quot;main.main.PrintArray-arg&quot; -&gt; &quot;main.main-output&quot;	[pos=&quot;e,669.33,894.56 460.86,897.44 512.79,896.72 602.73,895.48 659.2,894.7&quot;];
+		&quot;main.main.PrintArray-format&quot; -&gt; &quot;main.main-myformat&quot;	[pos=&quot;e,645.93,952 468.77,952 514.33,952 583.15,952 635.66,952&quot;];
+		&quot;main.main.mav_1-in1&quot; -&gt; &quot;main.main-input&quot;	[pos=&quot;e,888.81,203.06 737.73,274.84 773.71,257.75 839.35,226.56 879.64,207.42&quot;];
+		&quot;main.main.mav_1-out1&quot; -&gt; &quot;main.main-output&quot;	[pos=&quot;e,672.48,887.14 452.08,826.24 485.28,837.71 538.97,855.54 586.2,868 611.2,874.6 639.38,880.62 662.55,885.2&quot;];
+	}
+}" class="graphviz" /></div>
+</section>
+<section id="library-components">
+<h2>Library Components<a class="headerlink" href="#library-components" title="Permalink to this heading">¶</a></h2>
+<p>The library components are grouped into two modules (or packages):
+<code class="docutils literal notranslate"><span class="pre">Generic</span></code> for harboring generic templates, and <code class="docutils literal notranslate"><span class="pre">Skeleton</span></code> for defining
+templates for specialized collective operations, all targeting a
+sequential C implementation.</p>
+<section id="generic">
+<h3>Generic<a class="headerlink" href="#generic" title="Permalink to this heading">¶</a></h3>
+<p>The generic components are spread throughout several files showcasing
+some of the template design tips described in <a class="reference internal" href="template-libs.html"><span class="doc std std-doc">Template Libraries</span></a>.</p>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">Generic/__init__.py</span><a class="headerlink" href="#id5" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">with_schema</span><span class="p">,</span> <span class="n">Block</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos"> 6</span><span class="nd">@dataclass</span>
+<span class="linenos"> 7</span><span class="k">class</span> <span class="nc">Infinite</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="sd">&quot;&quot;&quot; The base C implementation for an infinite loop. &quot;&quot;&quot;</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">11</span>        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\</span>
+<span class="linenos">12</span><span class="s2">while (1) { </span><span class="se">\n\</span>
+<span class="linenos">13</span><span class="s2">  {</span><span class="si">% f</span><span class="s2">or inst in param.schedule %} </span><span class="se">\n\</span>
+<span class="linenos">14</span><span class="s2">  {{ placeholder[inst] }} </span><span class="se">\n\</span>
+<span class="linenos">15</span><span class="s2">  {</span><span class="si">% e</span><span class="s2">ndfor %} </span><span class="se">\n\</span>
+<span class="linenos">16</span><span class="s2">}&quot;</span>
+<span class="linenos">17</span>    <span class="p">)</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">20</span>        <span class="k">assert</span> <span class="s2">&quot;schedule&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">21</span>        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;schedule&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">Generic/IO.py</span><a class="headerlink" href="#id6" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">read_template</span><span class="p">,</span> <span class="n">with_schema</span><span class="p">,</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Requirement</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos"> 6</span><span class="nd">@dataclass</span>
+<span class="linenos"> 7</span><span class="k">class</span> <span class="nc">ReadArray</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic implementation for monitoring a system. Gets outside</span>
+<span class="linenos"> 9</span><span class="sd">    information from the console.</span>
+<span class="linenos">10</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">13</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stdio.h&quot;</span><span class="p">]}))</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">16</span>        <span class="n">default</span><span class="o">=</span><span class="n">read_template</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;ReadArray.C&quot;</span><span class="p">)</span>
+<span class="linenos">17</span>    <span class="p">)</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">20</span>        <span class="k">assert</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">21</span>        <span class="k">assert</span> <span class="s2">&quot;size&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">22</span>        <span class="k">assert</span> <span class="s2">&quot;arg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">23</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos">26</span><span class="nd">@dataclass</span>
+<span class="linenos">27</span><span class="k">class</span> <span class="nc">PrintArray</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos">28</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic implementation for monitoring a system. Prints an array to</span>
+<span class="linenos">29</span><span class="sd">    the console.</span>
+<span class="linenos">30</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">31</span>
+<span class="linenos">32</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">33</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stdio.h&quot;</span><span class="p">]}))</span>
+<span class="linenos">34</span>
+<span class="linenos">35</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">36</span>        <span class="n">default</span><span class="o">=</span><span class="n">read_template</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;PrintArray.C&quot;</span><span class="p">)</span>
+<span class="linenos">37</span>    <span class="p">)</span>
+<span class="linenos">38</span>
+<span class="linenos">39</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">40</span>        <span class="k">assert</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">41</span>        <span class="k">assert</span> <span class="s2">&quot;size&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">42</span>        <span class="k">assert</span> <span class="s2">&quot;arg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">Generic/templates.c</span><a class="headerlink" href="#id7" title="Permalink to this code">¶</a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// Template: ReadArray.C</span>
+<span class="linenos"> 2</span><span class="p">{</span><span class="kt">int</span><span class="w"> </span><span class="n">__io_it</span><span class="p">;</span>
+<span class="linenos"> 3</span><span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">__io_it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">__io_it</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">param</span><span class="p">.</span><span class="n">size</span><span class="w"> </span><span class="p">}};</span><span class="w"> </span><span class="n">__io_it</span><span class="o">++</span><span class="p">){</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="n">scanf</span><span class="p">({{</span><span class="w"> </span><span class="n">param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="o">&amp;</span><span class="p">{{</span><span class="w"> </span><span class="n">label</span><span class="p">.</span><span class="n">arg</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="p">}}[</span><span class="n">__io_it</span><span class="p">]);</span>
+<span class="linenos"> 5</span><span class="w">  </span><span class="p">}</span>
+<span class="linenos"> 6</span><span class="p">}</span>
+<span class="linenos"> 7</span><span class="c1">// End: ReadArray.C</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="c1">// Template: PrintArray.C</span>
+<span class="linenos">11</span><span class="p">{</span><span class="kt">int</span><span class="w"> </span><span class="n">__io_it</span><span class="p">;</span>
+<span class="linenos">12</span><span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">__io_it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">__io_it</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">param</span><span class="p">.</span><span class="n">size</span><span class="w"> </span><span class="p">}};</span><span class="w"> </span><span class="n">__io_it</span><span class="o">++</span><span class="p">){</span>
+<span class="linenos">13</span><span class="w">    </span><span class="n">printf</span><span class="p">({{</span><span class="w"> </span><span class="n">param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">label</span><span class="p">.</span><span class="n">arg</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="p">}}[</span><span class="n">__io_it</span><span class="p">]);</span>
+<span class="linenos">14</span><span class="w">  </span><span class="p">}</span>
+<span class="linenos">15</span><span class="p">}</span>
+<span class="linenos">16</span><span class="c1">// End: PrintArray.C</span>
+<span class="linenos">17</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="specialized-collective-operations">
+<h3>Specialized Collective Operations<a class="headerlink" href="#specialized-collective-operations" title="Permalink to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Skeleton</span></code> module showcases more advanced template design using
+the ZOTI-Gen Jinja extensions.</p>
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-text">Skeleton/Compute.py</span><a class="headerlink" href="#id8" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">read_template</span><span class="p">,</span> <span class="n">with_schema</span><span class="p">,</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Requirement</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos"> 6</span><span class="nd">@dataclass</span>
+<span class="linenos"> 7</span><span class="k">class</span> <span class="nc">ShiftFarm</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 9</span><span class="sd">    Shift-farm specialized skeleton</span>
+<span class="linenos">10</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">13</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cutils.h&quot;</span><span class="p">]}))</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">16</span>        <span class="n">default</span><span class="o">=</span><span class="n">read_template</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;ShiftFarm.C&quot;</span><span class="p">)</span>
+<span class="linenos">17</span>    <span class="p">)</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">20</span>        <span class="c1"># internal iterator (resolved name)</span>
+<span class="linenos">21</span>        <span class="k">assert</span> <span class="s2">&quot;_it&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">22</span>
+<span class="linenos">23</span>        <span class="c1"># auto-bound to &#39;size1&#39; from placeholder? TODO</span>
+<span class="linenos">24</span>        <span class="k">assert</span> <span class="s2">&quot;_range&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">25</span>
+<span class="linenos">26</span>        <span class="c1"># called template</span>
+<span class="linenos">27</span>        <span class="k">assert</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">placeholder</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
+<span class="linenos">28</span>
+<span class="linenos">29</span>
+<span class="linenos">30</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos">31</span><span class="nd">@dataclass</span>
+<span class="linenos">32</span><span class="k">class</span> <span class="nc">FarmRed_Acc</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos">33</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">34</span><span class="sd">    Farm-reduce skeleton with initial element, fused map-reduce kernel function</span>
+<span class="linenos">35</span><span class="sd">    and programmable (exposed) size param.</span>
+<span class="linenos">36</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">39</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cutils.h&quot;</span><span class="p">]}))</span>
+<span class="linenos">40</span>
+<span class="linenos">41</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">42</span>        <span class="n">default</span><span class="o">=</span><span class="n">read_template</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;FarmRed_Acc.C&quot;</span><span class="p">)</span>
+<span class="linenos">43</span>    <span class="p">)</span>
+<span class="linenos">44</span>
+<span class="linenos">45</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">46</span>        <span class="c1"># internal iterator (resolved name)</span>
+<span class="linenos">47</span>        <span class="k">assert</span> <span class="s2">&quot;_it&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">48</span>
+<span class="linenos">49</span>        <span class="c1"># auto-bound to &#39;size1&#39; from placeholder? TODO</span>
+<span class="linenos">50</span>        <span class="k">assert</span> <span class="s2">&quot;_acc&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">51</span>
+<span class="linenos">52</span>        <span class="c1"># label IDs over which &#39;_it&#39; iterates</span>
+<span class="linenos">53</span>        <span class="k">assert</span> <span class="s2">&quot;iterate_over&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">54</span>
+<span class="linenos">55</span>        <span class="c1"># called fused farm-reduce kernel</span>
+<span class="linenos">56</span>        <span class="k">assert</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">placeholder</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>Notice that both <code class="docutils literal notranslate"><span class="pre">ShiftFarm</span></code> and <code class="docutils literal notranslate"><span class="pre">FarmRed_Acc</span></code> specify a requirement
+upon a certain target library header <code class="docutils literal notranslate"><span class="pre">cutils.h</span></code>. This is where
+functions used in their template such as <code class="docutils literal notranslate"><span class="pre">min</span></code> are supposed to be
+defined.</p>
+<div class="literal-block-wrapper docutils container" id="id9">
+<div class="code-block-caption"><span class="caption-text">Skeleton/templates.c</span><a class="headerlink" href="#id9" title="Permalink to this code">¶</a></div>
+<div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="x">// Template: ShiftFarm.C</span>
+<span class="linenos"> 2</span><span class="cp">{%</span> <span class="k">set</span> <span class="nv">iterate_over</span> <span class="o">=</span> <span class="nv">param.iterate_over</span><span class="o">|</span><span class="nf">setdefaults</span><span class="o">({</span><span class="s2">&quot;offset&quot;</span><span class="o">:</span> <span class="s2">&quot;0&quot;</span><span class="o">,</span> <span class="s2">&quot;range&quot;</span><span class="o">:</span> <span class="s2">&quot;name&quot;</span> <span class="o">})</span> <span class="cp">%}</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="cp">{%</span> <span class="k">macro</span> <span class="nv">itrange</span><span class="o">()</span> -<span class="cp">%}</span>
+<span class="linenos"> 5</span><span class="cp">{%</span> <span class="k">set</span> <span class="nv">ranges</span> <span class="o">=</span> <span class="o">[]</span> <span class="cp">%}</span>
+<span class="linenos"> 6</span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">k</span><span class="o">,</span><span class="nv">p</span> <span class="k">in</span> <span class="nv">iterate_over.items</span><span class="o">()</span> -<span class="cp">%}</span>
+<span class="linenos"> 7</span><span class="cp">{%</span> <span class="k">do</span> <span class="nv">ranges.append</span><span class="o">(</span><span class="nv">label</span><span class="o">[</span><span class="nv">k</span><span class="o">]|</span><span class="nf">find</span><span class="o">(</span><span class="nv">p.range</span><span class="o">))</span> <span class="cp">%}</span>
+<span class="linenos"> 8</span><span class="cp">{%</span>- <span class="k">endfor</span> <span class="cp">%}</span><span class="x">min(</span><span class="cp">{{</span> <span class="nv">ranges</span><span class="o">|</span><span class="nf">join</span><span class="o">(</span><span class="s2">&quot;, &quot;</span><span class="o">)</span> <span class="cp">}}</span><span class="x">)</span>
+<span class="linenos"> 9</span><span class="cp">{%</span>- <span class="k">endmacro</span> <span class="cp">%}</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="x">for (</span><span class="cp">{{</span> <span class="nv">label._it.name</span> <span class="cp">}}</span><span class="x"> = 0; </span><span class="cp">{{</span> <span class="nv">label._it.name</span> <span class="cp">}}</span><span class="x"> &lt; </span><span class="cp">{{</span> <span class="nv">itrange</span><span class="o">()</span> <span class="cp">}}</span><span class="x"> ; </span><span class="cp">{{</span> <span class="nv">label._it.name</span> <span class="cp">}}</span><span class="x">++){</span>
+<span class="linenos">12</span><span class="x">  </span><span class="cp">{{</span> <span class="nv">label._range.name</span> <span class="cp">}}</span><span class="x"> = </span><span class="cp">{{</span> <span class="nv">itrange</span><span class="o">()</span> <span class="cp">}}</span><span class="x"> - </span><span class="cp">{{</span> <span class="nv">label._it.name</span> <span class="cp">}}</span><span class="x">;</span>
+<span class="linenos">13</span><span class="x">  </span><span class="cp">{{</span> <span class="nv">placeholder</span><span class="o">[</span><span class="s2">&quot;f&quot;</span><span class="o">]</span> <span class="cp">}}</span>
+<span class="linenos">14</span><span class="x">}</span>
+<span class="linenos">15</span><span class="x">// End: ShiftFarm.C</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span><span class="x">// Template: FarmRed_Acc.C</span>
+<span class="linenos">19</span><span class="cp">{%</span> <span class="k">set</span> <span class="nv">iterate_over</span> <span class="o">=</span> <span class="nv">param.iterate_over</span><span class="o">|</span><span class="nf">setdefaults</span><span class="o">({</span><span class="s2">&quot;offset&quot;</span><span class="o">:</span> <span class="s2">&quot;0&quot;</span><span class="o">,</span> <span class="s2">&quot;range&quot;</span><span class="o">:</span> <span class="s2">&quot;name&quot;</span> <span class="o">})</span> <span class="cp">%}</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="cp">{%</span> <span class="k">macro</span> <span class="nv">itrange</span><span class="o">()</span> -<span class="cp">%}</span>
+<span class="linenos">22</span><span class="cp">{%</span> <span class="k">set</span> <span class="nv">ranges</span> <span class="o">=</span> <span class="o">[]</span> <span class="cp">%}</span>
+<span class="linenos">23</span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">k</span><span class="o">,</span><span class="nv">p</span> <span class="k">in</span> <span class="nv">iterate_over.items</span><span class="o">()</span> -<span class="cp">%}</span>
+<span class="linenos">24</span><span class="cp">{%</span> <span class="k">do</span> <span class="nv">ranges.append</span><span class="o">(</span><span class="nv">label</span><span class="o">[</span><span class="nv">k</span><span class="o">]|</span><span class="nf">find</span><span class="o">(</span><span class="nv">p.range</span><span class="o">))</span> <span class="cp">%}</span>
+<span class="linenos">25</span><span class="cp">{%</span>- <span class="k">endfor</span> <span class="cp">%}</span><span class="x">min(</span><span class="cp">{{</span> <span class="nv">ranges</span><span class="o">|</span><span class="nf">join</span><span class="o">(</span><span class="s2">&quot;, &quot;</span><span class="o">)</span> <span class="cp">}}</span><span class="x">)</span>
+<span class="linenos">26</span><span class="cp">{%</span>- <span class="k">endmacro</span> <span class="cp">%}</span>
+<span class="linenos">27</span>
+<span class="linenos">28</span><span class="x">for (</span><span class="cp">{{</span> <span class="nv">label._it.name</span> <span class="cp">}}</span><span class="x"> = 0; </span><span class="cp">{{</span> <span class="nv">label._it.name</span> <span class="cp">}}</span><span class="x"> &lt; </span><span class="cp">{{</span> <span class="nv">itrange</span><span class="o">()</span> <span class="cp">}}</span><span class="x"> ; </span><span class="cp">{{</span> <span class="nv">label._it.name</span> <span class="cp">}}</span><span class="x">++){</span>
+<span class="linenos">29</span><span class="x">  </span><span class="cp">{{</span> <span class="nv">placeholder</span><span class="o">[</span><span class="s2">&quot;f&quot;</span><span class="o">]</span> <span class="cp">}}</span>
+<span class="linenos">30</span><span class="x">}</span>
+<span class="linenos">31</span><span class="cp">{{</span> <span class="nv">label.out1.name</span> <span class="cp">}}</span><span class="x"> = </span><span class="cp">{{</span> <span class="nv">label._acc.name</span> <span class="cp">}}</span><span class="x">;</span>
+<span class="linenos">32</span><span class="x">// End: FarmRed_Acc.C</span>
+</pre></div>
+</div>
+</div>
+<p>The template definition shows an example of using local Jinja
+<a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/templates/#macros">macro</a>,
+as well as the in-house
+<a class="reference internal" href="input-format.html#zoti_gen.render.JinjaExtensions.setdefaults" title="zoti_gen.render.JinjaExtensions.setdefaults"><code class="xref py py-meth docutils literal notranslate"><span class="pre">zoti_gen.render.JinjaExtensions.setdefaults()</span></code></a> filter.</p>
+</section>
+</section>
+<section id="output-artifacts">
+<h2>Output Artifacts<a class="headerlink" href="#output-artifacts" title="Permalink to this heading">¶</a></h2>
+<p>Finally, the generated artifacts can be seen in this section. In this
+case the artifacts are presented as two separate files:</p>
+<ul class="simple">
+<li><p>a JSON file representing the include dependencies, useful for a
+post-processor, e.g. to generate the preamble of the .c file.</p></li>
+<li><p>a .c file containing the bulk of the code (without the preamble).</p></li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id10">
+<div class="code-block-caption"><span class="caption-text">Dependencies</span><a class="headerlink" href="#id10" title="Permalink to this code">¶</a></div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="p">{</span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;stdio.h&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;cutils.h&quot;</span><span class="p">]}</span>
+</pre></div>
+</div>
+</div>
+<p>Notice that the generated code reflects the directive flags passed
+during block instantiation: all blocks are expanded as inline text
+except <code class="docutils literal notranslate"><span class="pre">mulacc</span></code> which is not using the <code class="docutils literal notranslate"><span class="pre">&quot;expand&quot;</span></code> directive. This is
+because it contains plain non-template native code which needs to be
+isolated as a separate function.</p>
+<div class="literal-block-wrapper docutils container" id="id11">
+<div class="code-block-caption"><span class="caption-text">Output C code</span><a class="headerlink" href="#id11" title="Permalink to this code">¶</a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kt">void</span><span class="w"> </span><span class="nf">mulacc</span><span class="p">(</span><span class="n">in1</span><span class="p">,</span><span class="w"> </span><span class="n">in2</span><span class="p">,</span><span class="w"> </span><span class="n">acc</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 2</span><span class="w">  </span><span class="c1">// vvv mulacc</span>
+<span class="linenos"> 3</span><span class="w">  </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">in1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">in2</span><span class="p">;</span>
+<span class="linenos"> 4</span><span class="w">  </span><span class="c1">// ^^^ mulacc</span>
+<span class="linenos"> 5</span><span class="p">};</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 8</span><span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">input</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="linenos"> 9</span><span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">output</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="linenos">10</span><span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">COEF</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
+<span class="linenos">11</span><span class="w">  </span><span class="c1">// vvv main</span>
+<span class="linenos">12</span><span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">13</span>
+<span class="linenos">14</span><span class="w">    </span><span class="c1">// vvv ReadArray</span>
+<span class="linenos">15</span>
+<span class="linenos">16</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">17</span><span class="w">      </span><span class="kt">int</span><span class="w"> </span><span class="n">__io_it</span><span class="p">;</span>
+<span class="linenos">18</span><span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">__io_it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">__io_it</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">__io_it</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">19</span><span class="w">        </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">input</span><span class="p">[</span><span class="n">__io_it</span><span class="p">]);</span>
+<span class="linenos">20</span><span class="w">      </span><span class="p">}</span>
+<span class="linenos">21</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">22</span><span class="w">    </span><span class="c1">//</span>
+<span class="linenos">23</span><span class="w">    </span><span class="c1">// ^^^ ReadArray</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">_it</span><span class="p">;</span>
+<span class="linenos">26</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">_range</span><span class="p">;</span>
+<span class="linenos">27</span><span class="w">    </span><span class="c1">// vvv mav_1</span>
+<span class="linenos">28</span>
+<span class="linenos">29</span><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">_it</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">input</span><span class="p">);</span><span class="w"> </span><span class="n">_it</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">30</span><span class="w">      </span><span class="n">_range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">input</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">_it</span><span class="p">;</span>
+<span class="linenos">31</span><span class="w">      </span><span class="kt">int</span><span class="w"> </span><span class="n">_it0</span><span class="p">;</span>
+<span class="linenos">32</span><span class="w">      </span><span class="kt">int</span><span class="w"> </span><span class="n">_acc</span><span class="p">;</span>
+<span class="linenos">33</span><span class="w">      </span><span class="c1">// vvv fred_1</span>
+<span class="linenos">34</span>
+<span class="linenos">35</span><span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_it0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">_it0</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">_range</span><span class="p">,</span><span class="w"> </span><span class="n">COEF</span><span class="p">);</span><span class="w"> </span><span class="n">_it0</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">36</span><span class="w">        </span><span class="n">mulacc</span><span class="p">((</span><span class="n">input</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_it</span><span class="p">)[</span><span class="n">_it0</span><span class="p">],</span><span class="w"> </span><span class="n">COEF</span><span class="p">[</span><span class="n">_it0</span><span class="p">],</span><span class="w"> </span><span class="n">_acc</span><span class="p">,</span><span class="w"> </span><span class="n">_acc</span><span class="p">)</span>
+<span class="linenos">37</span><span class="w">      </span><span class="p">}</span>
+<span class="linenos">38</span><span class="w">      </span><span class="n">output</span><span class="p">[</span><span class="n">_it</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_acc</span><span class="p">;</span>
+<span class="linenos">39</span><span class="w">      </span><span class="c1">//</span>
+<span class="linenos">40</span><span class="w">      </span><span class="c1">// ^^^ fred_1</span>
+<span class="linenos">41</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">42</span><span class="w">    </span><span class="c1">//</span>
+<span class="linenos">43</span><span class="w">    </span><span class="c1">// ^^^ mav_1</span>
+<span class="linenos">44</span>
+<span class="linenos">45</span><span class="w">    </span><span class="c1">// vvv PrintArray</span>
+<span class="linenos">46</span>
+<span class="linenos">47</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">48</span><span class="w">      </span><span class="kt">int</span><span class="w"> </span><span class="n">__io_it</span><span class="p">;</span>
+<span class="linenos">49</span><span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">__io_it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">__io_it</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">__io_it</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">50</span><span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">output</span><span class="p">[</span><span class="n">__io_it</span><span class="p">]);</span>
+<span class="linenos">51</span><span class="w">      </span><span class="p">}</span>
+<span class="linenos">52</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">53</span><span class="w">    </span><span class="c1">//</span>
+<span class="linenos">54</span><span class="w">    </span><span class="c1">// ^^^ PrintArray</span>
+<span class="linenos">55</span><span class="w">  </span><span class="p">}</span>
+<span class="linenos">56</span><span class="w">  </span><span class="c1">// ^^^ main</span>
+<span class="linenos">57</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>To obtain these files we ran the ZOTI-Gen CLI tool using the
+following configuration, assuming that all source files, libraries as
+well as the CLI tool are accessible from the current folder.</p>
+<div class="literal-block-wrapper docutils container" id="id12">
+<div class="code-block-caption"><span class="caption-text">zoticonf.json</span><a class="headerlink" href="#id12" title="Permalink to this code">¶</a></div>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[zoti.gen]</span>
+
+<span class="n">lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;.&quot;</span><span class="p">]</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;deps.json&quot;</span>
+<span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;main.yaml&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;genspec_leafs.yaml&quot;</span><span class="p">]</span>
+<span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;out.c&quot;</span>
+<span class="n">begin_block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;// vvv {comp.name}\n&quot;</span><span class="w"> </span>
+<span class="n">end_block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;\n// ^^^ {comp.name}&quot;</span><span class="w"> </span>
+</pre></div>
+</div>
+</div>
+<hr class="footnotes docutils" />
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>For specifying the same input in a less verbose and slightly
+more feature-rich syntax, one could consider a more human-readable
+frontend, such as ZOTI-YAML.</p>
+</aside>
+</aside>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">zoti-gen</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="input-format.html">Input Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-libs.html">Template Libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rendering.html">Rendering</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#specification-files">Specification Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bindings-and-names">Bindings and Names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#library-components">Library Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-artifacts">Output Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-tran">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="rendering.html" title="previous chapter">Rendering</a></li>
+      <li>Next: <a href="api-reference.html" title="next chapter">API Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/tutorial.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

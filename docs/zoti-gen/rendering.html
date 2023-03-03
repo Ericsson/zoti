@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Rendering &#8212; zoti-gen 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Template Libraries" href="template-libs.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="rendering">
+<h1>Rendering<a class="headerlink" href="#rendering" title="Permalink to this heading">¶</a></h1>
+<p><em>DISCLAIMER: This page is meant to be a collection of user notes on
+the internal functioning of ZOTI-Gen, and not a comprehensive
+documentation resource. As such, it may fall out-of-sync with future
+iterations of the tool. For advanced usage always check the source
+code.</em></p>
+<section id="code-blocks-structure">
+<h2>Code Blocks Structure<a class="headerlink" href="#code-blocks-structure" title="Permalink to this heading">¶</a></h2>
+<p>Once the input specification is loaded into a
+<a class="reference internal" href="api-reference.html#zoti_gen.handler.ProjHandler" title="zoti_gen.handler.ProjHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_gen.handler.ProjHandler</span></code></a>, the internal structure of a
+project (representing a target artifact file) can be constructed
+recursively using the <a class="reference internal" href="api-reference.html#zoti_gen.handler.ProjHandler.resolve" title="zoti_gen.handler.ProjHandler.resolve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">zoti_gen.handler.ProjHandler.resolve()</span></code></a>
+method. During this process all code templates are fully expanded and
+all names are resolved, updating the internal representation of each
+block accordingly. At the end of the procedure:</p>
+<ul class="simple">
+<li><p>all (recursively) instantiated blocks will contain resolved
+information (e.g. updated label names) and complete target code.</p></li>
+<li><p>the history of fully-expanded blocks will be reflected in
+<a class="reference internal" href="api-reference.html#zoti_gen.handler.ProjHandler.decls" title="zoti_gen.handler.ProjHandler.decls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zoti_gen.handler.ProjHandler.decls</span></code></a> which contains the names
+of the top-level blocks and the order in which they need to be
+declared.</p></li>
+<li><p>the global requirements will be represented in (a dictionary of)
+graphs in <a class="reference internal" href="api-reference.html#zoti_gen.handler.ProjHandler.requs" title="zoti_gen.handler.ProjHandler.requs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zoti_gen.handler.ProjHandler.requs</span></code></a></p></li>
+</ul>
+<p>The procedure starts with the main block pointed by
+<a class="reference internal" href="api-reference.html#zoti_gen.handler.ProjHandler.main" title="zoti_gen.handler.ProjHandler.main"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zoti_gen.handler.ProjHandler.main</span></code></a> and recurs base on all the
+<code class="docutils literal notranslate"><span class="pre">instance</span></code> entries found. For each block it roughly follows the
+same algorithm:</p>
+<ol class="arabic simple">
+<li><p>resolve the component name to avoid clashes in the same namespace.</p></li>
+<li><p>foreach original <code class="docutils literal notranslate"><span class="pre">label</span></code> resolve label name to avoid clashes</p></li>
+<li><p>update <code class="docutils literal notranslate"><span class="pre">param</span></code> based on bindings</p></li>
+<li><p>foreach original <code class="docutils literal notranslate"><span class="pre">label</span></code> render its usage in the current
+context</p></li>
+<li><p>foreach <code class="docutils literal notranslate"><span class="pre">instance</span></code>:</p>
+<ul class="simple">
+<li><p>retrieve referenced block</p></li>
+<li><p>resolve bindings</p></li>
+<li><p>recursive call block resolver and/or code renderer based on
+instance <code class="docutils literal notranslate"><span class="pre">directive</span></code></p></li>
+</ul>
+</li>
+<li><p>if current block has requirements update the global ones</p></li>
+<li><p>render <code class="docutils literal notranslate"><span class="pre">code</span></code> in the current context. If annotations specified
+surround rendered code with annotations.</p></li>
+</ol>
+</section>
+<section id="controlling-block-instantiation">
+<h2>Controlling Block Instantiation<a class="headerlink" href="#controlling-block-instantiation" title="Permalink to this heading">¶</a></h2>
+<p>There are several way to control how a block is going to be
+instantiated or rendered. This section goes through some of the more
+common use cases.</p>
+<section id="inline-code-expansion">
+<h3>Inline code expansion<a class="headerlink" href="#inline-code-expansion" title="Permalink to this heading">¶</a></h3>
+<p>The code of a block can be expanded in another block’s placeholder in
+the following case:</p>
+<ul class="simple">
+<li><p>the <code class="docutils literal notranslate"><span class="pre">instance/directive</span></code> entry contains the flag <code class="docutils literal notranslate"><span class="pre">&quot;expand&quot;</span></code>.</p></li>
+<li><p>if the <code class="docutils literal notranslate"><span class="pre">instance/usage</span></code> entry is provided then the (recursively
+expanded) code of the referenced block passes through an additional
+rendering in the current context to reflect its usage.</p></li>
+<li><p>if the referenced block contains a <code class="docutils literal notranslate"><span class="pre">block/prototype</span></code> entry it will
+be ignored.</p></li>
+</ul>
+</section>
+<section id="function-call">
+<h3>Function call<a class="headerlink" href="#function-call" title="Permalink to this heading">¶</a></h3>
+<p>If the instantiated block needs to be expanded as an independent
+(declared) function instead of an inline snippet, which is called from
+the parent’s placeholder here is how to do this:</p>
+<ul class="simple">
+<li><p>do not pass anything to <code class="docutils literal notranslate"><span class="pre">instance/directive</span></code>.</p></li>
+<li><p>define a function call template in <code class="docutils literal notranslate"><span class="pre">instance/usage</span></code>.</p></li>
+<li><p>define a function type signature in the referenced block’s
+<code class="docutils literal notranslate"><span class="pre">block/prototype</span></code>.</p></li>
+</ul>
+<p>NOTE 1: if multiple parent blocks reference the same block, it will
+only be declared (and constructed) once, and all subsequent calls will
+be handled by <code class="docutils literal notranslate"><span class="pre">instance/usage</span></code>. If this is not the desired behavior
+and you need to create separate new declarations of the same block
+(with new names) for each new instance, you need to</p>
+<ul class="simple">
+<li><p>provide the flag <code class="docutils literal notranslate"><span class="pre">&quot;new&quot;</span></code> to each <code class="docutils literal notranslate"><span class="pre">instance/directive</span></code> concerned.</p></li>
+</ul>
+<p>NOTE 2: by default, when constructing a new declaration for the
+instantiated component the parent’s namespace is reset, and the label
+bindings are not passed further to the referenced block. If this is
+not the desired behavior, i.e., you need to pass forward name
+bindings, you need to</p>
+<ul class="simple">
+<li><p>provide the flag <code class="docutils literal notranslate"><span class="pre">&quot;pass&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">instance/directive</span></code>.</p></li>
+</ul>
+</section>
+<section id="new-declaration-without-function-call">
+<h3>New declaration without function call<a class="headerlink" href="#new-declaration-without-function-call" title="Permalink to this heading">¶</a></h3>
+<p>If we just need to trigger the resolve of certain blocks but without
+being referenced in the rendered code, you can follow the instructions
+for <a class="reference internal" href="#function-call"><span class="std std-doc">Function call</span></a> with the following addition:</p>
+<ul class="simple">
+<li><p>do not provide <code class="docutils literal notranslate"><span class="pre">instance/placeholder</span></code> or leave it empty or set it to
+<code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="rendering-engine">
+<h2>Rendering Engine<a class="headerlink" href="#rendering-engine" title="Permalink to this heading">¶</a></h2>
+<p>There are two rendering engines, one for template functions, and one
+for code templates (see <a class="reference internal" href="input-format.html"><span class="doc std std-doc">Input Specification</span></a>).</p>
+<section id="template-functions">
+<h3>Template Functions<a class="headerlink" href="#template-functions" title="Permalink to this heading">¶</a></h3>
+<p>Template functions are rendered in various places during the resolve
+procedure, as documented in the list below. These templates are
+rendered as formatted strings, without any context, by passing only
+the arguments exposed by <a class="reference internal" href="api-reference.html#zoti_gen.core.TemplateFun" title="zoti_gen.core.TemplateFun"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_gen.core.TemplateFun</span></code></a>:</p>
+<ul class="simple">
+<li><p>at <code class="docutils literal notranslate"><span class="pre">block/instance/bind/label_to_label</span></code> by passing the key of
+<code class="docutils literal notranslate"><span class="pre">parent</span></code><a class="footnote-reference brackets" href="#id5" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+<li><p>at <code class="docutils literal notranslate"><span class="pre">block/label/usage</span></code> by passing its label key<a class="footnote-reference brackets" href="#id5" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+<li><p>at <code class="docutils literal notranslate"><span class="pre">block/instance/usage</span></code> by passing the resolved name of the
+referenced component, followed by a sequence of all the keys for
+each label<a class="footnote-reference brackets" href="#id5" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+<li><p>at <code class="docutils literal notranslate"><span class="pre">block/prototype</span></code> by passing the resolved name of the component,
+followed by a sequence of all the keys for each label<a class="footnote-reference brackets" href="#id5" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p></li>
+</ul>
+</section>
+<section id="code-templates">
+<h3>Code Templates<a class="headerlink" href="#code-templates" title="Permalink to this heading">¶</a></h3>
+<p>Code templates are strings with
+<a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/templates/">Jinja2</a> markup
+commands evaluated in a custom context built from the resolved block
+specification. The context will always contain the following entries:</p>
+<dl class="myst field-list simple">
+<dt class="field-odd">label<span class="colon">:</span></dt>
+<dd class="field-odd"><p>contains a dictionary of all resolved <code class="docutils literal notranslate"><span class="pre">label</span></code> entries (see
+<a class="reference internal" href="input-format.html"><span class="doc std std-doc">Input Specification</span></a>), both own and passed via bindings, where the keys
+are the original (specified) names.</p>
+</dd>
+<dt class="field-even">param<span class="colon">:</span></dt>
+<dd class="field-even"><p>contains a merged dictionary with this block’s <code class="docutils literal notranslate"><span class="pre">param</span></code> entries
+and the ones passed via bindings.</p>
+</dd>
+<dt class="field-odd">placeholder<span class="colon">:</span></dt>
+<dd class="field-odd"><p>will contain the rendered code for each declared
+instance (e.g., as inline code or function call).</p>
+</dd>
+</dl>
+<hr class="footnotes docutils" />
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id5" role="note">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id3">3</a>,<a role="doc-backlink" href="#id4">4</a>)</span>
+<p>used to access data in the <a class="reference internal" href="#code-templates"><span class="std std-doc">Code Templates</span></a> context.</p>
+</aside>
+</aside>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">zoti-gen</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="input-format.html">Input Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-libs.html">Template Libraries</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rendering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#code-blocks-structure">Code Blocks Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#controlling-block-instantiation">Controlling Block Instantiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rendering-engine">Rendering Engine</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-tran">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="template-libs.html" title="previous chapter">Template Libraries</a></li>
+      <li>Next: <a href="tutorial.html" title="next chapter">Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/rendering.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
