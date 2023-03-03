@@ -24,6 +24,8 @@ black = "*"
 types-pyyaml = "*"
 license-sh = "*"
 virtualenv = "*"
+sphinx = "*"
+myst-parser = "*"
 
 [requires]
 python_version = "3.10"

@@ -6,6 +6,24 @@ from marshmallow import post_load
 
 
 def with_schema(schema_base_class):
+    """Wrapper which creates a sub-class ``Schema`` under the current
+    class, as a (default) child of *schema_base_class*
+
+    Example usage:
+
+    .. code-block:: python
+
+        @with_schema(Block.Schema)
+        @dataclass
+        class ReadArray(Block):
+            pass
+
+    will create a class ``ReadArray.Schema`` which is used whenever
+    instantiating this class with data from the input specification
+    file.
+
+    """
+
     def Inner(cls):
         class Wrapper:
             def __init__(self, *args, **kwargs):
@@ -28,25 +46,42 @@ def with_schema(schema_base_class):
 #     return line
 
 
-def read_template(modname: str, filename: str, name: str,
+def read_template(module: str, filename: str, name: str,
                   delimiters=("\\ *Template: *{name}", "\\ *End: *{name}")) -> str:
-    """Returns a template written in a (possibly formatted) external
-    source file found at ``path``. A source file may contain multiple
-    templates, hence this method returns only the one between
-    ``delimiter`` for ``name``. Delimiters are formatted regular
-    expressions marking the beginning and end of the template.
+    """Returns a template string from a (possibly formatted) external
+    source file. A source file may contain multiple templates, hence
+    this method returns only the one between ``delimiter`` for
+    ``name``.
 
-    Check the documentation (TBA) for more details on how to
-    write templates in their own source file.
+    :arg module: name of Python module relative to which the source
+        file is found (e.g. can use ``__name__`` if it is in the same
+        path as the current file)
+
+    :arg filename: full name of the source file, including extension.
+
+    :arg name: name of the current component, used as delimiter marker
+       in case multiple components are defined in the same file.
+
+    :arg delimiters: tuple containing the begin and end marker for the
+        issued template, formatted as regular expressions where
+        ``{name}`` is replaced with **name**.
+
+    Example usage:
+
+    .. code-block:: python
+
+        code: str = field(
+            default=read_template(__name__, "templates.c", "ReadArray.C")
+        )
 
     """
     begin = delimiters[0].format(name=name)
     end = delimiters[1].format(name=name)
     m = re.compile(r"%s(.*?)%s" % (begin, end), re.S)
 
-    textfile = pkgutil.get_data(modname, filename)
+    textfile = pkgutil.get_data(module, filename)
     if textfile is None:
-        msg = "Cannot load file '{filename}' relative to '{modname}'"
+        msg = "Cannot load file '{filename}' relative to '{module}'"
         raise IOError(msg)
     text = m.search(textfile.decode())
     if text:
