@@ -2,14 +2,18 @@ ZOTI-Gen
 ========
 
 ZOTI-Gen is a ligtweight template-based code generator. It builds upon
-Python's packaging and distribution ecosystem (for defining
-maintainable libraries of templates) and
-[Jinja2](https://jinja.palletsprojects.com)'s templating capabilities
-(for gluing together these templates) to define a minimalistic
-component-based framework for describing code in a language- and
-target-agnostic manner. It is meant to serve as a backend in a generic
-code synthesis flow, and has been developed in the context of the
-[ZOTI](https://ericsson.github.io/zoti) project.
+
+1. Python's
+[packaging](https://realpython.com/python-modules-packages/) and
+distribution ecosystem for defining maintainable libraries of
+templates; and
+1. [Jinja2](https://jinja.palletsprojects.com)'s templating capabilities
+for gluing together these templates. 
+
+to define a minimalistic component-based framework for describing code
+in a language- and target-agnostic manner. It is meant to serve as a
+backend in a generic code synthesis flow, and has been developed in
+the context of the [ZOTI](https://ericsson.github.io/zoti) project.
 
 Installation
 ------------
@@ -46,6 +50,17 @@ pipenv install # --dev
 pipenv run python3 -m build
 ```
 
+### Testing the library
+
+To run the test suite, call from within a `--dev` Pipenv environment:
+
+```shell
+pytest # --cov
+```
+
+Usage
+-----
+
 To run the CLI tool either call it from inside the Pipenv shell:
 
 ```shell
@@ -59,22 +74,31 @@ or from outside it, in the folder where the `Pipfile` resides:
 pipenv run python3 -m zoti_gen --help
 ```
 
-The API library can be loaded like any other Python package, e.g., by
-adding the following path to the `PYTHONPATH` variable:
+ZOTI-Gen is mainly meant to be used as a CLI tool, but in case any
+feature from its API is needed, it can be loaded as any usual Python
+package, e.g. by adding to `PYTHONPATH`:
 
 ```
-PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-gen/src
+PYTHONPATH=${PYTHONPATH}:</path/to/>zoti-graph/src
 ```
 
-ideally from within the Pipenv shell which takes care of the library
-dependencies.
+CLI arguments documented with the `--help` command can be also passed
+via a `zoticonf.toml` file situated in the same path where the tool is
+being invoked. Arguments need to be defined under a section called
+`[zoti.gen]` and need to follow [TOML](https://toml.io/en/v1.0.0)
+syntax, e.g.:
 
-### Testing the library
+```toml
+[zoti]
 
-To run the test suite, call from within a `--dev` Pipenv environment:
+# global configuration variables, read by all tools. Unused.
 
-```shell
-pytest # --cov
+[zoti.gen]
+
+# configuration variables for ZOTI-Gen. Overrides global ones
+
+begin_block = "\n// vvv {comp.name} begin\n"
+end_block = "\n// ^^^ {comp.name} end\n"
 ```
 
 Documentation

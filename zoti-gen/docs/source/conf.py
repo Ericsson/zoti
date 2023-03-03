@@ -5,28 +5,28 @@ from enum import Flag
 from typing import Any, Optional
 
 from sphinx.ext import autodoc
-from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
-from sphinx_toolbox.sidebar_links import SidebarLinksDirective
 
 sys.path.insert(0, os.path.abspath("../../src/"))
-from zoti_yaml import __version__
 
-project = "zoti-yaml"
-copyright = "2023, Ericsson S&T"
+project = "zoti-gen"
+copyright = "2022-2023 Ericsson"
 author = "George Ungureanu"
-release = __version__
+
+# The full version, including alpha/beta/rc tags
+release = "0.1.0"
 
 extensions = [
     "sphinx.ext.todo",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
+    "sphinx.ext.graphviz",
     "myst_parser",
 ]
 
 myst_enable_extensions = [
     "colon_fence",
-    "deflist",
     "fieldlist",
     "html_admonition",
     "html_image",
@@ -39,16 +39,20 @@ html_theme_options = {
     'github_repo': 'zoti',
     'extra_nav_links': {
         "ZOTI": "https://ericsson.github.io/zoti/",
-        "GitHub": "https://github.com/Ericsson/zoti/tree/main/zoti-yaml",
+        "GitHub": "https://github.com/Ericsson/zoti/tree/main/zoti-tran",
     }
 }
 
+templates_path = []
 exclude_patterns = []
-# html_static_path = ["_static"]
 autodoc_member_order = "bysource"
-add_module_names = False
-autodoc_inherit_docstrings = False
-myst_heading_anchors = 3
+add_module_names = True
+myst_heading_anchors = 4
+# autodoc_typehints = "description"
+
+
+autodoc_typehints_format = 'fully-qualified'
+autodoc_unqualified_typehints = True
 
 
 class SimpleClassDocumenter(autodoc.ClassDocumenter):
@@ -65,6 +69,7 @@ class SimpleClassDocumenter(autodoc.ClassDocumenter):
     # do not add a header to the docstring
     def add_directive_header(self, sig):
         pass
+
 
 def setup(app):
     app.add_autodocumenter(SimpleClassDocumenter)

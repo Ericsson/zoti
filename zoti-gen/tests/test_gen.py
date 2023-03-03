@@ -1,3 +1,5 @@
+from zoti_yaml import Module
+from zoti_gen.handler import ProjHandler
 import os
 import sys
 import yaml
@@ -6,11 +8,6 @@ from pathlib import PurePosixPath
 
 sys.path.insert(0, "src")
 sys.path.insert(0, "tests/inputs")
-
-from zoti_gen.handler import ProjHandler
-from zoti_yaml import Module
-
-from pprint import pprint
 
 
 def test_scenario1() -> None:
@@ -25,14 +22,15 @@ def test_scenario1() -> None:
     gen.resolve()
 
     assert len(gen.decls) == 1
-    assert gen.get(**gen.decls[0]).code == "main(in1, in2, acc, &out) {\n out = acc + in1 * in2; \n};"
+    assert gen.get(
+        gen.decls[0]).code == "main(in1, in2, acc, &out) {\n \nout = acc + in1 * in2;\n \n};"
 
     gen2 = ProjHandler("main", mods)
     gen2.parse()
     gen2.resolve()
     assert len(gen2.requs.dep_list("include")) == 2
     for cp in gen2.decls:
-        assert gen2.get(**cp).code
+        assert gen2.get(cp).code
 
     try:
         gen2.dump_yaml("tmp.yaml")
