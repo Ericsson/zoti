@@ -115,7 +115,7 @@ class ProjHandler:
                 spec_ref = ty.RefSchema().load(comp_src[ty.ATTR_TYPE])
             info = comp_src if get_pos(comp_src) else caller
         else:
-            comp_src = {"name": name}
+            comp_src = {"name": ref.name}
             needs_spec = True
             spec_ref, info = ref, caller
 

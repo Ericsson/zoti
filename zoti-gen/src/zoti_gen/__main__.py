@@ -21,7 +21,8 @@ parser = argparse.ArgumentParser(
     "modules.",
     formatter_class=argparse.RawTextHelpFormatter,
 )
-parser.add_argument("--version", action="version", version=" %(prog)s-" + dist.version)
+parser.add_argument("--version", action="version",
+                    version=" %(prog)s-" + dist.version)
 parser.add_argument(
     "--verbose", action="store_const",
     dest="loglevel", const=log.INFO, default=log.WARNING,
@@ -88,7 +89,7 @@ try:
         modules.append(Module(preamble, doc))
     except Exception:
         pass
-    
+
     paths = [Path(p) for p in args.input] if args.input else []
     for path in paths:
         if path.suffix in [".yaml", ".yml"]:
@@ -104,8 +105,8 @@ try:
     if conf["lib"]:
         sys.path += conf["lib"]
 
-        gen = ProjHandler(main, modules,
-                          annotation=(conf["begin_block"], conf["end_block"]))
+    gen = ProjHandler(main, modules,
+                      annotation=(conf["begin_block"], conf["end_block"]))
     gen.parse()
     gen.resolve()
 

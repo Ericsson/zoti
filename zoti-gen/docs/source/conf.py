@@ -21,6 +21,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
+    "sphinx.ext.graphviz",
     "myst_parser",
 ]
 
