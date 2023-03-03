@@ -6,7 +6,7 @@ different sources and for different target platforms.
 
 ## Template Modules
 
-Instead of providing an own library management system, ZOTI-Gen choses
+Instead of providing an own library management system, ZOTI-Gen chooses
 to "piggyback" on the already-established [module and package
 system](https://docs.python.org/3/tutorial/modules.html) of
 Python. Hence ZOTI-Gen template libraries are developed as regular
@@ -34,7 +34,7 @@ user-defined *template components*. Each template component is a child
 class inheriting the {class}`zoti_gen.core.Block` base class and
 partially defining its members. 
 
-## Referencing Template Components
+## Using Template Components
 
 A template component can be instantiated from the ZOTI-Gen input
 specification through the `type` entry of blocks. For example,
