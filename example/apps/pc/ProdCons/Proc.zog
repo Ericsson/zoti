@@ -1,0 +1,43 @@
+module: ProdCons.Proc
+---
+nodes:
+  - name: Proc
+    kind: PlatformNode
+    target: {platform: unix-process, language: C} # More info?
+    ports:
+      - name: st_data
+        dir: in
+        data_type: {name: Tst.LinkData}
+      - name: res_data
+        dir: out
+        data_type: {name: Tst.ResData}
+        
+    nodes:
+      - name: Preproc
+        kind: ActorNode
+        description: "Proto-dataflow of NumCrunch Preproc"
+        nodes:
+          - name: preproc_native
+            kind: KernelNode
+            extern: !include {file: ../../kernels/Preproc.dfc}
+            ports:
+              - {name: st_data, dir: in}
+              - name: out
+                dir: out
+                data_type: {name: Tst.IntermediateData}
+                port_type: {type: assign} 
+      - name: Maincomp
+        kind: ActorNode
+        description: "Proto-dataflow of NumCrunch MainComp"
+        nodes:
+          - name: maincomp_native
+            kind: KernelNode
+            extern: !include {file: ../../kernels/MainComp.dfc}
+            ports:
+              - {name: in, dir: in, data_type: {name: Tst.IntermediateData}}
+              - {name: res, dir: out, data_type: {name: Tst.ResData}}
+    edges:
+      - connect: [".", st_data, Preproc/preproc_native, st_data]
+      - connect: [Preproc/preproc_native, out, Maincomp/maincomp_native, in]
+      - connect: [Maincomp/maincomp_native, res, ".", res_data]
+      

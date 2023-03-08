@@ -1,0 +1,64 @@
+module: ProdCons.Src
+import:
+- {module: Lib.Probes}
+
+---
+
+nodes:
+- name: Src
+  description: "Proto-dataflow of Src"
+  kind: PlatformNode
+  target: {platform: unix-process, language: C} # More info?
+  ports:
+    - name: trig
+      dir: in
+      data_type: {name: Common.Timestamp}       # relevant to KernelNode
+    - name: data
+      dir: out
+      data_type: {name: Tst.LinkData}
+    - name: DFL_counter_flush
+      dir: in
+    - name: DFL_counter_samples
+      dir: out 
+  nodes:
+    - name: Src
+      description: "Proto-dataflow of Src_compute"
+      kind: ActorNode
+      nodes:                                    # default detector and flows
+        - name: src_native
+          kind: KernelNode
+          extern: !include {file: ../../kernels/Src.dfc}
+          ports:
+            - name: trig                            # props from connection
+              dir: in
+            - name: data                            # props from connection
+              dir: out
+              data_type: {name: Tst.LinkData}       # TODO: workaround for probe?
+            - name: inited
+              dir: inout
+              port_type: {type: assign}
+              data_type: {name: Common.Boolean, value: "false"}
+            - name: predef_data
+              dir: inout
+              port_type: {type: assign}
+              data_type: {name: Tst.PredefLinkData}
+    - !attach
+      name: counter
+      ref: !ref {module: Lib.Probes, path: "/nodes[CounterProbe]"}
+      parameters:
+        probe-name: "Src-trig-pkts"
+  primitives:
+    - {name: null1, type: "NULL"}
+    - {name: null2, type: "NULL"}
+  edges:
+    - connect: [".", "trig", "Src/src_native", "trig"]
+    - connect: ["Src/src_native", "inited", "null1", null]
+      kind: storage
+    - connect: ["Src/src_native", "predef_data", "null2", null]
+      kind: storage
+    - connect: [".", "DFL_counter_flush", "counter", "DFL_counter_flush"]
+    - connect: ["counter", "DFL_counter_samples", ".", "DFL_counter_samples"]
+    # - connect: ["src/src_native", "data", ".", "data"]
+    - connect: ["Src/src_native", "data", "counter", "monitored_input"]
+    - connect: ["counter", "bypassed_data", ".", "data"]
+

@@ -20,7 +20,7 @@ nodes:
             kind: KernelNode
             extern:
               !include 
-              file: ../kernels/Sink.dfc
+              file: ../../kernels/Sink.dfc
               begin: "// <#begin#>(Sink_data)"
               end: "// <#end#>(Sink_data)"
             ports:
@@ -45,7 +45,7 @@ nodes:
             kind: KernelNode
             extern:
               !include 
-              file: ../kernels/Sink.dfc
+              file: ../../kernels/Sink.dfc
               begin: "// <#begin#>(Sink_stat)"
               end: "// <#end#>(Sink_stat)"
             ports:

@@ -24,7 +24,7 @@ nodes:
         nodes:
           - name: preproc_native
             kind: KernelNode
-            extern: !include {file: ../kernels/Preproc.dfc}
+            extern: !include {file: ../../kernels/Preproc.dfc}
             ports:
               - {name: st_data, dir: in}
               - name: out
@@ -37,7 +37,7 @@ nodes:
         nodes:
           - name: maincomp_native
             kind: KernelNode
-            extern: !include {file: ../kernels/MainComp.dfc}
+            extern: !include {file: ../../kernels/MainComp.dfc}
             ports:
               - {name: in, dir: in, data_type: {name: Tst.IntermediateData}}
               - {name: res, dir: out, data_type: {name: Tst.ResData}}
