@@ -2,21 +2,15 @@
 tool = "zoti-graph-0.1.0"
 keys = ["nodes", "ports", "edges", "primitives"]
 ext = [".zog"]
-pathvar = ["app", "graphlib"]
 
-[zoti.yaml.ftn_dbg]
+[zoti.yaml.ftn]
 tool = "zoti-yaml-0.1.0"
 keys = ["type", "entries"]
-pathvar = ["gen/types"]
 
 [zoti.yaml.gen]
 tool = "zoti-gen-0.1.0"
 keys = ["block", "port", "instance", "bind"]
 ext = [".zoc"]
-pathvar = ["gen/genspec"]
-
-[zoti.graph]
-dump_out = "gen/dbg"
 
 [zoti.gen]
 lib = ["templatelib"]

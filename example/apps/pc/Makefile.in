@@ -1,0 +1,2 @@
+MAIN  = ProdCons
+NODES = Src Proc Sink
