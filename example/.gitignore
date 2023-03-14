@@ -1,3 +1,5 @@
 *.dot
 *.txt
 gen
+prebuilt
+targetlib/*.o

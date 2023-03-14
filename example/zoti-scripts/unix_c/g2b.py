@@ -1,3 +1,6 @@
+from dumputils import SpecDumper
+import genspec
+import translib as target
 import sys
 import yaml
 import pathlib
@@ -13,10 +16,6 @@ import zoti_tran as tran
 import zoti_tran.translib as agnostic
 
 sys.path.insert(0, pathlib.Path(__file__).parent.resolve())
-
-import translib as target
-import genspec
-from dumputils import SpecDumper
 
 
 dist_zoti_graph = distribution("zoti_graph")
@@ -43,7 +42,7 @@ gpath = Path(args.graph)
 # fpaths = Path().glob(args.ftn)
 fpaths = [Path(p) for p in args.ftn]
 
-if gpath.suffixes == [".raw",".yaml"]:
+if gpath.suffixes == [".raw", ".yaml"]:
     with open(gpath) as f:
         G = graph.from_raw_yaml(f, version=dist_zoti_graph.version)
 else:
@@ -84,6 +83,14 @@ script.transform([
         dump_graph={
             "port_info": lambda p: f"{p.port_type.__class__.__name__},{p.data_type['type'].__class__.__name__}",
             "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
+        } if args.debug else None,
+    ),
+    tran.TransSpec(
+        target.receiver_types,
+        dump_graph={
+            "port_info": lambda p: f"{p.data_type['type']}",
+            # "port_info": lambda p: p.dir.name,
+            # "edge_info": lambda e: e.kind.name,
         } if args.debug else None,
     ),
     tran.TransSpec(

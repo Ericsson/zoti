@@ -13,6 +13,5 @@ keys = ["block", "port", "instance", "bind"]
 ext = [".zoc"]
 
 [zoti.gen]
-lib = ["templatelib"]
 begin_block = "\n// vvv {comp.name} begin\n"
 end_block = "\n// ^^^ {comp.name} end\n"

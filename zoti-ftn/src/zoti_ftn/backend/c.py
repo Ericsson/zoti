@@ -68,6 +68,9 @@ class TypeABC(ftn.TypeABC):
         return (None, None)
 
     def gen_ctor(self, buf_var, acc_expr, ptr_fixup=True):
+        if not self.need_malloc():
+            return ""
+
         base_size_expr = self._gen_base_size_expr(acc_expr)
         arr_infos = self._gen_arr_infos(acc_expr)
         size_exprs = [base_size_expr] + [sz for _, sz, _ in arr_infos]
@@ -113,7 +116,7 @@ class TypeABC(ftn.TypeABC):
         arr_infos = self._gen_arr_infos(acc_expr)
         size_exprs = [base_size_expr] + [sz for _, sz, _ in arr_infos]
         return "(" + " + ".join(size_exprs) + ")"
-    
+
     def gen_marshal(self, buf_ptr, acc_expr):
         return ";\n".join(self.gen_marshal_stmts(buf_ptr, acc_expr)) + ";"
 
@@ -326,7 +329,8 @@ class Array(ftn.Array, TypeABC):
                 stmts.append(
                     f"{acc_expr}.offset = (char*)({acc_expr}.arr) - (char*)({buf_ptr})"
                 )
-        sub_stmts = self.element_type._gen_marshalling(new_acc, iter_lvl, inverse)
+        sub_stmts = self.element_type._gen_marshalling(
+            new_acc, iter_lvl, inverse)
         stmts.extend(sub_stmts)
         return stmts
 
@@ -531,10 +535,10 @@ class FtnDb(ftn.FtnDb):
 
         if isinstance(uid, TypeABC):
             return {"_get": "", "_set": "FTNC_ASSIGN"}
-            
+
         if not (isinstance(uid, ftn.Uid) or isinstance(uid, str)):
             return None
-        access_dict : Dict = {}
+        access_dict: Dict = {}
         uid = uid if isinstance(uid, ftn.Uid) else ftn.Uid(uid)
         qname = _mangle_to_C_name(uid)
         for getset_names, _, _, read_only_expr in self.get(uid).gen_access_expr("(x)", 0):
@@ -577,5 +581,3 @@ class FtnDb(ftn.FtnDb):
         static_str = "static " if static else ""
         value_str = f" = {value}" if value else ""
         return f"{static_str}{ty_str} {var}{value_str};"
-
-

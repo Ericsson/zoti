@@ -58,7 +58,7 @@ def expand_actors(G, T, **kwargs):
         fsm_entry = ty.KernelNode(name="_fsm", _info=info,)
         G.register_child(actor, G.new(fsm, fsm_entry))
         log.info(f"  - Created detector node: {fsm}")
-        
+
         # connect inputs to FSM
         for port in fsm_spec.inputs:
             inp = actor.withPath(ty.Uid(port))
@@ -66,9 +66,10 @@ def expand_actors(G, T, **kwargs):
             # assert G.entry(inp).dir != ty.Dir.OUT
             cpy = _port_copy(inp.name(), fsm, G.entry(inp))
             G.entry(cpy).dir = ty.Dir.IN
-            G.connect(inp, cpy, edge=ty.Edge(ports.Assign, ty.Relation.EVENT, {}, {}), recursive=False)
+            G.connect(inp, cpy, edge=ty.Edge(ports.Assign,
+                      ty.Relation.EVENT, {}, {}), recursive=False)
             log.info(f"  - Connected detector input: {port}")
-            
+
         # create a new type + new port for FSM states
         if fsm_spec.states is not None:
             qual_name = f"{actor.parent().name()}.{actor.name()}_states"
@@ -91,8 +92,10 @@ def expand_actors(G, T, **kwargs):
             # tag preprocessor
             if entry.detector.preproc is not None:
                 G.decouple(actor.withNode(entry.detector.preproc))
-                G.add_mark("preproc", True, actor.withNode(entry.detector.preproc))
-                log.info(f"  - Found preproc {actor.withNode(entry.detector.preproc)}")
+                G.add_mark("preproc", True, actor.withNode(
+                    entry.detector.preproc))
+                log.info(
+                    f"  - Found preproc {actor.withNode(entry.detector.preproc)}")
             # tag scenarios
             if entry.detector.scenarios is not None:
                 for scen in entry.detector.scenarios:
@@ -103,13 +106,15 @@ def expand_actors(G, T, **kwargs):
 
         # select all untagged nodes under a "default scenario"
         tags = ["preproc", "scenario", "detector"]
-        kerns = G.children(actor, select=lambda n: all([t not in n.mark for t in tags]))
+        kerns = G.children(actor, select=lambda n: all(
+            [t not in n.mark for t in tags]))
         if len(kerns) > 0:
             clus = _cluster_underneath("default", actor, kerns, entry._info,)
             G.add_mark("scenario", True, clus)
             log.info(f"  - Created default scenario from {kerns}")
 
     return True
+
 
 def clean_ports(G, port_inference, **kwargs):
     """This transformation performs the following: 
@@ -163,22 +168,23 @@ def clean_ports(G, port_inference, **kwargs):
                 conn = G.connected_ports(port)
                 ends = G.end_ports(port, graph=conn)
                 entry = G.entry(port)
-                
+
                 # sync names of interconneted storage ports and make globals for them
                 if (G.entry(*G.port_edges(port)[0]).kind == ty.Relation.STORAGE
-                    and not G.get_mark("global_var", port)):
+                        and not G.get_mark("global_var", port)):
                     glb_name = _make_global(pltf, entry.name, entry)
                     for p in [e for e in ends if isinstance(G.entry(e), ty.Port)]:
                         G.entry(p).name = glb_name
                         G.add_mark("global_var", True, p)
-                    log.info(f"  - Promoted to global '{glb_name}': {conn.nodes}")
+                    log.info(
+                        f"  - Promoted to global '{glb_name}': {conn.nodes}")
 
                 # # change type of input ports to reflect their mechanism
                 # if entry.dir == ty.Dir.IN:
                 #     G.decouple_entry(port)
                 #     entry = G.entry(port)
                 #     entry.data_type = entry.port_type.get_port_type()
-                
+
                 # remove all actor ports connected to NULL (and the NULL connections)
                 nulls = [snk for snk in ends
                          if isinstance(G.entry(snk), ty.Primitive)
@@ -192,7 +198,7 @@ def clean_ports(G, port_inference, **kwargs):
                     log.info(f"  - Removed dangling ports {rmd}")
 
                 # remove all intermediate storage connections
-                elif G.entry (*G.port_edges(port)[0]).kind == ty.Relation.STORAGE:
+                elif G.entry(*G.port_edges(port)[0]).kind == ty.Relation.STORAGE:
                     # G.depth(p) <= G.depth(port)
                     def _to_remove(p):
                         return conn.degree(p) > 1
@@ -202,7 +208,7 @@ def clean_ports(G, port_inference, **kwargs):
             for scen in G.children(actor,
                                    select=lambda n: isinstance(n, ty.CompositeNode)):
 
-                #remove ignore nodes and downstream ports propagated
+                # remove ignore nodes and downstream ports propagated
                 for node in G.children(scen, select=lambda n: "ignore" in n.mark):
                     dsts = G.ports(node)
                     while dsts:
@@ -213,24 +219,26 @@ def clean_ports(G, port_inference, **kwargs):
                                         if G.depth(v) <= G.depth(node)])
                         dsts = tmp
                     G.ir.remove_node(node)
-                
+
                 # expose intermediate variables in scenarios
                 proj = G.node_projection(scen, with_parent=False)
                 for src_kern, dst_kern in proj.edges():
                     for src, dst in proj[src_kern][dst_kern]["ports"]:
                         inter = _new_intermediate_connection(src, dst, scen)
-                        log.info(f"  - Using {inter} as intemediate between ({src}, {dst})")
+                        log.info(
+                            f"  - Using {inter} as intemediate between ({src}, {dst})")
 
                 # add forced dependency to "probe_counter" nodes
                 for node in G.children(scen, select=lambda n: "probe_counter" in n.mark):
                     for ups, _ in G.node_edges(node, in_outside=True):
                         for down in [v for u, v in G.port_edges(ups, inp=False, out=True)
-                                        if G.parent(v) != node]:
-                            entry=deepcopy(G.entry(ups))
+                                     if G.parent(v) != node]:
+                            entry = deepcopy(G.entry(ups))
                             entry.dir = ty.Dir.OUT
                             dummy = G.register_port(node, G.new(
                                 node.withPort("_dummy"), entry))
-                            G.connect(dummy, down, G.entry(ups, down), recursive=False)
+                            G.connect(dummy, down, G.entry(
+                                ups, down), recursive=False)
 
                 # # marking timer input as global; HACK, to enable writing to it
                 # for node in G.children(scen):
@@ -238,7 +246,6 @@ def clean_ports(G, port_inference, **kwargs):
                 #         G.decouple(port)
                 #         entry = G.entry(port)
                 #         entry.mark["global_var"] = True
-                
 
         # alter exit ports to reflect socket variables
         for oport in G.ports(
@@ -254,6 +261,7 @@ def clean_ports(G, port_inference, **kwargs):
             entry.mark["socket"] = True
     return True
 
+
 def separate_reactions(G, clean_ports, **kwargs):
     def _make_global(pltf, name, port) -> str:
         glb_key = util.unique_name(pltf.withPort(name), G.ports(pltf),
@@ -263,7 +271,7 @@ def separate_reactions(G, clean_ports, **kwargs):
         G.register_port(pltf, G.new(glb_key, newport))
         G.add_mark("global_var", True, glb_key)
         return newport.name
-    
+
     def _duplicate_scenario(port, scen):
         new = G.copy_tree(scen, f"A_{port.name()}_A")
         iports = G.ports(new, select=lambda p: p.dir == ty.Dir.IN)
@@ -282,7 +290,7 @@ def separate_reactions(G, clean_ports, **kwargs):
             for oport in G.ports(new):
                 if u.name() == oport.name():
                     G.connect(oport, v, G.entry(u, v), recursive=False)
-    
+
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
         for actor in G.children(pltf, select=lambda n: isinstance(n, ty.ActorNode)):
             for scen in G.children(actor, select=lambda n: "scenario" in n.mark):
@@ -294,3 +302,10 @@ def separate_reactions(G, clean_ports, **kwargs):
                         name = _make_global(pltf, scenp.name(), G.entry(scenp))
                         G.decouple(actorp)
                         G.add_mark("buff_name", name, actorp)
+
+
+def receiver_types(G, T, **kwargs):
+    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+        for iport in G.ports(pltf, select=lambda p: p.dir == ty.Dir.IN):
+            entry = G.entry(iport)
+            entry.data_type = T.make_type(**entry.port_type.buffer_type())

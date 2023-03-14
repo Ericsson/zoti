@@ -190,7 +190,6 @@ class Constant:
     def __repr__(self):
         return "#{repr(self.const)}"
 
-    
     class Schema(mm.Schema):
         class Meta:
             strict = True
@@ -204,7 +203,6 @@ class Constant:
             if len(data) != 1:
                 raise mm.ValidationError("A constant can only be one type.")
             return Constant(data.values().next())
-
 
 
 ## Basic Data Types ##
@@ -223,7 +221,7 @@ class TypeABC:
         type = mm.fields.String()
         readonly = mm.fields.Bool(load_default=False)
         _info = mm.fields.Raw(data_key=tok.ATTR_INFO, load_default=None)
-        
+
         # @mm.post_load
         # def construct(self, data, **kwargs):
         #     return TypeABC(**data)
@@ -343,7 +341,8 @@ class Array(TypeABC):
 
     class Schema(TypeABC.Schema):
         range = Range.Field(data_key=tok.ATTR_RANGE)
-        len_field = mm.fields.String(data_key=tok.ATTR_LEN_FIELD, load_default=None)
+        len_field = mm.fields.String(
+            data_key=tok.ATTR_LEN_FIELD, load_default=None)
         element_type = TypeABC.Field(data_key=tok.ATTR_ELEMENT_TYPE)
 
         @mm.validates("range")
@@ -485,7 +484,7 @@ class FtnDb:
 
         self._srcs = srcs
         self._defs = {}
-        
+
     def add_source(self, module, name, src) -> None:
         """Adds a user-provided FTN source in the database."""
         if module in self._srcs and name in self._srcs[module]:
@@ -514,7 +513,7 @@ class FtnDb:
         """
         if isinstance(uid, TypeABC):
             return uid
-        
+
         uid = uid if isinstance(uid, Uid) else Uid(uid)
         if uid in self._defs:
             return self._defs[uid]
@@ -539,8 +538,9 @@ class FtnDb:
             newid = Uid(qual)
             self.add_source(newid.module, newid.name, assignment[qual])
             return newid
-        
-        ndefs = len([x for x in [name, from_ftn, from_spec, from_assign] if x is not None])
+
+        ndefs = len(
+            [x for x in [name, from_ftn, from_spec, from_assign] if x is not None])
         if ndefs == 0:
             raise FtnError("No data type definition provided.")
         if ndefs != 1:
@@ -554,7 +554,7 @@ class FtnDb:
                 return {"type": _newsource(bind), "value": value}
             except Exception:
                 spec = lang.load_str(from_ftn)
-                return  {"type": self.parse(spec), "value": value}
+                return {"type": self.parse(spec), "value": value}
         if from_assign is not None:
             return {"type": _newsource(from_assign), "value": value}
         if from_spec is not None:

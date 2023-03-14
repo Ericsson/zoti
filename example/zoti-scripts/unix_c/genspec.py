@@ -10,10 +10,11 @@ from ports import BlockBuffer, Timer, Socket
 
 # from pprint import pprint
 
-def _gen_arg(var, typ, T, casting=False, out=False, **kwargs ):
+
+def _gen_arg(var, typ, T, casting=False, out=False, **kwargs):
     tt = T.get(typ)
     match (casting, out, isinstance(tt, Array) or isinstance(tt, Structure)):
-        case(False, False, False): # not casting, Input, no Array/struct
+        case(False, False, False):  # not casting, Input, no Array/struct
             return f"&{var}"
         case(False, False, True):  # not casting, Input, Array/struct
             return f"{var}"
@@ -40,7 +41,7 @@ def _gen_arg(var, typ, T, casting=False, out=False, **kwargs ):
     #         return var
     #     else:
     #         return f"&{var}"
-        
+
 
 def _mangle_c_name(fullname):
     return str(fullname).replace("/", "_").replace("-", "_").replace(".", "_")
@@ -96,7 +97,7 @@ def _make_init_stage2(name, probes, timers, G, T):
         [f"dfl_evt_add_timer({p.port_type.period}LL, DFLF_{name}_{p.name});\n"
          for p in timers]
     )
-    
+
     comp = {
         "name": f"DFLF_{name}_INIT_stage2",
         "prototype": ["name", 'void $name() { {{ placeholder.code }} }'],
@@ -149,7 +150,7 @@ def _make_cfg_oport(name, ports, T):
 
 
 def _make_cfg_atom(name, ports, init_table, T):
-    
+
     inst = {
         "placeholder": None,
         "block": Ref(f"DFLF_{name}_CFG_atom"),
@@ -170,8 +171,10 @@ def _make_kernel_component(node, parent, G, T):
 
     entry = G.entry(node)
     globs = G.ports(node, select=lambda p: not _is_local(p))
-    iports = G.ports(node, select=lambda p: _is_local(p) and p.dir == ty.Dir.IN)
-    oports = G.ports(node, select=lambda p: _is_local(p) and p.dir == ty.Dir.OUT)
+    iports = G.ports(node, select=lambda p: _is_local(p)
+                     and p.dir == ty.Dir.IN)
+    oports = G.ports(node, select=lambda p: _is_local(p)
+                     and p.dir == ty.Dir.OUT)
 
     # TODO: casting should happen as part of type handling (i.e. by FTN)
     portinfo = [{
@@ -180,8 +183,9 @@ def _make_kernel_component(node, parent, G, T):
         "prefix": "*",
         "prtarg": f"const {T.c_name(G.entry(p).data_type['type'])}* {G.entry(p).name}",
         "usearg": _gen_arg(
-            f"{{{{ label.${p.name()}.name }}}}", G.entry(p).data_type['type'], T,
-            casting=(any([G.entry(i).dir==ty.Dir.IN
+            f"{{{{ label.${p.name()}.name }}}}", G.entry(
+                p).data_type['type'], T,
+            casting=(any([G.entry(i).dir == ty.Dir.IN
                           for i in G.connected_ports(p)
                           if G.parent(i) == parent])))
     } for p in iports]
@@ -193,7 +197,7 @@ def _make_kernel_component(node, parent, G, T):
         "usearg": _gen_arg(f"{{{{ label.${p.name()}.name }}}}",
                            G.entry(p).data_type['type'], T, out=True)
     } for p in oports]
-    
+
     # print("¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤")
     # print(iports + oports)
     # print([[o.name() for o in G.connected_ports(p) if G.parent(o) == parent] for p in iports + oports])
@@ -204,7 +208,7 @@ def _make_kernel_component(node, parent, G, T):
             [{"label_to_label": {
                 "child": p.name(),
                 "parent": [
-                    o.name() for o in G.connected_ports(p) if G.parent(o) == parent][0],}
+                    o.name() for o in G.connected_ports(p) if G.parent(o) == parent][0], }
               } for p in iports + oports] +
             [{"usage_to_label": {"child": p.name(), "usage": [G.entry(p).name]}}
              for p in globs]
@@ -229,7 +233,7 @@ def _make_kernel_component(node, parent, G, T):
         "prototype": [
             "name",
             (f'inline static void $name ({", ".join([p["prtarg"] for p in portinfo])}) '
-             '{ {{ placeholder.code }} }')], 
+             '{ {{ placeholder.code }} }')],
         "code": entry.extern,
         "_info": entry._info
     }
@@ -250,27 +254,30 @@ def _make_actor_scenario(node, G, T):
         "type": T.get(G.entry(p).data_type["type"]),
         "declargs":{"var": f"*{{{{label.{G.entry(p).name}.name}}}}",
                     **G.entry(p).data_type},
-        "consargs": [ "{{label." + G.entry(p).name + ".name}}" ,
-                      "(*{{ label."+ G.entry(p).name +".name}})"],
-        "descargs": [ "{{label." + G.entry(p).name + ".name}}" ,
-                      G.entry(p).data_type.get("value")]
-         } for p in inter_ports]
- 
+        "consargs": ["{{label." + G.entry(p).name + ".name}}",
+                     "(*{{ label." + G.entry(p).name + ".name}})"],
+        "descargs": ["{{label." + G.entry(p).name + ".name}}",
+                     G.entry(p).data_type.get("value")]
+    } for p in inter_ports]
+
     snd_specs = [
         G.entry(p).port_type.sender_genspec(
             p, G.entry(p),
-            [G.entry(o).name for o in G.connected_ports(p) if G.depth(o) == 2][0], T)
+            [G.entry(o).name for o in G.connected_ports(p)
+             if G.depth(G.commonAncestor(o, p)) == 1][0],  # TODO: wow!
+            T)
         for p in G.ports(node, select=lambda n: n.dir == ty.Dir.OUT)
     ]
     ############
-    
+
     usage = (
         [snd_usage[0] for _, snd_usage, _, _ in snd_specs]    # constructor
         # + [snd_usage[1] for _, snd_usage, _, _ in snd_specs]  # declaration # TODO... why clashing with parent?
         + [T.gen_decl(**inter["declargs"]) for inter in inter_usage]
         + [inter["type"].gen_ctor(*inter["consargs"]) for inter in inter_usage]
         + ['{{ placeholder.code }}']
-        + [inter["type"].gen_desctor(*inter["descargs"]) for inter in inter_usage]
+        + [inter["type"].gen_desctor(*inter["descargs"])
+           for inter in inter_usage]
         # + [snd_usage[2] for _, snd_usage, _, _ in snd_specs]  # marshalling # TODO... marshalling before sending
         + [snd_usage[3] for _, snd_usage, _, _ in snd_specs]  # destructor
     )
@@ -289,7 +296,8 @@ def _make_actor_scenario(node, G, T):
         G.node_projection(node), source=node))[1:]
     # nx.nx_pydot.write_dot(nx.path_graph(sched), f"sched_{_mangle_c_name(str(node))}.dot")
 
-    kerns = [_make_kernel_component(n, node, G, T) for n in sched if isinstance(G.entry(n), ty.KernelNode)]
+    kerns = [_make_kernel_component(
+        n, node, G, T) for n in sched if isinstance(G.entry(n), ty.KernelNode)]
 
     cp_insts = [inst for inst, _ in kerns] + [
         inst for _, _, snd_insts, _ in snd_specs for inst in snd_insts]
@@ -325,13 +333,15 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
 
     # TODO: ports between scenarios
     ports = (rcv_ports +
-             [{"name": p.name} for p in  oports] +
+             [{"name": p.name} for p in oports] +
              [{"name": G.entry(p).name, "usage": [G.get_mark("buff_name", p)]}
               for p in G.ports(actor_id, select=lambda p: p.dir == ty.Dir.IN)
               if p != port_id])
 
     proto = rcv_proto[:-1] + [
-        rcv_proto[-1] + "\n ".join([
+        rcv_proto[-1]
+        + T.gen_decl(f"{{{{label.{iport.name}.name}}}}", **iport.data_type)
+        + "\n" + "\n ".join([
             T.gen_decl(f"* {{{{label.{p.name}.name}}}}", **p.data_type)
             for p in oports
         ]) + '\n {{ placeholder.code }}\n}']
@@ -344,7 +354,7 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
 
     scens = [_make_actor_scenario(scen, G, T) for scen in port_scenarios]
     # unique_blocks = {blk["name"]: blk for _, blks in scens for blk in blks}
-    
+
     insts = (rcv_insts
              + ([preproc] if preproc else [])
              + ([detector] if detector else [])
@@ -378,7 +388,7 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
             for p in G.ports(pltf, select=lambda p: isinstance(p.port_type, Timer))]
         atomports = [
             ({"name": "atom_table_len", "usage": ["DFL_dyn_atom_table_len"]},
-             "static size_t "," = 0"),
+             "static size_t ", " = 0"),
             ({"name": "atom_table_inited", "usage": ["DFL_atom_table_inited"]},
              "static bool ", " = false"),
             ({"name": "atom_table", "usage": ["DFL_atom_table"]},
@@ -394,17 +404,16 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
                 ({"name": "dyn_table_inited", "usage": ["DFL_dyn_atom_table_inited"]},
                  "static bool ", " = false"),
             ]
-        
+
         glbs_inst, glbs_comp = _make_global_inits(name, atomports, glbs, G, T)
-        
+
         buffs = [G.entry(p).port_type.header_funcs(G.entry(p).name)
                  for p in G.ports(pltf, select=lambda p: isinstance(p.port_type, BlockBuffer))]
         buff_inst, buff_comp = ([j for i, c in buffs for j in i],
                                 [j for i, c in buffs for j in c])
-        
+
         stg1_inst, stg1_comp = _make_init_stage1(name, [], T)
 
-        
         stg2_inst, stg2_comp = _make_init_stage2(name, probes, timers, G, T)
 
         iport = [
@@ -428,7 +437,8 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
             "init_atom_table" in G.entry(pltf).mark, T)
 
         # iffy
-        osockets = [{"name": p[1]} for p in oport]  # , "usage": f"DFLBUF_{p[1]}"
+        osockets = [{"name": p[1]}
+                    for p in oport]  # , "usage": f"DFLBUF_{p[1]}"
         cfg_names = {"atom": acfg_comp["name"],
                      "inport": icfg_comp["name"],
                      "outport": ocfg_comp["name"]}
@@ -439,7 +449,7 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
             "requirement": {
                 "include": T.requirements() + ["<stdio.h>"]
                 + ['"DFL_core.h"', '"DFL_util.h"', '"dfl_cfg.h"',
-                   '"dfl_evt.h"', '"dfl_thrd.h"', '"DflSys.h"']
+                   '"dfl_evt.h"']
                 + [f'"{h}"' for h in typedefs.keys()]
             },
             "label": [a for a, _, _ in atomports] + osockets,
@@ -464,7 +474,6 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
         unique_child_cps = {cp["name"]: cp for cp in child_cps}
         cps = [main, glbs_comp, stg1_comp, stg2_comp, icfg_comp, ocfg_comp,
                acfg_comp] + buff_comp + list(unique_child_cps.values())
-        
 
         preamble = {
             "module": name,
@@ -479,8 +488,9 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
                         "usage": WithCreate(["p", "{{label.$p.name}}"])}}]
             },]
         },]
-        
-        specs[pltf.name()] = [preamble, Default([{"block": defaults}, {"block": cps}])]
+
+        specs[pltf.name()] = [preamble, Default(
+            [{"block": defaults}, {"block": cps}])]
 
     return specs
 

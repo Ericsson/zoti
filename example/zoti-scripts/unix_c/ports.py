@@ -3,10 +3,9 @@ from copy import deepcopy
 from zoti_tran import ScriptError, ContextError
 from dumputils import Ref
 
- 
-def _mangle_c_name(fullname):
-    return str(fullname).replace("/", "_").replace("-", "_").replace(".", "_").replace("^","__")
 
+def _mangle_c_name(fullname):
+    return str(fullname).replace("/", "_").replace("-", "_").replace(".", "_").replace("^", "__")
 
 
 ######## PORT TYPES ########
@@ -18,27 +17,29 @@ class PortTypeABC:
 class Assign(PortTypeABC):
     pass
 
- 
 
 class Socket(PortTypeABC):
+    def buffer_type(self):
+        return {"name": "DflSys.UdpPacket"}
+
     def receiver_genspec(self, iport_name: str, prefix: str,  T):
-        labels = [   
+        labels = [
             {"name": "socket", "usage": ["DFL_socket"]},
             {"name": "size"},
             {"name": iport_name, "usage": [f"udp2ram_{iport_name}"]},
         ]
         # prototype expects to be closed by caller
-        proto = ["name", 
-            " void $name(int {{label.socket.name}}) {\n"
-            " uint16_t {{label.size.name}};\n" +
-            T.gen_decl(f"{{{{label.{iport_name}.name}}}}", "DflSys.UdpPacket") + "\n"
-        ]
+        proto = ["name",
+                 " void $name(int {{label.socket.name}}) {\n"
+                 " uint16_t {{label.size.name}};\n"  # +
+                 # T.gen_decl(f"{{{{label.{iport_name}.name}}}}", "DflSys.UdpPacket") + "\n"
+                 ]
         instances = [{
             "placeholder": "receive",
             "block": Ref(f"recv_{prefix}_{iport_name}"),
             "directive": ["expand"],
             "bind": [
-                {"label_to_label": { "parent": iport_name, "child": "ram"}},
+                {"label_to_label": {"parent": iport_name, "child": "ram"}},
                 {"label_to_label": {"parent": "socket", "child": "socket"}},
                 {"label_to_label": {"parent": "size", "child": "size"}},
             ],
@@ -54,14 +55,14 @@ class Socket(PortTypeABC):
         oport_ty = oport_entry.data_type
         oport_tyspec = T.get(oport_ty["type"])
         oport_name = oport_entry.name
-        
+
         labels = []
 
-        usage = [ 
+        usage = [
             oport_tyspec.gen_ctor(var, f"(*{var})"),
             T.gen_decl(var, **oport_ty),
             oport_tyspec.gen_marshal(var, f"(*{var})"),
-            oport_tyspec.gen_desctor(var, oport_ty.get("value")) 
+            oport_tyspec.gen_desctor(var, oport_ty.get("value"))
         ]
 
         instances = [{                                       # marshalling first
@@ -76,8 +77,9 @@ class Socket(PortTypeABC):
             "directive": ["expand"],
             "bind": [
                 {"label_to_label": {"child": "data", "parent": oport_name}},
-                {"usage_to_label": {"child": "socket", "usage": [connected_name]}},
-            
+                {"usage_to_label": {"child": "socket",
+                                    "usage": [connected_name]}},
+
             ]
         }]
 
@@ -94,25 +96,31 @@ class Timer(PortTypeABC):
     def __init__(self, period: int):
         self.period = period
 
+    def buffer_type(self):
+        return {"name": "Common.Timespec"}
+
     def receiver_genspec(self, iport_name: str, prefix: str,  T):
-        labels = [   
+        labels = [
             {"name": "timestamp", "usage": ["DFL_timestamp"]},
             {"name": iport_name, "usage": [f"timerrecv_{iport_name}",],
              "glue": T.gen_access_dict("Common.Timespec", read_only=False)},
         ]
         # prototype expects to be closed by caller
-        proto = ["name", 
-            " void $name(int64_t {{label.timestamp.name}}) {\n" +
-            T.gen_decl(f"{{{{label.{iport_name}.name}}}}", "Common.Timespec") + "\n"
-        ]
+        proto = ["name",
+                 " void $name(int64_t {{label.timestamp.name}}) {\n"  # +
+                 # T.gen_decl(f"{{{{label.{iport_name}.name}}}}",
+                 #            "Common.Timespec") + "\n"
+                 ]
         instances = [{
             "placeholder": "read_timer",
             "block": Ref(f"read_timer_{prefix}_{iport_name}"),
             "directive": ["expand"],
             "bind": [
-                {"value_to_param": { "child": "period", "value": str(self.period)}},
-                {"value_to_param": { "child": "callback", "value": f"DFLF_{prefix}_{iport_name}"}},
-                {"label_to_label": { "parent": "timestamp", "child": "timestamp"}},
+                {"value_to_param": {"child": "period",
+                                    "value": str(self.period)}},
+                {"value_to_param": {"child": "callback",
+                                    "value": f"DFLF_{prefix}_{iport_name}"}},
+                {"label_to_label": {"parent": "timestamp", "child": "timestamp"}},
                 {"label_to_label": {"parent": iport_name, "child": "timerrecv"}},
             ],
         }]
@@ -138,6 +146,7 @@ def _merge_dicts(plist, key, err_msg=""):
             else:
                 getattr(ref, key)[k] = v
     return ref
+
 
 def make_data_type(plist, T, pids=None):
     """Syncs a list of port entries *plist* which are supposed to be
@@ -174,7 +183,7 @@ def make_port_type(plist, pids=None):
             return BlockBuffer(**kwargs)
         else:
             raise ValueError(f"Unknown port type '{type}'")
-    
+
     if len(plist) == 0:
         return
     ref = _merge_dicts(plist, "port_type", "Port type argument mismatch: ")
@@ -193,7 +202,7 @@ def make_markings(plist, pids=None):
 
     """
     if len(plist) == 0:
-        return 
+        return
     ref = _merge_dicts(plist, "mark", "Data type argument mismatch: ")
     return ref.mark
 
@@ -207,10 +216,10 @@ class BlockBuffer(PortTypeABC):
             "placeholder": None,
             "block": Ref(f"{port_name}_alloc"),
             "directive": ["pass"],
-        },{
+        }, {
             "placeholder": None,
             "block": Ref(f"{port_name}_pop"),
-            "directive": ["pass"],            
+            "directive": ["pass"],
         }]
         components = [{
             "name": f"{port_name}_alloc",
@@ -228,7 +237,7 @@ if (blk_start < 0)
   {port_name}.start[id] = blk_nr;
 return blk_nr;
 """,
-        },{
+        }, {
             "name": f"{port_name}_pop",
             "prototype": ["name", "inline static int16_t $name(Common__StreamId_t id, uint16_t block_max){ {{ placeholder['code'] }} }"],
             "code": f"""
