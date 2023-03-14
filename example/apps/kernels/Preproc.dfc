@@ -51,4 +51,4 @@ for (uint16_t i = 0; i < length; ++i) {
   t.f = b[i]; {{ setter("out.b", "i", "t.i") }};
   t.f = c[i]; {{ setter("out.c", "i", "t.i") }};
  }
-{{ setter("out.LEN", "length") }}
+{{ setter("out.LEN", "length") }};

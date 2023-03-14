@@ -168,6 +168,7 @@ printf("Timer trigged, now=%"PRIu64" %"PRIu32"\n",
        {{ getter("timerrecv.seconds") }},
        {{ getter("timerrecv.nanosecs") }}
        );
+#endif
        
 dfl_evt_add_timer({{param.period}}LL, {{param.callback}});
 // End: TimerReceive.C
