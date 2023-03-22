@@ -6,16 +6,17 @@
  $(error "clang-format not installed, Consider installing it.")
  endif
 
-ifeq ($(wildcard ../prebuilt/x86_64/*),)
+ifeq ($(wildcard ../target/prebuilt/x86_64/*),)
 $(error "Did not found x86_64 prebuild libraries. Consider running 'make prepare'.")
 endif
 
-PYTHON		= pipenv run python
-ZOTI_YAML	= $(PYTHON) -m zoti_yaml
-ZOTI_GRAPH	= $(PYTHON) -m zoti_graph
-ZOTI_FTN	= $(PYTHON) -m zoti_ftn
-ZOTI_GEN	= $(PYTHON) -m zoti_gen
-C_FORMAT	= clang-format
+PYTHON		:= pipenv run python
+ZOTI_YAML	:= $(PYTHON) -m zoti_yaml
+ZOTI_GRAPH	:= $(PYTHON) -m zoti_graph
+ZOTI_FTN	:= $(PYTHON) -m zoti_ftn
+ZOTI_GEN	:= $(PYTHON) -m zoti_gen
+C_FORMAT	:= clang-format
+CC 		:= gcc
 
 ############################################################################
 ## Setting path variables
@@ -26,7 +27,7 @@ SCRIPT_PATH 	= .
 GRAPH_LIB	= $(APP_PATH) ../graphlib
 TYPE_LIB	= ../typelib
 TEMPLATE_LIB	= ../templatelib
-PREBUILT_PATH	= ../prebuilt/x86_64
+PREBUILT_PATH	= ../target/prebuilt/x86_64
 PREBUILT_INCL	= $(PREBUILT_PATH)/include
 PREBUILT_LIB	= $(PREBUILT_PATH)/lib
 GEN_PATH	= ../gen/$(APP)
@@ -80,7 +81,6 @@ GEN_BINS	:= $(patsubst $(GEN_CODE_PATH)/%.o, $(GEN_BIN_PATH)/%.bin, $(GEN_OBJS))
 ## C compilation flags
 ############################################################################
 
-CC := gcc
 #OPT_CFLAGS := -O2
 
 ifndef DEBUG
