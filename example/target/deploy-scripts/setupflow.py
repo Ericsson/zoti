@@ -19,7 +19,7 @@ import itertools
 import socket
 import json
 
-import dfl.graph
+import dfl
 
 
 ATTR_EXTERNAL_NAME = 'external-name'
@@ -39,7 +39,7 @@ def fatal(msg):
     sys.exit(1)
 
 
-class FlowEdge(dfl.graph.FlowEdge):
+class FlowEdge(dfl.FlowEdge):
     def __init__(self, src_node, src_port, dst_node, dst_port,
                  attrs, node_def, context):
         super().__init__(src_node, src_port, dst_node, dst_port,
@@ -48,14 +48,7 @@ class FlowEdge(dfl.graph.FlowEdge):
 
     def resolve_port_nr(self):
         src_host = self.get_src_node().get_host()
-        # Hack: EMCA is a special case at the moment. Static port and address.
-        #   We retrofit the destination with the static port number that the
-        #   EMCA binary will send to.
-        if src_host == 'EMCA':
-            dst_port_nr = 8091
-            self.get_dst_port().set_port_nr(dst_port_nr)
-        else:
-            dst_port_nr = self.get_dst_port().get_port_nr()
+        dst_port_nr = self.get_dst_port().get_port_nr()
         dst_host = self.get_dst_node().get_host()
         self.get_src_port().set_ip_destination(dst_host, dst_port_nr)
 
@@ -67,16 +60,16 @@ class FlowEdge(dfl.graph.FlowEdge):
         return self._external_dst
 
 
-class Port(dfl.graph.Port):
+class Port(dfl.Port):
     pass
 
 
-class TimerPort(dfl.graph.TimerPort, Port):
-    def deploy(self, node_inst):
-        pass
+# class TimerPort(dfl.TimerPort, Port):
+#     def deploy(self, node_inst):
+#         pass
 
 
-class InPort(dfl.graph.InPort, Port):
+class InPort(dfl.InPort, Port):
     def __init__(self, port_node, parent_node_def, context):
         super().__init__(port_node, parent_node_def, context)
         if not parent_node_def.is_system_nodedef():
@@ -89,9 +82,6 @@ class InPort(dfl.graph.InPort, Port):
         self._ip_port_nr = ip_port_nr
 
     def deploy(self, node_inst):
-        # Hack: If node is on EMCA we do nothing. Handled manually and static.
-        if node_inst.get_host() == 'EMCA':
-            return
 
         msg = {
             'cfg-kind': 'in-port',
@@ -112,22 +102,13 @@ class InPort(dfl.graph.InPort, Port):
                                      self._ip_port_nr)
 
 
-class OutPort(dfl.graph.OutPort, Port):
+class OutPort(dfl.OutPort, Port):
     def set_ip_destination(self, ip_host, ip_port):
-        # Hack: EMCA is a special case at the moment. Static port and address.
-        if ip_host == 'EMCA':
-            self._ip_host = '192.168.56.1'
-            self._ip_port_nr = 5555
-        else:
-            self._ip_host = ip_host
-            self._ip_port_nr = ip_port
+        self._ip_host = ip_host
+        self._ip_port_nr = ip_port
 
     def deploy(self, node_inst):
         print('OutPort: {!r}'.format(self.get_name()));
-        # Hack: If node is on EMCA we do nothing. Handled manually and static.
-        if node_inst.get_host() == 'EMCA':
-            return
-
         msg = {
             'cfg-kind': 'out-port',
             'name': self.get_name(),
@@ -147,7 +128,7 @@ class OutPort(dfl.graph.OutPort, Port):
                                      self._ip_port_nr)
 
 
-class NodeInstance(dfl.graph.NodeInstance):
+class NodeInstance(dfl.NodeInstance):
     def __init__(self, name, parent, node_def, parameters, context):
         super().__init__(name, parent, node_def, parameters, context)
         self._host = None
@@ -277,29 +258,9 @@ class NodeInstance(dfl.graph.NodeInstance):
         self.get_context().sendto(self.get_host(), self.get_cfg_port(), msg)
 
 
-class NodeDef(dfl.graph.NodeDef):
+class NodeDef(dfl.NodeDef):
     def __init__(self, name, context, spec=None):
         super().__init__(name, context, spec=spec)
-
-    #### def configure_nodes(self):
-    ####     print('Port base: {}'.format(self.get_context().get_port_base()))
-    ####     subnodes = self.get_subnodes(include_system=False)
-    ####     for e in self.get_edges():
-    ####         e.resolve_port_nr()
-
-    ####     print('Nodes:')
-    ####     for n in subnodes:
-    ####         print('  {}'.format(n))
-    ####     print('Edges:')
-    ####     for e in self.get_edges():
-    ####         print('  {}'.format(e))
-
-    ####     for n in subnodes:
-    ####         n.push_atoms()
-    ####     for n in subnodes:
-    ####         n.get_nodedef().deploy_inports()
-    ####     for n in subnodes:
-    ####         n.get_nodedef().deploy_outports()
 
 
 class NameService(object):
@@ -342,7 +303,7 @@ class NameService(object):
             return json.loads(data.decode(encoding='UTF-8'))
 
 
-class Context(dfl.graph.Context):
+class Context(dfl.Context):
     def __init__(self, port_base, ns_host, ns_port, guard_period,
                  search_paths=None):
         self._port_base = port_base
@@ -412,7 +373,7 @@ def main():
 
     global debug_printing
     debug_printing = args.debug
-    dfl.graph.debug_printing = debug_printing
+    dfl.debug_printing = debug_printing
 
     global use_csv
     use_csv = args.csv

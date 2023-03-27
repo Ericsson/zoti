@@ -41,7 +41,7 @@ def fatal(msg):
     sys.exit(1)
 
 
-class NodeInstance(dfl.graph.NodeInstance):
+class NodeInstance(dfl.NodeInstance):
     def __init__(self, name, parent, node_def, parameters, context):
         super().__init__(name, parent, node_def, parameters, context)
         self._bin_name = None
@@ -83,10 +83,6 @@ class NodeInstance(dfl.graph.NodeInstance):
         return self._in_window
 
     def download_to_agent(self):
-        # Hack: If node is on EMCA we do nothing. Handled manually and static.
-        if self.get_host() == 'EMCA':
-            return
-
         binfile_name = self.get_binfile_name()
         if binfile_name == '':
             # No binfile, nothing to download.
@@ -128,10 +124,6 @@ class NodeInstance(dfl.graph.NodeInstance):
             fatal('Download failed, status={!r}'.format(resp['status']))
 
     def start_node(self, window_all):
-        # Hack: If node is on EMCA we do nothing. Handled manually and static.
-        if self.get_host() == 'EMCA':
-            return
-
         binfile_name = self.get_binfile_name()
         if binfile_name == '':
             # No binfile, nothing to start.
@@ -155,10 +147,6 @@ class NodeInstance(dfl.graph.NodeInstance):
             fatal('Start failed, status={!r}'.format(resp['status']))
 
     def stop_node(self):
-        # Hack: If node is on EMCA we do nothing. Handled manually and static.
-        if self.get_host() == 'EMCA':
-            return
-
         binfile_name = self.get_binfile_name()
         if binfile_name == '':
             # No binfile, nothing to stop.
@@ -199,7 +187,7 @@ class NodeInstance(dfl.graph.NodeInstance):
             return json.loads(data.decode(encoding='UTF-8'))
 
 
-class NodeDef(dfl.graph.NodeDef):
+class NodeDef(dfl.NodeDef):
     def __init__(self, name, context, spec=None):
         super().__init__(name, context, spec=spec)
 
@@ -234,11 +222,11 @@ class NodeDef(dfl.graph.NodeDef):
             n.stop_node()
 
 
-class Context(dfl.graph.Context):
+class Context(dfl.Context):
     def __init__(self, search_paths=None, bin_paths=None, agent_port=0xdf1a):
         super().__init__(search_paths=search_paths)
         self._agent_port = agent_port
-        self._bin_repo = dfl.graph.FileRepo(bin_paths)
+        self._bin_repo = dfl.FileRepo(bin_paths)
 
     def get_agent_port(self):
         return self._agent_port
@@ -274,7 +262,7 @@ def main():
 
     global debug_printing
     debug_printing = args.debug
-    dfl.graph.debug_printing = debug_printing
+    dfl.debug_printing = debug_printing
 
     agent_port = args.agent_port
     if PORT_OFFSET_VAR in os.environ:

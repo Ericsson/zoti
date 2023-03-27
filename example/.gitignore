@@ -2,4 +2,6 @@
 *.txt
 gen
 prebuilt
-targetlib/*.o
+target/**/*.o
+__pycache__
+bins_storage

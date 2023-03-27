@@ -147,19 +147,44 @@ class ZotiLoader(SafeLoader):
             return self.construct_mapping(node, deep=deep)
         assert False
 
-    def construct_with_create(self, node):
-        return ty.WithCreate(self.construct_any(node))
+    def construct_policy_union(self, node):
+        try:
+            return ty.MergePolicy(obj=self.construct_any(node), union=True, replace=False)
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
 
-    def construct_with_replace(self, node):
-        return ty.WithReplace(self.construct_any(node))
+    def construct_policy_union_replace(self, node):
+        try:
+            return ty.MergePolicy(obj=self.construct_any(node), union=True, replace=True)
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
+
+    def construct_policy_intersect(self, node):
+        try:
+            return ty.MergePolicy(obj=self.construct_any(node), union=False, replace=False)
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
+
+    def construct_policy_intersect_replace(self, node):
+        try:
+            return ty.MergePolicy(obj=self.construct_any(node), union=False, replace=True)
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
 
 
 ZotiLoader.add_constructor("!include", ZotiLoader.include)
 ZotiLoader.add_constructor("!default", ZotiLoader.construct_default)
 ZotiLoader.add_constructor("!attach", ZotiLoader.construct_attach)
 ZotiLoader.add_constructor("!ref", ZotiLoader.construct_ref)
-ZotiLoader.add_constructor("!with_create", ZotiLoader.construct_with_create)
-ZotiLoader.add_constructor("!with_replace", ZotiLoader.construct_with_replace)
+ZotiLoader.add_constructor("!policy:union", ZotiLoader.construct_policy_union)
+ZotiLoader.add_constructor("!policy:union+replace", ZotiLoader.construct_policy_union_replace)
+ZotiLoader.add_constructor("!policy:intersect", ZotiLoader.construct_policy_intersect)
+ZotiLoader.add_constructor("!policy:intersect+replace",
+                           ZotiLoader.construct_policy_intersect_replace)
 
 
 def load(stream, Loader, **kwargs):

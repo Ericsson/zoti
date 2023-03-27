@@ -19,6 +19,11 @@ class Assign(PortTypeABC):
 
 
 class Socket(PortTypeABC):
+    ext_name: str
+
+    def __init__(self, external_name: str = None):
+        self.ext_name = external_name
+        
     def buffer_type(self):
         return {"name": "DflSys.UdpPacket"}
 
@@ -89,6 +94,15 @@ class Socket(PortTypeABC):
         }]
         return labels, usage, instances, blocks
 
+    def to_json(self):
+        jsn = {
+            "trigger-type": "socket",
+            "transport-type": "UDP"
+        }
+        if self.ext_name:
+            jsn["external-name"] = self.ext_name
+        return jsn
+
 
 class Timer(PortTypeABC):
     period: int
@@ -130,6 +144,12 @@ class Timer(PortTypeABC):
         }]
         return labels, proto, instances, blocks
 
+    def to_json(self):
+        return {
+            "trigger-type": "timer",
+            "period": self.period
+        }
+    
 ######## SYNC PROCEDURES ########
 
 
@@ -174,13 +194,11 @@ def make_port_type(plist, pids=None):
     """
     def _build_port(type, **kwargs):
         if type == "socket":
-            return Socket()
+            return Socket(**kwargs)
         elif type == "timer":
             return Timer(**kwargs)
         elif type == "assign":
             return Assign()
-        elif type == "block-buffer":
-            return BlockBuffer(**kwargs)
         else:
             raise ValueError(f"Unknown port type '{type}'")
 
@@ -206,56 +224,3 @@ def make_markings(plist, pids=None):
     ref = _merge_dicts(plist, "mark", "Data type argument mismatch: ")
     return ref.mark
 
-
-############ DROPPED ###############
-
-
-class BlockBuffer(PortTypeABC):
-    def header_funcs(self, port_name,):
-        instances = [{
-            "placeholder": None,
-            "block": Ref(f"{port_name}_alloc"),
-            "directive": ["pass"],
-        }, {
-            "placeholder": None,
-            "block": Ref(f"{port_name}_pop"),
-            "directive": ["pass"],
-        }]
-        components = [{
-            "name": f"{port_name}_alloc",
-            "prototype": ["name", "inline static int16_t $name(Common__StreamId_t id, uint16_t block_max){ {{ placeholder['code'] }} }"],
-            "code": f"""
-int16_t blk_nr = {port_name}.next[id];
-int16_t blk_start = {port_name}.start[id];
-if (blk_nr == blk_start)
-  return -1;
-if (blk_nr+1 >= block_max)
-  {port_name}.next[id] = 0;
-else
-  {port_name}.next[id]++;
-if (blk_start < 0)
-  {port_name}.start[id] = blk_nr;
-return blk_nr;
-""",
-        }, {
-            "name": f"{port_name}_pop",
-            "prototype": ["name", "inline static int16_t $name(Common__StreamId_t id, uint16_t block_max){ {{ placeholder['code'] }} }"],
-            "code": f"""
-int16_t blk_nr = {port_name}.start[id];
-if (blk_nr >= 0) {{
-  int16_t blk_start = blk_nr + 1;
-  if (blk_start >= block_max) {{
-    blk_start = 0;
-  }}
-  if (blk_start == {port_name}.next[id]) {{
-    {port_name}.next[id] = 0;
-    {port_name}.start[id] = -1;
-  }} else {{
-    {port_name}.start[id] = blk_start;
-  }}
-}}
-return blk_nr;
-"""
-        }]
-
-        return instances, components

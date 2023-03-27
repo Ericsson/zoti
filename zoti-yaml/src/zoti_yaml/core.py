@@ -1,7 +1,7 @@
 import logging as log
 from copy import deepcopy
 from pathlib import Path, PurePosixPath
-from pprint import pformat
+from pprint import pformat, pprint
 from typing import Any, Dict, List, Optional, Union, Generic, TypeVar
 from dataclasses import dataclass
 
@@ -27,6 +27,8 @@ def clean(node):
             for k, v in node.items()
             if k not in RESERVED_KWS
         }
+    if isinstance(node, MergePolicy):
+        node.obj = clean(node.obj)
     return node
 
 
@@ -428,17 +430,24 @@ class Attach:
 ## !default ##
 ##############
 
-@dataclass(eq=False)
-class WithCreate:
+@dataclass
+class MergePolicy:
     """See ``!default``."""
+    obj: Optional[Any] = None
+    union: bool = True
+    replace: bool = False
+    
+# @dataclass(eq=False)
+# class WithCreate:
+#     """See ``!default``."""
 
-    obj: Any
+#     obj: Any
 
 
-@dataclass(eq=False)
-class WithReplace:
-    """See ``!default``."""
-    obj: Any
+# @dataclass(eq=False)
+# class WithReplace:
+#     """See ``!default``."""
+#     obj: Any
 
 
 class Default:
@@ -514,22 +523,22 @@ class Default:
         return "!default\n" + pformat([self.defaults, self.original])
 
     def resolve(self):
-        def _merge_dict(orig: Dict, default: Dict) -> Any:
+        def _merge_dict(orig: Dict, default: Dict, policy: MergePolicy) -> Any:
             def _merge_val(key, val):
-                if isinstance(val, WithReplace):
-                    orig[key] = deepcopy(val.obj)
-                    return
-                elif isinstance(val, WithCreate):
+                if isinstance(val, MergePolicy):
+                    new_policy = MergePolicy(union=val.union, replace=val.replace)
                     val = val.obj
-                    if key not in orig:
-                        orig[key] = deepcopy(val)
-                        return
+                else:
+                    new_policy = policy
+                # log.warn(f"policy={new_policy}")
                 if key in orig:
-                    orig[key] = _merge_dict(orig[key], val)
+                    orig[key] = _merge_dict(orig[key], val, new_policy)
+                elif new_policy.union:
+                    orig[key] = deepcopy(val)
                 return
 
             if type(orig) != type(default):
-                print(default, orig)
+                # print(default, orig)
                 msg = f"Cannot merge {type(default).__name__} with {type(orig).__name__}"
                 msg += f"\n  {pformat(default)}"
                 msg += f"\n  {pformat(orig)}"
@@ -541,11 +550,12 @@ class Default:
                 # if len(default) != 1:
                 #     err = f"Length of default list should be 1.\n{pformat(default)}"
                 #     raise ValueError(err)
-                orig = [_merge_dict(element, default[0]) for element in orig]
-            elif not orig:
+                orig = [_merge_dict(element, default[0], policy) for element in orig]
+            elif policy.replace or not orig:
                 orig = deepcopy(default)
             return orig
 
-        _merge_dict(self.original, clean(self.defaults))
+        _merge_dict(self.original, clean(self.defaults), policy=MergePolicy())
         log.info("  - default values applied")
+
         return self.original
