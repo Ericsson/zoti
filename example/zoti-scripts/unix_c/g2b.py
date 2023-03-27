@@ -1,13 +1,16 @@
 from dumputils import SpecDumper
-import genspec
-import translib as target
 import sys
 import yaml
+import json
 import pathlib
 import argparse
 import logging as log
 from pathlib import Path
 from importlib.metadata import distribution
+
+import genspec
+import gendepl
+import translib as target
 
 import zoti_graph as graph
 import zoti_graph.sanity as sanity
@@ -134,6 +137,7 @@ script.transform([
     ),
     tran.TransSpec(genspec.typedefs),
     tran.TransSpec(genspec.genspec),
+    tran.TransSpec(gendepl.gendepl),
 ])
 
 for node, spec in script.genspec.items():
@@ -145,3 +149,7 @@ for fname, text in script.typedefs.items():
     with open(Path(args.code).joinpath(fname), "w") as f:
         f.write(text)
         log.info(f"  * Dumped typedefs '{f.name}'")
+
+with open(Path(args.output).joinpath(f"{script.gendepl['name']}.dfg"), "w") as f:
+    f.write(json.dumps(script.gendepl, indent=2))
+    log.info(f"  * Dumped deploy spec '{f.name}'")

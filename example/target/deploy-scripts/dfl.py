@@ -7,10 +7,6 @@ import pathlib
 import itertools
 import string
 import json
-import importlib
-
-from dfl import ftn, jsftn
-
 
 NODE_FILE_EXT = '.dfg'
 TYPE_FILE_EXT = '.ftn'
@@ -67,12 +63,6 @@ def fatal(msg):
     sys.stderr.write('Error: {}\n'.format(msg))
     sys.exit(1)
 
-
-class Epsilon(object):
-    '''Internal marker class representing the empty set.'''
-    pass
-
-
 class Frame(object):
     def __init__(self, parent_frame, node=None, name=None):
         assert node or name
@@ -92,15 +82,6 @@ class Frame(object):
 
     def get_parent_frame(self):
         return self._parent_frame
-
-    def is_top_frame(self):
-        return not self._parent_frame
-
-    def get_child_by_name(self, name, create=False):
-        child = self._children.get(name)
-        if create and not child:
-            child = Frame(self, name=name)
-        return child
 
     def get_child_by_node(self, node, create=False):
         child = self._children.get(node.get_name())
@@ -135,13 +116,6 @@ class Frame(object):
         self._node = node
         self._name = name
 
-    def get_path(self):
-        if self._parent_frame:
-            ancestors = self._parent_frame.get_path()
-        else:
-            ancestors = []
-        return ancestors + [self]
-
     def get_path_names(self):
         if self._path_names is None:
             if self._parent_frame:
@@ -153,18 +127,6 @@ class Frame(object):
 
     def get_path_str(self, delim='^'):
         return delim.join(self.get_path_names())
-
-    def get_path_id(self):
-        if not self._path_id:
-            self._path_id = self.get_path_str()
-        return self._path_id
-
-    def find_frame(self, path):
-        assert path[0] == self._name
-        frame = self
-        for name in path[1:]:
-            frame = frame.get_child_by_name(name, create=True)
-        return frame
 
 
 class ParameterInterpolator(string.Formatter):
@@ -240,19 +202,6 @@ class FlowEdge(object):
             .format(self._src_node, self._src_port.get_name(),
                     self._dst_node, self._dst_port.get_name())
 
-    def get_flow_name(self, derive=True):
-        if self._flow_name is None:
-            flow_name = self.get_attr(EDGE_ATTR_FLOW_NAME, dflt=None)
-            if flow_name is None and derive:
-                flow_name = self._src_node.get_flow_name()
-            self._flow_name = flow_name
-        return self._flow_name
-
-    def get_context(self):
-        return self._context
-
-    def get_nodedef(self):
-        return self._node_def
 
     def get_src_node(self):
         return self._src_node
@@ -266,8 +215,8 @@ class FlowEdge(object):
     def get_dst_port(self):
         return self._dst_port
 
-    def get_attrs(self):
-        return self._attrs
+    # def get_attrs(self):
+    #     return self._attrs
 
     def has_attr(self, name, incl_dflt=True):
         if name in self._attrs:
@@ -287,108 +236,6 @@ class FlowEdge(object):
                 return defaults[name]
         return dflt
 
-    def set_attr(self, name, value):
-        self._attrs[name] = value
-
-    def remove_attr(self, name):
-        if name in self._attrs:
-            del self._attrs[name]
-
-    def remove_attrs(self, names):
-        for n in names:
-            self.remove_attr(n)
-
-    def in_cycle(self):
-        return self._cycle
-
-    def get_context(self):
-        return self._context
-
-    def check_types(self, frame):
-        if self._src_port.get_type(frame) != self._dst_port.get_type(frame):
-            fatal('"{}", type mismatch for ports of edge: {}'
-                  .format(self._node_def.get_spec_path(), self))
-            
-
-class Type(object):
-    def __init__(self, name, module, def_str, definition, context):
-        self._name = name
-        self._module = module
-        self._def_str = def_str
-        self._definition = definition
-        self._context = context
-        self._is_special_type = False
-
-        ####if not name:
-        ####    self._name = definition.get_name()
-
-    def __eq__(self, other):
-        assert False, 'No reasonable implementation at the moment'
-        if not isinstance(other, Type):
-            return False
-        if other._is_special_type:
-            return other.__eq__(self)
-        return self._module == other._module and self._name == other._name
-
-    def is_same(self, other):
-        # TODO: Just comparing the definition string is not a good way to
-        #   judge if two types are equal, but it is easy for now. The slightly
-        #   better approach of comparing the structure is not completely
-        #   satisfying either, because two types maybe should be regarded
-        #   incompatible if they express different things (e.g. as with
-        #   new type and new subtype in Ada), but we do not have a way to
-        #   express that in current FTN.
-        if not isinstance(other, Type):
-            return False
-        if other._is_special_type != self._is_special_type:
-            return False
-        ####if self._name:
-        ####    return self._module == other._module and self._name == other._name
-        return self._def_str == other._def_str
-        # return self._definition == other._definition
-
-    def get_module(self):
-        assert False, 'No reasonable implementation at the moment'
-        return self._module
-
-    ####def get_name(self):
-    ####    return self._name
-
-    def _get_fqname(self):
-        if self._module:
-            return self._module.get_name() + '.' + self._name
-        else:
-            return self._name
-
-    def get_fqname(self):
-        assert False, 'No reasonable implementation at the moment'
-        if self._module:
-            return self._module.get_name() + '.' + self._name
-        else:
-            return self._name
-
-    def get_key(self):
-        if self._name:
-            return self._get_fqname()
-        return self.get_def_str()
-
-    def get_def_str(self):
-        return self._def_str
-
-    def get_definition(self):
-        return self._definition
-
-
-class AnyType(Type):
-    def __init__(self, context):
-        super().__init__('<ANY>', None, None, None, context)
-        self._is_special_type = True
-
-    def __eq__(self, other):
-        assert isinstance(other, Type)
-        return True
-
-
 class Port(object):
     def __init__(self, port_node, parent_node_def, context):
         self._id = 'p{}'.format(context.next_unique_nr())
@@ -403,83 +250,9 @@ class Port(object):
         self._node_slice_name = port_node.get_parameter(NODE_SLICE_NAME_PARAM,
                                                         NODE_SLICE_NAME_DFLT)
 
-    def get_id(self):
-        return self._id
-
-    def __str__(self):
-        return '{}:{}'.format(self._parent_node_def.get_name(), self.get_name())
-
-    def __lt__(self, other):
-        return self._name < other._name
-
     def get_name(self):
         return self._name
 
-    def get_flow_name(self):
-        return self._port_node.get_flow_name()
-
-    def get_node_slice_name(self):
-        return self._node_slice_name
-
-    def is_outport(self):
-        return not self.is_inport()
-
-    def get_type(self, frame):
-        '''Return the data-type the port accepts.
-
-        Note, a port is part of a prototype node which can be instantiated
-        several times, each possibly with a new specification of the actual
-        types. So the type of a port is dependent on how it has been navigated
-        to, i.e. dependent on the current chain of Frames, and we need to
-        resolve the type within that context. The given chain
-        contains the path down to the prototype node, but not the port node
-        itself. Therefore the port node is appended before doing the parameter
-        interpolation.
-        '''
-        ######## subframe = frame.get_child_by_node(self.get_port_node(), create=True)
-        ######## pi = ParameterInterpolator(subframe)
-        ######## type_expr = pi.get_parameter('data-type', dflt='<ANY>')
-        #### type_expr = self.get_port_node() \
-        ####                 .resolve_parameter(frame, 'data-type', dflt='<ANY>')
-        #### if type_expr == '<ANY>':
-        ####     typ = AnyType(self._context)
-        #### else:
-        ####     print('FTN expr: frame={}'.format(frame))
-        ####     print('  type_expr={!r}'.format(type_expr))
-        ####     pre_imports = \
-        ####         self._parent_node_def.resolve_type_package_names(frame)
-        ####     ftn_expr = dfl.ftn_lib.FtnExpr(type_expr, pre_imports,
-        ####                                    self._context)
-        ####     ftn_expr.process_expr()
-        ####     print('  _spec={!r}'.format(ftn_expr._spec))
-        ####     typ = Type(None, None, type_expr, ftn_expr.get_spec(), self._context)
-        #### return typ
-        return self.get_port_node() \
-                   .resolve_parameter_into_type(frame, 'data-type', dflt='<ANY>')
-
-    def get_node_def(self):
-        return self._parent_node_def
-
-    def get_port_node(self):
-        return self._port_node
-
-
-# TODO: Timers are handled analogous to sockets so there should not be any
-#   timer ports anymore. Check this and remove.
-class TimerPort(Port):
-    def __init__(self, port_node, parent_node_def, context):
-        super().__init__(port_node, parent_node_def, context)
-
-    def is_inport(self):
-        return True
-
-    def get_period(self, frame):
-        '''Return the period with which the timer should trigger.
-        '''
-        subframe = frame.get_child_by_node(self)
-        pi = ParameterInterpolator(subframe)
-        period = pi.get_parameter('period')
-        return period
 
 
 class InPort(Port):
@@ -526,70 +299,14 @@ class NodeInstance(object):
     def get_name(self):
         return self._name
 
-    def _derive_flow_name(self):
-        flow_name = self.get_parameter('flow-name', dflt=None)
-        if flow_name is None:
-            for edge_in in self.get_connected_edges_in():
-                candidate = edge_in.get_flow_name(derive=False)
-                if candidate is not None:
-                    if flow_name is None:
-                        flow_name = candidate
-                    else:
-                        assert candidate == flow_name
-        if flow_name is None:
-            flow_name = self._name
-        return flow_name
-
-    def get_flow_name(self):
-        if self._flow_name is None:
-            self._flow_name = self._derive_flow_name()
-        return self._flow_name
-
-    #### TODO: This is not really needed because the Frame object can be used
-    ####   direcly. Remove it when all uses have been verified to work without
-    ####   it.
-    ####def get_fqname(self, frame):
-    ####    return frame.get_stack_str()
-
-    def get_parent_graph(self):
-        return self._parent
-
-    #### TODO: Replaced by Frame objects, which are created in a different way.
-    ####   Remove when all uses have been verfied to work without it.
-    ####def get_bstack(self, bstack):
-    ####    return bstack+[(self._name, self)]
-
-    #### TODO: Should use Frame objects instead, but should not create a new
-    ####   hierarchy of those, I think. Should a node instance have a Frame
-    ####   hierarchy describing its full hierachy? When that is instantiated
-    ####   within another NodeDef a new hierachy need to be created, so in
-    ####   that case a kind of copy of the local hierachy would have to be
-    ####   created, one for each instance. Need some thinking.
-    ####def find_node_w_stack(self, nav_path, bstack):
-    ####    return self.get_nodedef().find_node_w_stack(nav_path, bstack)
-
     def get_nodedef(self):
         return self._node_def
-
-    def get_parameters(self):
-        return self._parameters
 
     def get_parameter(self, name, dflt=None):
         return self._parameters.get(name, dflt)
 
     def set_parameter(self, name, value):
         self._parameters[name] = value
-
-    def resolve_parameter(self, frame, name, dflt=None):
-        '''Same as get_parameter but resolves references to parent nodes.
-        '''
-        nodeframe = frame.get_child_by_node(self, create=True)
-        pi = ParameterInterpolator(nodeframe)
-        return pi.get_parameter(name, dflt=dflt)
-
-    def resolve_parameter_into_type(self, frame, name, dflt=None):
-        type_expr = self.resolve_parameter(frame, name, dflt=dflt)
-        return self.get_context().resolve_type_expr(type_expr)
 
     def resolve_atom_names(self, frame):
         atom_defs = self.get_nodedef().get_atom_defs()
@@ -607,55 +324,11 @@ class NodeInstance(object):
     def get_top_frame(self):
         return self._top_frame
 
-    def get_intrinsics_handler(self, topic=INTRINSICS_TOPIC):
-        return self.get_nodedef().get_intrinsics_handler(topic)
-
-    def get_inport(self, port_name, required=True):
-        return self.get_nodedef().get_inport(port_name, required=required)
-
     def get_inports(self, sort=False):
         return self.get_nodedef().get_inports(sort=sort)
 
-    def get_outport(self, port_name, required=True):
-        return self.get_nodedef().get_outport(port_name, required=required)
-
     def get_outports(self, sort=False):
         return self.get_nodedef().get_outports(sort=sort)
-
-    def get_connected_edges(self):
-        if not self._parent:
-            return []
-        return self._parent.get_edges_for_node(self)
-
-    def get_connected_edges_in(self):
-        if not self._parent:
-            return []
-        return self._parent.get_edges_to_node(self)
-
-    def get_connected_edges_to_port(self, port):
-        if not self._parent:
-            return []
-        return self._parent.get_edges_to_port(self, port)
-
-    def get_connected_edges_to_ports(self, ports):
-        if not self._parent:
-            return []
-        return self._parent.get_edges_to_ports(self, ports)
-
-    def get_connected_edges_out(self):
-        if not self._parent:
-            return []
-        return self._parent.get_edges_from_node(self)
-
-    def get_connected_edges_from_port(self, port):
-        if not self._parent:
-            return []
-        return self._parent.get_edges_from_port(self, port)
-
-    def get_connected_edges_from_ports(self, ports):
-        if not self._parent:
-            return []
-        return self._parent.get_edges_from_ports(self, ports)
 
 
 class NodeDef(object):
@@ -701,12 +374,6 @@ class NodeDef(object):
 
         self._type_package_names = None
 
-        # Pre-load specified type packages.
-        # self._type_package_names = self._spec.get_field('type-packages',
-        #                                                 dflt=[])
-        # for tp in self._type_package_names:
-        #     context.get_type_module(tp)
-
     def __str__(self):
         return self._name
 
@@ -723,44 +390,6 @@ class NodeDef(object):
     def get_name(self):
         return self._name
 
-    def set_name(self, name):
-        self._name = name
-
-    def get_context(self):
-        return self._context
-
-    def get_spec(self):
-        return self._spec
-
-    def get_raw_spec(self):
-        return self._spec.get_spec()
-
-    def get_flow_forwarding(self):
-        if self._flow_forwarding is None and not self._is_system_object:
-            self._flow_forwarding = \
-                self._spec.get_field('flow-forwarding',
-                                     dflt=FLOW_FWD_CONTINUOUS)
-        return self._flow_forwarding
-
-    #### def get_type_package_names(self):
-    ####     if self._type_package_names is None and not self._is_system_object:
-    ####         self._type_package_names = \
-    ####             self._spec.get_field('type-packages', dflt=[])
-    ####     return self._type_package_names
-
-    #### def resolve_type_package_names(self, frame):
-    ####     print('resolve_type_package_names: frame={}'.format(frame))
-    ####     names = self.get_type_package_names().copy()
-    ####     print('    names={}'.format(names))
-    ####     if TYPE_PKG_INHERIT in names:
-    ####         parent_frame = frame.get_parent_frame()
-    ####         parent_node = parent_frame.get_node(resolve=True)
-    ####         parent_nodedef = parent_node.get_nodedef()
-    ####         names.extend(parent_nodedef.resolve_type_package_names(parent_frame))
-    ####         print('      continuing w frame={}'.format(frame))
-    ####         print('    extended names={}'.format(names))
-    ####     unique_names = {n  for n in names  if n != TYPE_PKG_INHERIT}
-    ####     return list(unique_names)
 
     def get_atom_defs(self):
         if self._atom_specs is None:
@@ -787,35 +416,12 @@ class NodeDef(object):
                 return False
         return True
 
-        # for r in roles:
-        #     if r not in self.get_roles():
-        #         return False
-        # return True
-
     def is_intrinsic(self):
         return self.has_role('intrinsic')
 
-    def is_divisible(self):
-        return not bool(self.get_intrinsics_handler(INTRINSICS_TOPIC))
-
-    #### TODO: See find_node_w_stack() in NodeInstance.
-    ####def find_node_w_stack(self, nav_path, bstack):
-    ####  name = nav_path[0]
-    ####  node = self.get_subnode(name)
-    ####  new_stack = node.get_bstack(bstack)
-    ####  if len(nav_path) > 1:
-    ####      return node.find_node_w_stack(nav_path[1:],
-    ####                                    new_stack)
-    ####  else:
-    ####      return new_stack
 
     def get_subnode(self, name):
         return self._get_subnodes()[name]
-
-    def get_subnode_frame(self, name, parent_frame):
-        n = self._get_subnodes()[name]
-        assert isinstance(n, NodeInstances)
-        return parent_frame.get_child_by_node(n, create=True)
 
     def get_subnodes(self, include_system=True):
         if self._is_system_object:
@@ -825,18 +431,6 @@ class NodeDef(object):
         return [ n
                  for n in self._get_subnodes().values()
                  if not n.is_system_node() ]
-
-    def get_subnode_frames(self, parent_frame):
-        return [ parent_frame.get_child_by_node(n, create=True)
-                 for n in self._get_subnodes().values() ]
-
-    def get_subnodes_matching(self, key, value):
-        res = []
-        for n in self._get_subnodes().values():
-            spec = n.get_nodedef().get_spec()
-            if spec.get_field(key) == value:
-                res.append(n)
-        return res
 
     def get_subnodes_w_roles(self, roles):
         return [ ni
@@ -882,183 +476,15 @@ class NodeDef(object):
             self._create_edges()
         return self._edges
 
-    def get_edges_for_node(self, node):
-        assert isinstance(node, NodeInstance)
-        return [ e
-                 for e in self.get_edges()
-                 if e.get_src_node() == node or e.get_dst_node() == node ]
-
-    def get_edges_to_node(self, node):
-        assert isinstance(node, NodeInstance)
-        return [ e
-                 for e in self.get_edges()
-                 if e.get_dst_node() == node ]
-
-    def get_edges_to_port(self, node, port):
-        assert isinstance(port, Port)
-        return [ e
-                 for e in self.get_edges()
-                 if e.get_dst_node() == node and e.get_dst_port() == port ]
-
-    def get_edges_to_ports(self, node, ports):
-        assert all([isinstance(p, Port) for p in ports])
-        return [ e
-                 for e in self.get_edges()
-                 if e.get_dst_node() == node and e.get_dst_port() in ports ]
-
-    def get_edges_from_node(self, node):
-        assert isinstance(node, NodeInstance)
-        return [ e
-                 for e in self.get_edges()
-                 if e.get_src_node() == node ]
-
-    def get_edges_from_port(self, node, port):
-        assert isinstance(port, Port)
-        return [ e
-                 for e in self.get_edges()
-                 if e.get_src_node() == node and e.get_src_port() == port ]
-
-    def get_edges_from_ports(self, node, ports):
-        assert all([isinstance(p, Port) for p in ports])
-        return [ e
-                 for e in self.get_edges()
-                 if e.get_src_node() == node and e.get_src_port() in ports ]
-
-    def add_edge(self, edge):
-        if self._edges is None:
-            self._create_edges()
-        self._edges.append(edge)
-
-    def remove_edges_for_node(self, node):
-        if self._edges is None:
-            self._create_edges()
-        self._edges = [ e
-                        for e in self._edges
-                        if e.get_src_node() != node and e.get_dst_node() != node ]
-
-    def remove_edge(self, edge):
-        assert self._edges is not None
-        self._edges.remove(edge)
-
-    def get_compute_kernel_specs(self):
-        if self._compute_kernel_specs is None and not self._is_system_object:
-            self._create_compute_kernel_specs()
-        return self._compute_kernel_specs
-
-    def get_compute_kernel_port_names(self, name):
-        return self.get_compute_kernel_specs().get(name)
-
-    def add_subnode(self, subnode_name, subnode):
-        assert not self._is_system_object
-        self._subnodes[subnode_name] = subnode
-        self._update_ports(subnode)
-
-    def remove_subnode(self, subnode_name):
-        assert not self._is_system_object
-
-        subnode = self._subnodes[subnode_name]
-        subdef = subnode.get_nodedef()
-        assert not (subdef.has_roles(['end-point', 'input']) or
-                    subdef.has_roles(['end-point', 'output'])), \
-            'Internal inconsistency: graph.py currently does not support ' \
-            'removing port nodes.'
-
-        del self._subnodes[subnode_name]
-
-    def generate_spec(self):
-        spec_def = self.get_raw_spec().copy()
-        spec_def['name'] = self.get_name()
-
-        nodes = []
-        for n in self.get_subnodes():
-            if n.is_system_node():
-                continue
-            subnode_def = n.get_nodedef()
-            nodes.append([n.get_name(), subnode_def.get_name(),
-                          n.get_parameters()])
-        spec_def['nodes'] = nodes
-
-        edges = []
-        for e in self.get_edges():
-            endp_specs = {}
-            for endp, node, port in \
-                [('src', e.get_src_node(), e.get_src_port()),
-                 ('dst', e.get_dst_node(), e.get_dst_port())]:
-
-                if node.is_system_node():
-                    endp_specs[endp] = node.get_name()
-                else:
-                    endp_specs[endp] = '{}:{}'.format(node.get_name(),
-                                                      port.get_name())
-
-            spec = [endp_specs['src'], endp_specs['dst']]
-            attrs = e.get_attrs()
-            if attrs and EDGE_ATTR_DEFAULTS in attrs:
-                attrs = attrs.copy()
-                del attrs[EDGE_ATTR_DEFAULTS]
-            if attrs:
-                spec.append(attrs)
-            edges.append(spec)
-        spec_def['edges'] = edges
-        return spec_def
-
-    def get_intrinsics_handler(self, topic=INTRINSICS_TOPIC):
-        inited, handler = self._intrinsics_handler.get(topic, (False, None))
-        if not inited:
-            mod_name = None
-            if self.has_role(COMP_KERN_ROLE):
-                mod_name = COMP_KERN_MODULE
-            elif self.has_role(SUBFLOW_ROLE):
-                mod_name = SUBFLOW_MODULE
-            elif self.has_role(CONSTRUCTOR_ROLE):
-                mod_name = CONSTRUCTOR_MODULE
-            elif self.is_intrinsic():
-                mod_name = self.get_name()
-            if mod_name:
-                pkg_name = self._context.get_instrinsics_package(topic)
-                full_name = pkg_name + '.' + mod_name
-                pkg_spec = importlib.util.find_spec(full_name)
-                if pkg_spec is None:
-                    fatal('Cannot find intrinsics module for {} under ' \
-                          'topic {!r}'
-                          .format(self.get_name(), topic))
-                module = importlib.import_module(full_name)
-                intrinsics_cls = getattr(module, INTRINSICS_SPEC_CLASS)
-                debug('Creating intrinsics handler {} for {}' \
-                      .format(full_name, self.get_name()))
-                handler = intrinsics_cls(self, self._context)
-            else:
-                debug('No intrinsics handler obj created for {}' \
-                      .format(self.get_name()))
-                handler = None
-            self._intrinsics_handler[topic] = (True, handler)
-        return handler
-
     def _create_subnodes(self):
         assert not self._is_system_object
-        debug('List of nodes from raw spec: {!r}'.format(self._spec['nodes']))
+        debug('List of nodes from raw spec: {!r}'.format(self._spec.get_field('nodes')))
         cls = self._context.get_ext_class(NodeInstance)
         self._subnodes = self._context.get_omnipresent().copy()
-        for n in self._spec['nodes']:
+        for n in self._spec.get_field('nodes', []):
             node_def = self._context.get_node_def(n[1])
             inst = cls(n[0], self, node_def, n[2], self._context)
             self._subnodes[n[0]] = inst
-
-    def _update_ports(self, new_subnode):
-        if self._outports is None:
-            # Ports have not yet been created so it does not matter if
-            # new_subnode is a port or not.
-            return
-
-        if new_subnode.get_nodedef().has_roles(['end-point', 'input']):
-            inport_cls = self._context.get_ext_class(InPort)
-            self._inports[new_subnode.get_name()] = \
-                inport_cls(new_subnode, self, self._context)
-        elif new_subnode.get_nodedef().has_roles(['end-point', 'output']):
-            outport_cls = self._context.get_ext_class(OutPort)
-            self._outports[new_subnode.get_name()] = \
-                outport_cls(new_subnode, self, self._context)
-
 
     def _ensure_ports(self):
         if self._outports != None or self._is_system_object:
@@ -1067,12 +493,6 @@ class NodeDef(object):
         ###timer_port_cls = self._context.get_ext_class(TimerPort)
         inport_cls = self._context.get_ext_class(InPort)
         outport_cls = self._context.get_ext_class(OutPort)
-
-        #### timer_ports = {}
-        #### timer_nodes = self.get_subnodes_w_roles(['end-point', 'timer'])
-        #### for ni in timer_nodes:
-        ####     timer_ports[ni.get_name()] = timer_port_cls(ni, self, self._context)
-        #### self._timer_ports = timer_ports
 
         inports = {}
         input_nodes = self.get_subnodes_w_roles(['end-point', 'input'])
@@ -1086,32 +506,11 @@ class NodeDef(object):
             outports[ni.get_name()] = outport_cls(ni, self, self._context)
         self._outports = outports
 
-        # input_nodes = self.get_subnodes_matching('border-node', 'input')
-        # self._inports = {ni.get_name(): inport_cls(ni, self, self._context)
-        #                  for ni in input_nodes}
-
-        # subflow_input_nodes = self.get_subnodes_matching('border-node',
-        #                                                  'subflow-input')
-        # self._subflow_inports = \
-        #     {ni.get_name(): inport_cls(ni, self, self._context)
-        #      for ni in subflow_input_nodes}
-
-        # outport_cls = self._context.get_ext_class(OutPort)
-        # output_nodes = self.get_subnodes_matching('border-node', 'output')
-        # self._outports = {ni.get_name(): outport_cls(ni, self, self._context)
-        #                   for ni in output_nodes}
-
-        # subflow_output_nodes = self.get_subnodes_matching('border-node',
-        #                                                   'subflow-output')
-        # self._subflow_outports = \
-        #     {ni.get_name(): outport_cls(ni, self, self._context)
-        #      for ni in subflow_output_nodes}
-
     def _create_edges(self):
         edge_defaults = self._spec.get_field('defaults', {}).get('edges')
         edges = []
         edge_cls = self._context.get_ext_class(FlowEdge)
-        for e in self._spec['edges']:
+        for e in self._spec.get_field('edges', []):
             debug('e={}'.format(repr(e)))
             nodes = {}
             ports = {}
@@ -1130,8 +529,25 @@ class NodeDef(object):
                     else:
                         port = node.get_nodedef().get_inport(port_name)
                 except KeyError:
-                    fatal('"{}", no {}-port "{}" in node "{}"'
-                          .format(self.get_spec_path(), dr, port_name, node_name))
+                    # fatal('"{}", no {}-port "{}" in node "{}"'
+                    #       .format(self.get_spec_path(), dr, port_name, node_name))
+
+                    nodedef = self._context.create_node_def(port_name, {})
+                    cls = self._context.get_ext_class(NodeInstance)
+                    p_node = cls(port_name, node, nodedef, {}, self._context)
+                    if dr == 'out':
+                        cls = self._context.get_ext_class(OutPort)
+                        port = cls(p_node, nodedef, self._context)
+                        if self._outports is None:
+                            self._outports = {}
+                        self._outports[port_name] = port
+                    else:
+                        cls = self._context.get_ext_class(InPort)
+                        port = cls(p_node, nodedef, self._context)
+                        if self._inports is None:
+                            self._inports = {}
+                        self._inports[port_name] = port
+                    
                 nodes[endp] = node
                 ports[endp] = port
             attrs = {} if len(e) <= 2 else e[2]
@@ -1162,14 +578,14 @@ class Context(object):
         self._obj_register = {}
         self._intrinsics_packages = { INTRINSICS_TOPIC: INTRINSICS_PKG }
 
-        if ftn_ctxt is None:
-            ftn_ctxt = (jsftn.FtnContext, {})
-        self._ftn_ctxt_class, self._ftn_ctxt_kwargs = ftn_ctxt
-        self._ftn_context = None
-
+        # ELEMENT_CLASSES = [
+        #     FlowEdge, Type, AnyType,
+        #     Port, TimerPort, InPort, OutPort,
+        #     NodeInstance, NodeDef
+        # ]
         ELEMENT_CLASSES = [
-            FlowEdge, Type, AnyType,
-            Port, TimerPort, InPort, OutPort,
+            FlowEdge, 
+            Port, InPort, OutPort,
             NodeInstance, NodeDef
         ]
         self._element_classes = {}
@@ -1229,54 +645,13 @@ class Context(object):
     def get_ext_class(self, cls):
         return self._element_classes[cls]
 
-    def append_search_path(self, path):
-        self._repo.append_search_path(path)
-
-    def append_search_path_str(self, pathstr):
-        self._repo.append_search_path_str(pathstr)
-
-    def prepend_search_path(self, path):
-        self._repo.prepend_search_path(path)
-
-    def prepend_search_path_str(self, pathstr):
-        self._repo.prepend_search_path_str(pathstr)
-
-    def get_instrinsics_package(self, topic):
-        return self._intrinsics_packages[topic]
-
-    def add_intrinsics_package(self, topic, pkg_name):
-        self._intrinsics_packages[topic] = pkg_name
-
-    def find_file(self, fname, exts=None):
-        return self._repo.find_file(fname, exts)
 
     def next_unique_nr(self):
         return next(self._unique_numbers)
 
-    def get_ftn_context(self):
-        if not self._ftn_context:
-            search_paths = self._repo.get_search_paths()
-            kwargs = self._ftn_ctxt_kwargs.copy()
-            kwargs['search_paths'] = search_paths
-            self._ftn_context = self._ftn_ctxt_class(**kwargs)
-        return self._ftn_context
-
-    def get_obj(self, obj_id):
-        return self._obj_register[obj_id]
 
     def register_obj(self, obj_id, obj):
         self._obj_register[obj_id] = obj
-
-    def resolve_type_expr(self, type_expr):
-        if type_expr == '<ANY>':
-            cls = self.get_ext_class(AnyType)
-            typ = cls(self)
-        else:
-            ftn_ctxt = self.get_ftn_context()
-            type_spec = ftn_ctxt.expr2type(type_expr)
-            cls = self.get_ext_class(Type)
-            typ = cls(None, None, type_expr, type_spec, self)
-        return typ
 
     def create_node_def(self, name, spec=None):
         assert not self._node_defs.get(name)
@@ -1330,8 +705,8 @@ class Spec(object):
     def get_spec(self):
         return self._spec
 
-    def has_field(self, fld):
-        return fld in self._spec
+    # def has_field(self, fld):
+    #     return fld in self._spec
 
     def get_field(self, fld, dflt=None):
         return self._spec.get(fld, dflt)
@@ -1357,12 +732,6 @@ class FileRepo(object):
     def append_search_path_str(self, pathstr):
         self.append_search_path(pathlib.Path(pathstr))
 
-    def prepend_search_path(self, path):
-        self._search_paths.insert(0, path)
-
-    def prepend_search_path_str(self, pathstr):
-        self.prepend_search_path(pathlib.Path(pathstr))
-
     def find_file(self, fname, exts=None):
         if not exts:
             exts = ['']
@@ -1378,29 +747,10 @@ class FileRepo(object):
         fname = def_name + NODE_FILE_EXT
         fp = self.find_file(fname)
         if not fp:
-            fatal('Cannot find file {}'.format(fname))
+            # fatal('Cannot find file {}'.format(fname))
+            return Spec(fp, {})
         with fp.open('r') as f:
             try:
                 return Spec(fp, json.load(f))
             except json.decoder.JSONDecodeError as e:
                 fatal('"{}", {}'.format(fp, e))
-
-
-def main():
-    argparser = argparse.ArgumentParser(description='Parses JSON file and builds internal structure.')
-    argparser.add_argument('--flow', '-F', required=True,
-                           help='name of input flow')
-    argparser.add_argument('--search-path', '-I', action='append',
-                           help='adds path to search for flow def files')
-    argparser.add_argument('--debug', action='store_true',
-                           help='turn on debug printouts')
-    args = argparser.parse_args()
-
-    global debug_printing
-    debug_printing = args.debug
-
-    ctxt = Context(search_paths=args.search_path)
-    graph = ctxt.load_node(args.flow)
-
-if __name__ == '__main__':
-    main()

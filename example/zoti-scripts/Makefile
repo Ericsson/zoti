@@ -36,7 +36,7 @@ GEN_TYPES_PATH	= $(GEN_PATH)/types
 GEN_SPEC_PATH	= $(GEN_PATH)/genspec
 GEN_TRANS_PATH	= $(GEN_PATH)/trans_dbg
 GEN_CODE_PATH	= $(GEN_PATH)/code
-GEN_BIN_PATH	= $(GEN_PATH)/bin
+GEN_BIN_PATH	= $(GEN_PATH)/bin/x86_64
 GEN_PATHS 	= $(GEN_PATH) $(GEN_GRAPH_PATH) $(GEN_TYPES_PATH) $(GEN_SPEC_PATH) $(GEN_CODE_PATH) $(GEN_TRANS_PATH) $(GEN_BIN_PATH)
 
 ############################################################################

@@ -1,12 +1,12 @@
 import networkx as nx
 
-from dumputils import Ref, Default, WithCreate
+from dumputils import Ref, Default, PolInter, PolUnion
 import zoti_graph.core as ty
 from zoti_ftn.backend.c import TypeABC
 from zoti_ftn.core import Array, Structure
 from zoti_tran import ScriptError
 
-from ports import BlockBuffer, Timer, Socket
+from ports import Timer, Socket
 
 # from pprint import pprint
 
@@ -407,10 +407,10 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
 
         glbs_inst, glbs_comp = _make_global_inits(name, atomports, glbs, G, T)
 
-        buffs = [G.entry(p).port_type.header_funcs(G.entry(p).name)
-                 for p in G.ports(pltf, select=lambda p: isinstance(p.port_type, BlockBuffer))]
-        buff_inst, buff_comp = ([j for i, c in buffs for j in i],
-                                [j for i, c in buffs for j in c])
+        # buffs = [G.entry(p).port_type.header_funcs(G.entry(p).name)
+        #          for p in G.ports(pltf, select=lambda p: isinstance(p.port_type, BlockBuffer))]
+        # buff_inst, buff_comp = ([j for i, c in buffs for j in i],
+        #                         [j for i, c in buffs for j in c])
 
         stg1_inst, stg1_comp = _make_init_stage1(name, [], T)
 
@@ -458,7 +458,6 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
                 'int main(int argc, char * argv[]) { {{placeholder.code}} }'],
             "instance": [
                 glbs_inst,
-            ] + buff_inst + [
                 stg1_inst,
                 stg2_inst,
                 icfg_inst,
@@ -473,21 +472,21 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
                 child_cps.extend(_make_iport_reaction(name, actor, port, G, T))
         unique_child_cps = {cp["name"]: cp for cp in child_cps}
         cps = [main, glbs_comp, stg1_comp, stg2_comp, icfg_comp, ocfg_comp,
-               acfg_comp] + buff_comp + list(unique_child_cps.values())
+               acfg_comp] + list(unique_child_cps.values())
 
         preamble = {
             "module": name,
             "top": "Main",
         }
 
-        defaults = [{
-            "label": [{"usage": WithCreate(["p", "{{label.$p.name}}"])}],
+        defaults = PolInter([{
+            "label": [{"usage":  PolUnion(["p", "{{label.$p.name}}"])}],
             "instance": [{
                 "bind": [{
                     "label_to_label": {
-                        "usage": WithCreate(["p", "{{label.$p.name}}"])}}]
+                        "usage": PolUnion(["p", "{{label.$p.name}}"])}}]
             },]
-        },]
+        },])
 
         specs[pltf.name()] = [preamble, Default(
             [{"block": defaults}, {"block": cps}])]

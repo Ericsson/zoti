@@ -9,10 +9,10 @@ import:
 !default
 - nodes:
   - edges: 
-    - edge_type: !with_create {name: UDP}
+    - edge_type: {name: UDP}
     nodes:
     - ports:
-        - port_type: !with_create {type: socket}
+        - port_type: {type: socket}
 - nodes:
     - name: Tst   # kind: CompositeNode
       description: "Example Dataflow Graph"
