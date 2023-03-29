@@ -255,6 +255,7 @@ class NodeInstance(dfl.NodeInstance):
             p.deploy(self)
 
     def send_config(self, msg):
+        print(msg)
         self.get_context().sendto(self.get_host(), self.get_cfg_port(), msg)
 
 

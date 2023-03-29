@@ -257,6 +257,7 @@ class Port(object):
 
 class InPort(Port):
     def __init__(self, port_node, parent_node_def, context):
+        print("Make Inport", port_node)
         super().__init__(port_node, parent_node_def, context)
 
     def is_inport(self):
@@ -265,6 +266,7 @@ class InPort(Port):
 
 class OutPort(Port):
     def __init__(self, port_node, parent_node_def, context):
+        print("Make Outport", port_node)
         super().__init__(port_node, parent_node_def, context)
 
     def is_inport(self):
@@ -349,6 +351,8 @@ class NodeDef(object):
         self._id = 'nd{}'.format(context.next_unique_nr())
         context.register_obj(self._id, self)
 
+        # print("============")
+        # print(name)
         self._name = name
         self._context = context
         if context._is_creating_system_objects():
@@ -482,7 +486,9 @@ class NodeDef(object):
         cls = self._context.get_ext_class(NodeInstance)
         self._subnodes = self._context.get_omnipresent().copy()
         for n in self._spec.get_field('nodes', []):
-            node_def = self._context.get_node_def(n[1])
+            # node_def = self._context.get_node_def(n[1])
+            spec = Spec(n[1], n[3]) if len(n) > 3 else Spec(n[1], {})
+            node_def = self._context.get_node_def(n[1], spec)
             inst = cls(n[0], self, node_def, n[2], self._context)
             self._subnodes[n[0]] = inst
 
@@ -529,24 +535,26 @@ class NodeDef(object):
                     else:
                         port = node.get_nodedef().get_inport(port_name)
                 except KeyError:
-                    # fatal('"{}", no {}-port "{}" in node "{}"'
-                    #       .format(self.get_spec_path(), dr, port_name, node_name))
+                    print(node.get_nodedef().get_inports())
+                    print(node.get_nodedef().get_outports())
+                    fatal('"{}", no {}-port "{}" in node "{}"'
+                          .format(self.get_spec_path(), dr, port_name, node_name))
 
-                    nodedef = self._context.create_node_def(port_name, {})
-                    cls = self._context.get_ext_class(NodeInstance)
-                    p_node = cls(port_name, node, nodedef, {}, self._context)
-                    if dr == 'out':
-                        cls = self._context.get_ext_class(OutPort)
-                        port = cls(p_node, nodedef, self._context)
-                        if self._outports is None:
-                            self._outports = {}
-                        self._outports[port_name] = port
-                    else:
-                        cls = self._context.get_ext_class(InPort)
-                        port = cls(p_node, nodedef, self._context)
-                        if self._inports is None:
-                            self._inports = {}
-                        self._inports[port_name] = port
+                    # nodedef = self._context.create_node_def(port_name, {})
+                    # cls = self._context.get_ext_class(NodeInstance)
+                    # p_node = cls(port_name, node, nodedef, {}, self._context)
+                    # if dr == 'out':
+                    #     cls = self._context.get_ext_class(OutPort)
+                    #     port = cls(p_node, nodedef, self._context)
+                    #     if self._outports is None:
+                    #         self._outports = {}
+                    #     self._outports[port_name] = port
+                    # else:
+                    #     cls = self._context.get_ext_class(InPort)
+                    #     port = cls(p_node, nodedef, self._context)
+                    #     if self._inports is None:
+                    #         self._inports = {}
+                    #     self._inports[port_name] = port
                     
                 nodes[endp] = node
                 ports[endp] = port
@@ -667,11 +675,11 @@ class Context(object):
         self._node_defs[name] = node_def
         return node_def
 
-    def get_node_def(self, name, create=True):
+    def get_node_def(self, name, spec=None, create=True):
         node_def = self._node_defs.get(name)
         if not node_def and create:
             cls = self.get_ext_class(NodeDef)
-            node_def = cls(name, self)
+            node_def = cls(name, self, spec)
             self._node_defs[name] = node_def
         return node_def
 
@@ -747,8 +755,8 @@ class FileRepo(object):
         fname = def_name + NODE_FILE_EXT
         fp = self.find_file(fname)
         if not fp:
-            # fatal('Cannot find file {}'.format(fname))
-            return Spec(fp, {})
+            fatal('Cannot find file {}'.format(fname))
+            # return Spec(fp, {})
         with fp.open('r') as f:
             try:
                 return Spec(fp, json.load(f))

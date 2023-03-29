@@ -140,6 +140,7 @@ script.transform([
     tran.TransSpec(gendepl.gendepl),
 ])
 
+
 for node, spec in script.genspec.items():
     with open(Path(args.output).joinpath(node).with_suffix(".zoc"), "w") as f:
         yaml.dump_all(spec, f, Dumper=SpecDumper, default_flow_style=None)
