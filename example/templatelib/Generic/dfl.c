@@ -44,7 +44,7 @@ return (res == 0 ? 0 : 1);
 int res = 0;
 
 {% for port in param.iports %}
-if (strcmp(name, "{{ port.name|replace('_', '-') }}") == 0) {
+if (strcmp(name, "{{ port.name }}") == 0) {
   res = dfl_evt_add_port(dfl_evt_socktype_udp, ip_port, {{ port.handler }});
   if (res < 0) printf("ERROR: Inport config failed, port='{{ port.name }}', "
 		      "sock_type='dfl_evt_socktype_udp', ip_port=%"PRId32", res=%d\n", ip_port, res);
@@ -59,7 +59,7 @@ return res;
 int res = 0;
 
 {% for opt in param.oports %}
-if (strcmp(name, "{{ opt.name|replace('_', '-') }}") == 0) {
+if (strcmp(name, "{{ opt.name }}") == 0) {
   res = dfl_evt_cfg_outport(dfl_evt_socktype_udp, &{{ label[opt.socket].name }}, ip_addr, ip_port);
     if (res < 0) printf("ERROR: Outport config failed, port='{{ opt.name }}', "
                         "sock_type='dfl_evt_socktype_udp', ip_addr='%s', ip_port=%"PRId32", res=%d\n",
@@ -127,17 +127,17 @@ size_t {{label.size.name}}_cnt =
 if ({{label.size.name}} < 0) return;
 {{label.size.name}} = (uint16_t){{label.size.name}}_cnt;
 
-if ({{label.size.name}} < sizeof(Common__Timestamp_t)) {
+if ({{label.size.name}} < {{param.expected_base_size}}) {
 #ifdef DFL_DEBUG_PRINT
-  printf("Unmarshal type Common.Timestamp failed! Packet size %"PRId32" < header size %"PRId32"\n",
-	 (int32_t){{label.size.name}}, (int32_t)sizeof(Common__Timestamp_t));
+  printf("Unmarshal type {{ param.expected_type }} failed! Packet size %"PRId32" < header size %"PRId32"\n",
+	 (int32_t){{label.size.name}}, (int32_t){{param.expected_base_size}});
 #endif
   return;
  }
-if ({{label.size.name}} != (sizeof(Common__Timestamp_t))) {
+if ({{label.size.name}} != {{param.expected_size}}) {
 #ifdef DFL_DEBUG_PRINT
-  printf("Unmarshal type Common.Timestamp failed! Packet size %"PRId32" != expected size %"PRId32"\n",
-	 (int32_t){{label.size.name}}, (int32_t)(sizeof(Common__Timestamp_t)));
+  printf("Unmarshal type {{ param.expected_type }} failed! Packet size %"PRId32" != expected size %"PRId32"\n",
+	 (int32_t){{label.size.name}}, (int32_t){{param.expected_size}});
 #endif
   return;
  }

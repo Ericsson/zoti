@@ -263,8 +263,7 @@ def _make_actor_scenario(node, G, T):
     snd_specs = [
         G.entry(p).port_type.sender_genspec(
             p, G.entry(p),
-            [G.entry(o).name for o in G.connected_ports(p)
-             if G.depth(G.commonAncestor(o, p)) == 1][0],  # TODO: wow!
+            [G.entry(o).name for o in G.connected_ports(p) if "udp_socket" in G.entry(o).name][0], 
             T)
         for p in G.ports(node, select=lambda n: n.dir == ty.Dir.OUT)
     ]
@@ -319,10 +318,14 @@ def _make_actor_scenario(node, G, T):
 
 def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
     iport = G.entry(port_id)
+    expected_type = iport.data_type["type"]
+    pltf_port, _ = G.port_edges(port_id, inp=True, out=False)[0]
+    iport.data_type = G.entry(pltf_port).data_type
     oports = [G.entry(p)
               for p in G.ports(actor_id, select=lambda p: p.dir == ty.Dir.OUT)]
     rcv_ports, rcv_proto, rcv_insts, rcv_blocks = iport.port_type.receiver_genspec(
-        iport.name, pltf_name, T)
+        iport.name, expected_type, pltf_name, T)
+    print("===================", iport.name, expected_type, iport.data_type)
     proj = G.node_projection(actor_id)
     port_scenarios = [y
                       for x, y in proj.edges(actor_id)

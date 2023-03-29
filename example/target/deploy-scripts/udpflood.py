@@ -113,6 +113,7 @@ def main():
         debug('ns_port={}'.format(ns_port))
         ns = NameService(args.ns_address, ns_port)
         host, port = ns.get(args.port_name)
+        print(host, port)
     else:
         host = args.host
         port = args.port

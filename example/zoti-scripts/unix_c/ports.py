@@ -27,7 +27,13 @@ class Socket(PortTypeABC):
     def buffer_type(self):
         return {"name": "DflSys.UdpPacket"}
 
-    def receiver_genspec(self, iport_name: str, prefix: str,  T):
+    def receiver_genspec(self, iport_name, exp_type, prefix: str, T):
+        # iport_name = iport_entry.name
+        exp_base_size = T.get(exp_type)._gen_base_size_expr(T.c_name(exp_type))
+        exp_size = T.get(exp_type).gen_size_expr(T.c_name(exp_type))
+        var = f"(({T.c_name(exp_type)} *)&{{{{label.{iport_name}.name}}}})"
+        
+        
         labels = [
             {"name": "socket", "usage": ["DFL_socket"]},
             {"name": "size"},
@@ -47,11 +53,27 @@ class Socket(PortTypeABC):
                 {"label_to_label": {"parent": iport_name, "child": "ram"}},
                 {"label_to_label": {"parent": "socket", "child": "socket"}},
                 {"label_to_label": {"parent": "size", "child": "size"}},
-            ],
+                {"value_to_param": {"child": "expected_type", "value": str(exp_type)}},
+                {"value_to_param": {"child": "expected_base_size",  "value": exp_base_size}},
+                {"value_to_param": {"child": "expected_size", "value": exp_size}}
+            ]
+        }, {
+            "placeholder": "marshal",
+            "block": Ref(f"marshal_{prefix}_{iport_name}"),
+            "directive": ["expand"],
+            "bind": [
+                {"label_to_label": {"parent": iport_name, "child": iport_name}},
+            ]
+
         }]
+        # print(T.get(exp_type).gen_unmarshal(var, f"(*{var})"))
         blocks = [{
             "name": f"recv_{prefix}_{iport_name}",
             "type": {"module": "Generic.Dfl", "name": "UdpReceive"}
+        }, {
+            "name": f"marshal_{prefix}_{iport_name}",
+            "code": T.get(exp_type).gen_unmarshal(var, f"(*{var})"),
+            "prototype": ['{{ placeholder["code"] }}']
         }]
         return labels, proto, instances, blocks
 
@@ -113,7 +135,7 @@ class Timer(PortTypeABC):
     def buffer_type(self):
         return {"name": "Common.Timespec"}
 
-    def receiver_genspec(self, iport_name: str, prefix: str,  T):
+    def receiver_genspec(self, iport_name: str, exp_type: str, prefix: str,  T):
         labels = [
             {"name": "timestamp", "usage": ["DFL_timestamp"]},
             {"name": iport_name, "usage": [f"timerrecv_{iport_name}",],
