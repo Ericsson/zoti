@@ -28,7 +28,7 @@ class Socket(PortTypeABC):
         return {"name": "DflSys.UdpPacket"}
 
     def receiver_genspec(self, iport_name, exp_type, prefix: str, T):
-        # iport_name = iport_entry.name
+        # iport_name = iport_entry.namepip instal
         exp_base_size = T.get(exp_type)._gen_base_size_expr(T.c_name(exp_type))
         exp_size = T.get(exp_type).gen_size_expr(T.c_name(exp_type))
         var = f"(({T.c_name(exp_type)} *)&{{{{label.{iport_name}.name}}}})"
@@ -82,8 +82,12 @@ class Socket(PortTypeABC):
         oport_ty = oport_entry.data_type
         oport_tyspec = T.get(oport_ty["type"])
         oport_name = oport_entry.name
-
+        exp_size = oport_tyspec.gen_size_expr(T.c_name(oport_ty["type"]))
+        
         labels = []
+
+        # print(oport_ty)
+        # print(T.gen_decl(var, **oport_ty))
 
         usage = [
             oport_tyspec.gen_ctor(var, f"(*{var})"),
@@ -91,7 +95,7 @@ class Socket(PortTypeABC):
             oport_tyspec.gen_marshal(var, f"(*{var})"),
             oport_tyspec.gen_desctor(var, oport_ty.get("value"))
         ]
-
+        
         instances = [{                                       # marshalling first
             "placeholder": f"marshal_{oport_id}",
             "block": None,
@@ -103,9 +107,14 @@ class Socket(PortTypeABC):
             "block": Ref(f"send_{_mangle_c_name(repr(oport_id))}"),
             "directive": ["expand"],
             "bind": [
-                {"label_to_label": {"child": "data", "parent": oport_name}},
+                {"value_to_param": {"child": "expected_size", "value": exp_size}},
+                {"label_to_label": {
+                    "child": "data", "parent": oport_name,
+                    "usage": ['p', ("" if oport_tyspec.need_malloc() else "&") + '{{label.$p.name}}']}}, 
                 {"usage_to_label": {"child": "socket",
                                     "usage": [connected_name]}},
+                {"usage_to_label": {"child": "size",
+                                    "usage": [f"{oport_name}_size"]}},
 
             ]
         }]

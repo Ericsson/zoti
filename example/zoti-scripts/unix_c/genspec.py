@@ -13,7 +13,7 @@ from ports import Timer, Socket
 
 def _gen_arg(var, typ, T, casting=False, out=False, **kwargs):
     tt = T.get(typ)
-    match (casting, out, isinstance(tt, Array) or isinstance(tt, Structure)):
+    match (casting, out, (isinstance(tt, Array) or isinstance(tt, Structure)) and (tt.need_malloc())):
         case(False, False, False):  # not casting, Input, no Array/struct
             return f"&{var}"
         case(False, False, True):  # not casting, Input, Array/struct
@@ -194,6 +194,7 @@ def _make_kernel_component(node, parent, G, T):
         "access": T.gen_access_dict(G.entry(p).data_type["type"], read_only=False),
         "prefix": "*",
         "prtarg": f"{T.c_name(G.entry(p).data_type['type'])}* {G.entry(p).name}",
+        # "prtarg": f"{T.c_name(G.entry(p).data_type['type'])}{'*' if T.get(G.entry(p).data_type['type']).need_malloc() else ''} {G.entry(p).name}",
         "usearg": _gen_arg(f"{{{{ label.${p.name()}.name }}}}",
                            G.entry(p).data_type['type'], T, out=True)
     } for p in oports]
@@ -251,11 +252,12 @@ def _make_actor_scenario(node, G, T):
     ]
     inter_ports = G.ports(node, select=lambda n: "inter_var" in n.mark)
     inter_usage = [{
-        "type": T.get(G.entry(p).data_type["type"]),
+        "type": T.make_type(from_spec={ "type": "ref", "ref": G.entry(p).data_type['type'].to_json()})["type"],
         "declargs":{"var": f"*{{{{label.{G.entry(p).name}.name}}}}",
                     **G.entry(p).data_type},
         "consargs": ["{{label." + G.entry(p).name + ".name}}",
                      "(*{{ label." + G.entry(p).name + ".name}})"],
+                     # T.c_name(G.entry(p).data_type["type"])],
         "descargs": ["{{label." + G.entry(p).name + ".name}}",
                      G.entry(p).data_type.get("value")]
     } for p in inter_ports]
@@ -263,7 +265,9 @@ def _make_actor_scenario(node, G, T):
     snd_specs = [
         G.entry(p).port_type.sender_genspec(
             p, G.entry(p),
-            [G.entry(o).name for o in G.connected_ports(p) if "udp_socket" in G.entry(o).name][0], 
+            [G.entry(o).name for o in G.connected_ports(p)
+             if "udp_socket" in G.entry(o).name
+             and G.depth(G.commonAncestor(p, o)) >= 1][0], 
             T)
         for p in G.ports(node, select=lambda n: n.dir == ty.Dir.OUT)
     ]
@@ -325,7 +329,7 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
               for p in G.ports(actor_id, select=lambda p: p.dir == ty.Dir.OUT)]
     rcv_ports, rcv_proto, rcv_insts, rcv_blocks = iport.port_type.receiver_genspec(
         iport.name, expected_type, pltf_name, T)
-    print("===================", iport.name, expected_type, iport.data_type)
+    # print("===================", iport.name, expected_type, iport.data_type)
     proj = G.node_projection(actor_id)
     port_scenarios = [y
                       for x, y in proj.edges(actor_id)
@@ -345,7 +349,7 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
         rcv_proto[-1]
         + T.gen_decl(f"{{{{label.{iport.name}.name}}}}", **iport.data_type)
         + "\n" + "\n ".join([
-            T.gen_decl(f"* {{{{label.{p.name}.name}}}}", **p.data_type)
+            T.gen_decl(f"{'*' if T.get(p.data_type['type']).need_malloc() else ''} {{{{label.{p.name}.name}}}}", **p.data_type)
             for p in oports
         ]) + '\n {{ placeholder.code }}\n}']
 

@@ -71,6 +71,7 @@ nodes:
     - name: flush
       dir: in
       data_type: {name: Common.Boolean}
+      port_type: {external_name: DFL-flush}
     - name: samples
       dir: in
       data_type: {name: Monitor.Collection64}

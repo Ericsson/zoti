@@ -28,4 +28,4 @@ import:
         - connect: ["sys-stat", null,  "Src", "trig"]
         - connect: ["sys-trigger", null,  "Sink", "stat_time"]
         - connect: ["Src", "data", "Proc", "st_data"]
-        - connect: ["Proc", "res_data", "Sink", "data"]
+        - connect: ["Proc", "res", "Sink", "data"]

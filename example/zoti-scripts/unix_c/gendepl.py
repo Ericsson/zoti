@@ -44,6 +44,29 @@ def _port_spec(G, uid):
         port_intrinsic
     ]
 
+def _atom_spec(G, uid):
+    entry = G.entry(uid)
+    port_intrinsic = {
+        "name": "TrigCounter2",
+        "description": [],
+        "roles": ["intrinsic", "counter"],
+        "atoms": ["{counter-name}"],
+        "parameters": ["data-type", "data-type-anchor", "counter-name"],
+    }
+
+    return [
+        entry.mark["probe_buffer"],
+        "TrigCounter2",
+        {
+            "data-type-anchor": "Common.Timestamp",
+            "data-type": "Monitor.Counter64",
+            "counter-name": entry.mark["probe_buffer"],
+            "DFL-proposed-port": "trig",
+            "node-name": entry.mark["probe_buffer"]
+        },
+        port_intrinsic
+    ]
+
 def gendepl(G, **kwargs):
     depl = {}
     root_entry = G.entry(G.root)
@@ -61,6 +84,7 @@ def gendepl(G, **kwargs):
         idx += 1
         cfg_port += 1
         idxs[entry.name] = idx
+        print(idx, entry.name)
         node = [
             f"proc-{idx}-{entry.name}",
             entry.name,
@@ -76,6 +100,9 @@ def gendepl(G, **kwargs):
                 "nodes": [
                     _port_spec(G, p)
                     for p in G.ports(pltf, select=lambda x: x.dir != graph.Dir.INOUT) 
+                ] + [
+                    _atom_spec(G, p)
+                    for p in G.ports(pltf, select=lambda x: "probe_buffer" in x.mark) 
                 ]
             }
             
@@ -83,6 +110,10 @@ def gendepl(G, **kwargs):
         
         depl["nodes"].append(node)
 
+    idx = 0
+    for pltf in G.children(G.root, select=lambda n: isinstance(n, graph.PlatformNode)):
+        entry = G.entry(pltf)
+        idx += 1
         for src, dst in G.node_edges(pltf, in_outside=True):
             src_entry = G.entry(src)
             dst_entry = G.entry(dst)

@@ -11,7 +11,7 @@ nodes:
       - name: st_data
         dir: in
         data_type: {name: Tst.LinkData}
-      - name: res_data
+      - name: res
         dir: out
         data_type: {name: Tst.ResData}
       - {name: DFL_counter_flush, dir: in}
@@ -51,6 +51,6 @@ nodes:
       # - connect: [PreAndMain/preproc, out, PreAndMain/maincomp, in]
       - connect: [Preproc/preproc_native, out, counter, monitored_input]
       - connect: [counter, bypassed_data,  Maincomp/maincomp_native, in]       
-      - connect: [Maincomp/maincomp_native, res, ".", res_data]
+      - connect: [Maincomp/maincomp_native, res, ".", res]
       - connect: [".", DFL_counter_flush, counter, DFL_counter_flush]
       - connect: [counter, DFL_counter_samples, ".", DFL_counter_samples]

@@ -10,10 +10,10 @@ import:
 !default
 - nodes:
   - edges:
-    - edge_type: !with_create {name: UDP}
+    - edge_type: {name: UDP}
     nodes:
     - ports:
-        - port_type: !with_create {type: socket}
+        - port_type: {type: socket}
 - nodes:
     - name: Tst   # kind: CompositeNode
       description: "Example Dataflow Graph"
@@ -36,7 +36,7 @@ import:
         - connect: ["sys-stat", null,  "Src", "trig"]
         - connect: ["sys-trigger", null,  "Sink", "stat_time"]
         - connect: ["Src", "data", "Proc", "st_data"]
-        - connect: ["Proc", "res_data", "Sink", "data"]
+        - connect: ["Proc", "res", "Sink", "data"]
         ### probe connections ###
         - connect: ["sys-flush", null,  "DFL_counter_stat", "flush"]
         - connect: ["DFL_counter_stat/Flush/flush", "flush1", "Src", "DFL_counter_flush"]

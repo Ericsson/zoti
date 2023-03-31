@@ -63,6 +63,10 @@ def fatal(msg):
     sys.stderr.write('Error: {}\n'.format(msg))
     sys.exit(1)
 
+class Epsilon(object):
+    '''Internal marker class representing the empty set.'''
+    pass
+
 class Frame(object):
     def __init__(self, parent_frame, node=None, name=None):
         assert node or name
