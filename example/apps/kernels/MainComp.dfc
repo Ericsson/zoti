@@ -2,6 +2,10 @@
 #define MAINCOMP_MULT 5000
 #define MAINCOMP_MULT2 30
 
+#ifdef DFL_DEBUG_PRINT
+printf("<#compute#>(Maincomp_compute)\n");
+#endif
+
 union {
   float f;
   uint32_t i;

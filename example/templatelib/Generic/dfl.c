@@ -144,13 +144,15 @@ if ({{label.size.name}} != {{param.expected_size}}) {
 // End: UdpReceive.C
 
 // Template: UdpSend.C
-  const size_t {{label.data.name}}_cnt = (sizeof(Tst__LinkData_t) + 100 * (sizeof(Res__Sample_t)));
-  if (send({{label.socket.name}},
-           {{label.data.name}},
-           {{label.data.name}}_cnt,
-           0) != {{label.data.name}}_cnt) {
+const size_t {{label.size.name}}_cnt = {{param.expected_size}};
+size_t {{label.size.name}} = send({{label.socket.name}},
+				  {{label.data.name}},
+				  {{label.size.name}}_cnt,
+				  0);
+  if ({{label.size.name}} != {{label.size.name}}_cnt) {
     #ifdef DFL_DEBUG_PRINT
-    printf("Send on <<<{{label.socket.name}}>>> failed!\n");
+    printf("Send on <<<{{label.socket.name}}>>> failed! Packet size %"PRId32" != expected size %"PRId32"\n",
+	 (int32_t){{label.size.name}}, (int32_t){{label.size.name}}_cnt);
     #endif
   }
 // End: UdpSend.C

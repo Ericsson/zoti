@@ -140,6 +140,7 @@ script.transform([
     tran.TransSpec(gendepl.gendepl),
 ])
 
+# assert False
 
 for node, spec in script.genspec.items():
     with open(Path(args.output).joinpath(node).with_suffix(".zoc"), "w") as f:

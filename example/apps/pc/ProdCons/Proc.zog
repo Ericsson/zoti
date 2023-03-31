@@ -8,7 +8,7 @@ nodes:
       - name: st_data
         dir: in
         data_type: {name: Tst.LinkData}
-      - name: res_data
+      - name: res
         dir: out
         data_type: {name: Tst.ResData}
         
@@ -39,5 +39,5 @@ nodes:
     edges:
       - connect: [".", st_data, Preproc/preproc_native, st_data]
       - connect: [Preproc/preproc_native, out, Maincomp/maincomp_native, in]
-      - connect: [Maincomp/maincomp_native, res, ".", res_data]
+      - connect: [Maincomp/maincomp_native, res, ".", res]
       

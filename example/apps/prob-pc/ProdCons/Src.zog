@@ -13,6 +13,7 @@ nodes:
     - name: trig
       dir: in
       data_type: {name: Common.Timestamp}       # relevant to KernelNode
+      port_type: {external_name: trig}
     - name: data
       dir: out
       data_type: {name: Tst.LinkData}
