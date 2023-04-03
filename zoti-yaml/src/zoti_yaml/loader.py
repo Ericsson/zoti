@@ -149,28 +149,28 @@ class ZotiLoader(SafeLoader):
 
     def construct_policy_union(self, node):
         try:
-            return ty.MergePolicy(obj=self.construct_any(node), union=True, replace=False)
+            return ty.MergePolicy.from_keyword(ty.POLICY_UNION, self.construct_any(node))
         except Exception as e:
             raise yaml.MarkedYAMLError(
                 note=str(e), problem_mark=node.start_mark)
 
-    def construct_policy_union_replace(self, node):
+    def construct_policy_runion(self, node):
         try:
-            return ty.MergePolicy(obj=self.construct_any(node), union=True, replace=True)
+            return ty.MergePolicy.from_keyword(ty.POLICY_RUNION, self.construct_any(node))
         except Exception as e:
             raise yaml.MarkedYAMLError(
                 note=str(e), problem_mark=node.start_mark)
 
-    def construct_policy_intersect(self, node):
+    def construct_policy_inter(self, node):
         try:
-            return ty.MergePolicy(obj=self.construct_any(node), union=False, replace=False)
+            return ty.MergePolicy.from_keyword(ty.POLICY_INTER, self.construct_any(node))
         except Exception as e:
             raise yaml.MarkedYAMLError(
                 note=str(e), problem_mark=node.start_mark)
 
-    def construct_policy_intersect_replace(self, node):
+    def construct_policy_rinter(self, node):
         try:
-            return ty.MergePolicy(obj=self.construct_any(node), union=False, replace=True)
+            return ty.MergePolicy.from_keyword(ty.POLICY_RINTER, self.construct_any(node))
         except Exception as e:
             raise yaml.MarkedYAMLError(
                 note=str(e), problem_mark=node.start_mark)
@@ -180,11 +180,10 @@ ZotiLoader.add_constructor("!include", ZotiLoader.include)
 ZotiLoader.add_constructor("!default", ZotiLoader.construct_default)
 ZotiLoader.add_constructor("!attach", ZotiLoader.construct_attach)
 ZotiLoader.add_constructor("!ref", ZotiLoader.construct_ref)
-ZotiLoader.add_constructor("!policy:union", ZotiLoader.construct_policy_union)
-ZotiLoader.add_constructor("!policy:union+replace", ZotiLoader.construct_policy_union_replace)
-ZotiLoader.add_constructor("!policy:intersect", ZotiLoader.construct_policy_intersect)
-ZotiLoader.add_constructor("!policy:intersect+replace",
-                           ZotiLoader.construct_policy_intersect_replace)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_UNION}", ZotiLoader.construct_policy_union)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_RUNION}", ZotiLoader.construct_policy_runion)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_INTER}", ZotiLoader.construct_policy_inter)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_RINTER}", ZotiLoader.construct_policy_rinter)
 
 
 def load(stream, Loader, **kwargs):

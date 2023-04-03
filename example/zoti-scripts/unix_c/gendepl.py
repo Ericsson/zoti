@@ -9,8 +9,8 @@ def _port_spec(G, uid):
     if entry.dir == graph.Dir.IN:
         actor_port_name = entry.name
     else:
-        print([G.entry(o).name for o in G.connected_ports(uid)
-               if G.depth(G.commonAncestor(o, uid)) >= 1 and G.depth(o) > G.depth(uid)] )
+        # print([G.entry(o).name for o in G.connected_ports(uid)
+        #        if G.depth(G.commonAncestor(o, uid)) >= 1 and G.depth(o) > G.depth(uid)] )
         actor_port_name = [G.entry(o).name for o in G.connected_ports(uid)
                            if G.depth(G.commonAncestor(o, uid)) >= 1
                            and G.depth(o) > G.depth(uid)][0]  # TODO: wow!
@@ -84,7 +84,7 @@ def gendepl(G, **kwargs):
         idx += 1
         cfg_port += 1
         idxs[entry.name] = idx
-        print(idx, entry.name)
+        # print(idx, entry.name)
         node = [
             f"proc-{idx}-{entry.name}",
             entry.name,

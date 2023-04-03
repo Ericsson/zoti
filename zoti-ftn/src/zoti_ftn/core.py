@@ -41,6 +41,9 @@ class Uid:
     def qualified(self):
         return f"{self.module}_{self.name}"
 
+    def to_json(self):
+        return{"module": self.module, "name": self.name}
+
     # class Schema(mm.Schema):
     #     name = mm.fields.String(required=True)
     #     module = mm.fields.String(required=True)
