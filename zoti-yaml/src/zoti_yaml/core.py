@@ -17,6 +17,11 @@ ATTR_MODULE = "module"
 ATTR_IMPORT = "import"
 ATTR_ALIAS = "as"
 
+POLICY_UNION = "union"
+POLICY_RUNION = "union+replace"
+POLICY_INTER = "intersect"
+POLICY_RINTER = "replace+intersect"
+
 
 def clean(node):
     if isinstance(node, list):
@@ -432,65 +437,81 @@ class Attach:
 
 @dataclass
 class MergePolicy:
-    """See ``!default``."""
+    """Policy dictating how the *defaults* object is to be recursively
+    merged in *originals* (see ``!default``). The current policies are:
+
+    ``union``
+        performs the union between *originals* and *defaults* where
+        *originals* have priority if the same key is found.
+
+    ``union+replace`
+        performs the union between *originals* and *defaults* where
+        *defaults* have priority if the same key is found.
+
+    ``intersection``
+        ignores fields from *defaults* whose keys are not explicitly
+        found in *originals*. *originals* have priority when the same
+        key is found.
+
+    ``intersection+replace`
+        ignores fields from *defaults* whose keys are not explicitly
+        found in *originals*. *defaults* have priority when the same
+        key is found.
+    """
     obj: Optional[Any] = None
     union: bool = True
     replace: bool = False
-    
-# @dataclass(eq=False)
-# class WithCreate:
-#     """See ``!default``."""
 
-#     obj: Any
-
-
-# @dataclass(eq=False)
-# class WithReplace:
-#     """See ``!default``."""
-#     obj: Any
-
+    @classmethod
+    def from_keyword(cls, keywd, obj):
+        if keywd == POLICY_UNION:
+            return cls(obj, union=True, replace=False)
+        elif keywd == POLICY_RUNION:
+            return cls(obj, union=True, replace=True)
+        elif keywd == POLICY_INTER:
+            return cls(obj, union=False, replace=False)
+        elif keywd == POLICY_RINTER:
+            return cls(obj, union=False, replace=True)
+        assert False
 
 class Default:
-    """This keyword is followed by a list of exactly 2 YAML objects (e.g.,
+    """This keyword is followed by a list of exactly 2 YAML objects (i.e.,
     trees), *defaults* and *original*. When the document tree is being
     resolved, it recursivvely fills in the contents of *original*
-    according to the values in *defaults* as per the following rules:
+    according to the values in *defaults* recursively, based on the
+    active merge policy (see ``!policy:<merge_policy>``). The default
+    merge policy is ``!policy:union``.
 
-    - both *original* and *defaults* need to be of the same
-      (recursive) type;
-
-    - whenever a list is being parsed only the first element of
-      *defaults* is being considered for defaulting every element of
-      *original*;
-
-    - if an object key is found both in *original* and *defaults*:
-
-      - if the *defaults* entry is a normal object it proceeds with
-        the recursive resolving as usual.
-
-      - if the *defaults* entry is preceded by a ``!with_replace``
-        keyword it completely overwrites the *original* entry.
-
-    - if an object key is found in *defaults* but not in *original*:
-
-      - if the *defaults* entry is a normal object it ignores it.
-
-      - if the *defaults* entry is preceded by a ``!with_create``
-        keyword it creates the new keyword in *original* and
-        associates its entry.
-
-    Example:
+    A policy is a marked YAML node in the *defaults* tree, and is
+    active from that node to all its childred until the last leaf node
+    or until a node with a policy changing marker. E.g.:
 
     .. code-block:: yaml
 
          !default
+         - !policy:A
+           root:          # policy A
+           - foo: bar     # policy A
+           - !policy B
+             biz:         # policy B
+             - baz        # policy B
+             - buzz       # policy B
+           - bam: blep    # policy A
+         - root: ...
+
+    Example:
+    
+    .. code-block:: yaml
+
+         !default
          - root:
-           - foo:
+           - !policy:intersect
+             foo:
                a: this is superseded by original
-               b: !with_replace this supersedes the original
+               b: !policy:union+replace this supersedes the original
                c: this will be ignored
-               d: !with_create this is created
-           - bar: this is ignored (only the first element in a list matters)
+               d: !policy:union this is created
+           - bar: this is ignored (only the first element in a list in !defaults matters)
          - root:
            - foo:
                a: this supersedes the default value

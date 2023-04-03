@@ -74,7 +74,7 @@ class TypeABC(ftn.TypeABC):
         base_size_expr = self._gen_base_size_expr(acc_expr)
         arr_infos = self._gen_arr_infos(acc_expr)
         size_exprs = [base_size_expr] + [sz for _, sz, _ in arr_infos]
-        # print(size_exprs, arr_infos)
+        # print(base_size_expr, size_exprs, arr_infos)
         ctor_lines = [f"{buf_var} = malloc({' + '.join(size_exprs)})"]
         if ptr_fixup:
             last_ptr = buf_var
@@ -89,6 +89,8 @@ class TypeABC(ftn.TypeABC):
         return ";\n".join(ctor_lines) + ";\n"
 
     def gen_desctor(self, buf_var, buf_val=None):
+        if not self.need_malloc():
+            return ""
         dctor = f"free({buf_var});"
         if buf_val is not None:
             dctor += f"\n{buf_var} = {buf_val};"
@@ -132,15 +134,15 @@ class TypeABC(ftn.TypeABC):
     def _gen_arr_infos(self, acc_expr):
         return []
 
-    # # TODO: Making _gen_arr_infos public as below is just a temporary hack to
-    # #   get marshalling working again. The type handling needs rethinking.
-    # def gen_arr_infos(self, acc_expr):
-    #     return self._gen_arr_infos(acc_expr)
+    # TODO: Making _gen_arr_infos public as below is just a temporary hack to
+    #   get marshalling working again. The type handling needs rethinking.
+    def gen_arr_infos(self, acc_expr):
+        return self._gen_arr_infos(acc_expr)
 
-    # # TODO: Making _gen_base_size_expr public as below is just a temporary hack
-    # #   to get marshalling working again. The type handling needs rethinking.
-    # def gen_base_sze_expr(self, acc_expr):
-    #     return self._gen_base_size_expr(acc_expr)
+    # TODO: Making _gen_base_size_expr public as below is just a temporary hack
+    #   to get marshalling working again. The type handling needs rethinking.
+    def gen_base_sze_expr(self, acc_expr):
+        return self._gen_base_size_expr(acc_expr)
 
 
 @with_schema(ftn.TypeRef.Schema)
@@ -572,8 +574,10 @@ class FtnDb(ftn.FtnDb):
             ty_str = usage
         elif isinstance(type, ftn.Uid):
             ty_str = _mangle_to_C_name(type) + "_t"
+            # ty_str, _ = self.get(type).gen_c_type("", allow_void=allow_void)
         elif isinstance(type, str):
             ty_str = _mangle_to_C_name(ftn.Uid(type)) + "_t"
+            # ty_str, _ = self.get(ftn.Uid(type)).gen_c_type("", allow_void=allow_void)
         elif isinstance(type, TypeABC):
             ty_str, _ = type.gen_c_type("", allow_void=allow_void)
         else:
