@@ -444,7 +444,7 @@ class MergePolicy:
         performs the union between *originals* and *defaults* where
         *originals* have priority if the same key is found.
 
-    ``union+replace`
+    ``union+replace``
         performs the union between *originals* and *defaults* where
         *defaults* have priority if the same key is found.
 
@@ -453,7 +453,7 @@ class MergePolicy:
         found in *originals*. *originals* have priority when the same
         key is found.
 
-    ``intersection+replace`
+    ``intersection+replace``
         ignores fields from *defaults* whose keys are not explicitly
         found in *originals*. *defaults* have priority when the same
         key is found.
@@ -492,7 +492,7 @@ class Default:
          - !policy:A
            root:          # policy A
            - foo: bar     # policy A
-           - !policy B
+           - !policy:B
              biz:         # policy B
              - baz        # policy B
              - buzz       # policy B
