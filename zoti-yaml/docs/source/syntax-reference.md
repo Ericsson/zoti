@@ -61,16 +61,10 @@ below.
 .. autosimple:: zoti_yaml.core.Default
 ```
 
-#### `!with_create` *any*
+#### `!policy:<merge_policy>` *any*
 
 ```{eval-rst}
-.. autosimple:: zoti_yaml.core.WithCreate
-```
-
-#### `!with_replace` *any*
-
-```{eval-rst}
-.. autosimple:: zoti_yaml.core.WithReplace
+.. autosimple:: zoti_yaml.core.MergePolicy
 ```
 
 #### `!ref` {*module*, *path*, *name*}

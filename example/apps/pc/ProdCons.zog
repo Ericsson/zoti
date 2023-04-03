@@ -1,0 +1,31 @@
+module: ProdCons
+main-is: "/nodes[Tst]"
+import:
+  - {module: ProdCons.Src, as: Src}
+  - {module: ProdCons.Proc, as: Proc}
+  - {module: ProdCons.Sink, as: Sink}
+---
+
+!default
+- nodes:
+  - edges: 
+    - edge_type: {name: UDP}
+    nodes:
+    - ports:
+        - port_type: {type: socket}
+- nodes:
+    - name: Tst   # kind: CompositeNode
+      description: "Example Dataflow Graph"
+      primitives:
+        - {name: sys-trigger, type: SYSTEM}
+        - {name: sys-flush, type: SYSTEM}
+        - {name: sys-stat, type: SYSTEM}
+      nodes:
+        - !attach {name: Src,  ref: !ref {module: Src, path: "/nodes[Src]"}}
+        - !attach {name: Proc, ref: !ref {module: Proc, path: "/nodes[Proc]"}}
+        - !attach {name: Sink, ref: !ref {module: Sink, path: "/nodes[Sink]"}}  
+      edges:
+        - connect: ["sys-stat", null,  "Src", "trig"]
+        - connect: ["sys-trigger", null,  "Sink", "stat_time"]
+        - connect: ["Src", "data", "Proc", "st_data"]
+        - connect: ["Proc", "res", "Sink", "data"]

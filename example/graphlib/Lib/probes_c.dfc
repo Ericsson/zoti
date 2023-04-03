@@ -20,7 +20,7 @@
 
 // v send_flush_n
 {% for port in param.flush_ports %}
-(*{{ port.name }}) = (*((bool *)&{{ label.flush.name }}));
+{{ port.name }} = (*((bool *)&{{ label.flush.name }}));
 {% endfor %}
 // ^ send_flush_n
 
@@ -32,13 +32,13 @@ for (int i = 0; i < {{ getter("samples.LEN") }}; ++i) {
      preferrably using dataflow mechanisms if reasonable. */
   DFL_atom_t id = {{ getter("samples.name", "i") }};
   int a = 0;
-  while (a < DFL_dyn_atom_table_len && DFL_dyn_atom_table[a].id_nr }} != id)
+  while (a < DFL_dyn_atom_table_len && DFL_dyn_atom_table[a].id_nr != id)
     ++a;
   if (a >= DFL_dyn_atom_table_len)
     printf("%-30"PRIu32" %10"PRIu64"\n", {{ getter("samples.name", "i") }},
 	   {{ getter("samples.cnt", "i") }});
   else
     printf("%-30s %10"PRIu64"\n", DFL_dyn_atom_table[a].name,
-	   {{ getter("samples.cnt", "i") }}(i));
+	   {{ getter("samples.cnt", "i") }});
  }
 // ^ print_stats

@@ -1,3 +1,7 @@
 *.dot
 *.txt
 gen
+prebuilt
+target/**/*.o
+__pycache__
+bins_storage

@@ -4,17 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-zoti-yaml = {editable = true, path = "./../zoti-yaml"}
-marshmallow = "*"
-toml = "*"
-zoti-graph = {editable = true, path = "./../zoti-graph"}
-networkx = "*"
-pydot = "*"
-zoti-ftn = {editable = true, path = "./../zoti-ftn"}
-arpeggio = "*"
-zoti-tran = {editable = true, path = "./../zoti-tran"}
-zoti-gen = {editable = true, path = "./../zoti-gen"}
-jinja2 = "*"
 
 [dev-packages]
 
