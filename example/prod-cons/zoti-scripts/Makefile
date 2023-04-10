@@ -2,14 +2,6 @@
 ## Tool invocation commands
 ############################################################################
 
- ifeq (, $(shell which clang-format))
- $(error "clang-format not installed, Consider installing it.")
- endif
-
-ifeq ($(wildcard ../target/prebuilt/x86_64/*),)
-$(error "Did not found x86_64 prebuild libraries. Consider running 'make prepare'.")
-endif
-
 PYTHON		:= pipenv run python
 ZOTI_YAML	:= $(PYTHON) -m zoti_yaml
 ZOTI_GRAPH	:= $(PYTHON) -m zoti_graph
@@ -18,54 +10,74 @@ ZOTI_GEN	:= $(PYTHON) -m zoti_gen
 C_FORMAT	:= clang-format
 CC 		:= gcc
 
+define check-dep
+ifeq (, $$(shell which $1))
+$$(error "$1 is not installed, Check README to install dependencies.")
+endif
+endef
+$(foreach dep, python3 pipenv $(C_FORMAT) $(CC),$(eval $(call check-dep,$(dep))))
+
+ifeq ($(wildcard ../target/prebuilt/x86_64/*),)
+$(error "Did not find x86_64 prebuild libraries. Consider running 'make prepare'.")
+endif
+
 ############################################################################
 ## Setting path variables
 ############################################################################
 
-APP_PATH	= ../apps/$(APP)
+# base paths
+HUB		= ..
+TC_PATH		= $(HUB)/apps/$(TC)
 SCRIPT_PATH 	= .
-GRAPH_LIB	= $(APP_PATH) ../graphlib
-TYPE_LIB	= ../typelib
-TEMPLATE_LIB	= ../templatelib
-PREBUILT_PATH	= ../target/prebuilt/x86_64
+
+#library paths
+GRAPH_LIB	= $(TC_PATH) $(HUB)/graphlib
+TYPE_LIB	= $(HUB)/typelib
+TEMPLATE_LIB	= $(HUB)/templatelib
+
+# target platform libraries
+PREBUILT_PATH	= $(HUB)/target/prebuilt/x86_64
 PREBUILT_INCL	= $(PREBUILT_PATH)/include
 PREBUILT_LIB	= $(PREBUILT_PATH)/lib
-GEN_PATH	= ../gen/$(APP)
+
+# generated artifacts paths
+GEN_PATH	= $(HUB)/gen/$(TC)
 GEN_GRAPH_PATH	= $(GEN_PATH)/graph
 GEN_TYPES_PATH	= $(GEN_PATH)/types
 GEN_SPEC_PATH	= $(GEN_PATH)/genspec
 GEN_TRANS_PATH	= $(GEN_PATH)/trans_dbg
 GEN_CODE_PATH	= $(GEN_PATH)/code
 GEN_BIN_PATH	= $(GEN_PATH)/bin/x86_64
-GEN_PATHS 	= $(GEN_PATH) $(GEN_GRAPH_PATH) $(GEN_TYPES_PATH) $(GEN_SPEC_PATH) $(GEN_CODE_PATH) $(GEN_TRANS_PATH) $(GEN_BIN_PATH)
+GEN_PATHS 	:= $(GEN_PATH) $(GEN_GRAPH_PATH) $(GEN_TYPES_PATH) $(GEN_SPEC_PATH)
+GEN_PATHS 	+= $(GEN_CODE_PATH) $(GEN_TRANS_PATH) $(GEN_BIN_PATH)
 
 ############################################################################
 ## Testing variables and loading environment
 ############################################################################
 
-ifndef APP
-$(error APP variable not set. Set APP to one of [$(shell ls -I kernels ../apps)])
+ifndef TC
+$(error TC variable not set. Set TC to one of [$(shell ls -I kernels $(HUB)/apps)])
 endif
 
 ifndef DEBUG
 $(info INFO: Running in normal mode. For debug mode define the DEBUG variable.)
 endif
 
-include $(APP_PATH)/Makefile.in
+include $(TC_PATH)/Makefile.in
 
 ifndef MAIN
-$(error MAIN not loaded from app $(APP)/Makefile.in)
+$(error MAIN not loaded from app $(TC)/Makefile.in)
 endif
 
 ifndef NODES
-$(error NODES not loaded from app $(APP)/Makefile.in)
+$(error NODES not loaded from app $(TC)/Makefile.in)
 endif
 
 ############################################################################
 ## Finding sources and setting targets
 ############################################################################
 
-APP_SRCS 	:= $(shell find $(APP_PATH) -name '*.zog')
+TC_SRCS 	:= $(shell find $(TC_PATH) -name '*.zog')
 NATIVE_SRCS 	:= $(shell find apps -name '*.dfc') 
 TYPE_SRCS 	:= $(sort $(shell find $(TYPE_LIB) -name '*.ftn')) # TODO: better way for deps
 
@@ -128,7 +140,7 @@ $(GEN_PATHS):
 
 ## graph: ##
 # Parse graph (project) input files and dumps a raw ZOTI-Graph object
-$(GRAPH_IN): $(NATIVE_SRCS) $(APP_SRCS)
+$(GRAPH_IN): $(NATIVE_SRCS) $(TC_SRCS)
 ifdef DEBUG   # debug rule: dump intermediate zoti-yaml format as YAML file
 	$(ZOTI_YAML) --verbose --pathvar $(GRAPH_LIB) -s graph -o $(@D)/inter.yaml -- $(MAIN) 
 	$(ZOTI_GRAPH) --verbose --dump-graph --dump-tree --dump-out $(GEN_GRAPH_PATH)\
@@ -146,10 +158,10 @@ $(GEN_TYPES_PATH)/%.yaml: $(TYPE_LIB)/%.ftn
 # Transform the previously generated representations into a genspec for each target node
 $(GENSPECS) $(GEN_TYPE_HDR): $(GRAPH_IN) $(TYPES_IN)
 ifdef DEBUG   # debug rule: dump intermediate graphs for each transformation
-	$(PYTHON) $(SCRIPT_PATH)/unix_c/g2b.py --verbose --debug -p $(GEN_TRANS_PATH) \
+	$(PYTHON) $(SCRIPT_PATH)/unix_c/zoti_tran.py --verbose --debug -p $(GEN_TRANS_PATH) \
 		-g $(GRAPH_IN) -o $(GEN_SPEC_PATH) -c $(GEN_CODE_PATH) -f $(TYPES_IN) 
 else          # normal rule: just generate genspec
-	$(PYTHON) $(SCRIPT_PATH)/unix_c/g2b.py \
+	$(PYTHON) $(SCRIPT_PATH)/unix_c/zoti_tran.py \
 		 -o $(GEN_SPEC_PATH) -g $(GRAPH_IN) -c $(GEN_CODE_PATH) -f $(TYPES_IN) 
 endif
 
