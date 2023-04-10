@@ -1,11 +1,21 @@
+{% if include.relative %}
 {% assign imgurl = include.url %}
+{% assign legurl = include.legend %}
+{% else %}
+{% assign imgurl = include.url | prepend: site.baseurl %}
+{% assign legurl = include.legend | prepend: site.baseurl %}
+{% endif %}
 
 <figure class="image">
-  <a href="{{ imgurl | prepend: site.baseurl }}">    
-    <img src="{{ imgurl | prepend: site.baseurl }}"
+  <a href="{{ imgurl }}">    
+    <img src="{{ imgurl }}"
 	 alt="{{ include.description }}"
+	 title="Click on the image for a large view"
 	 {% if include.scale %} height="{{ include.scale }}"{% endif %}
 	 >
   </a>
-  <figcaption><font size="2">{{ include.description }}</font></figcaption>
+  <figcaption><font size="2">
+      {{ include.description }}
+      {% if include.legend %}<a href="{{ legurl }}">[Legend]</a>{% endif %}
+  </font></figcaption>
 </figure>

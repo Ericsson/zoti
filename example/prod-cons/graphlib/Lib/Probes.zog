@@ -76,9 +76,9 @@ nodes:
       dir: in
       data_type: {name: Monitor.Collection64}
     # TODO: needs outputs defined by the caller
-  primitives:
-    - {name: null0, type: "NULL"}
-    - {name: null1, type: "NULL"}
+  # primitives:
+  #   - {name: null0, type: "NULL"}
+  #   - {name: null1, type: "NULL"}
   nodes:
     - name: Flush
       kind: ActorNode

@@ -62,7 +62,7 @@ follows:</p>
 <span class="linenos"> 7</span>
 <span class="linenos"> 8</span><span class="kt">!default</span>
 <span class="linenos"> 9</span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span>
-<span class="linenos">10</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mark</span><span class="p">:</span><span class="w"> </span><span class="kt">!with_create</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEFAULT_MARKING</span>
+<span class="linenos">10</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mark</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEFAULT_MARKING</span>
 <span class="linenos">11</span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span>
 <span class="linenos">12</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n1</span>
 <span class="linenos">13</span><span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
@@ -80,7 +80,7 @@ follows:</p>
 <span class="linenos">25</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!attach</span>
 <span class="linenos">26</span><span class="w">    </span><span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="kt">!ref</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">mod2</span><span class="p p-Indicator">,</span><span class="nt"> path</span><span class="p">:</span><span class="w">  </span><span class="s">&quot;/root/nodes[n1]&quot;</span><span class="p p-Indicator">}</span>
 <span class="linenos">27</span><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n2</span>
-<span class="linenos">28</span><span class="w">    </span><span class="nt">content-extra</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;I</span><span class="nv"> </span><span class="s">will</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">ignored!&quot;</span>
+<span class="linenos">28</span><span class="w">    </span><span class="nt">content-extra</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;I</span><span class="nv"> </span><span class="s">will</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">ignored!&quot;</span><span class="w"> </span>
 <span class="linenos">29</span><span class="w">    </span>
 </pre></div>
 </div>
@@ -231,9 +231,8 @@ path and a log. Also, notice that every child of <code class="docutils literal n
 contains an <code class="docutils literal notranslate"><span class="pre">_info</span></code> entry with positional metadata.</p>
 <p>The effects of <code class="docutils literal notranslate"><span class="pre">!default</span></code> (in <code class="docutils literal notranslate"><span class="pre">main.zoml</span></code> line <code class="docutils literal notranslate"><span class="pre">8</span></code>) can be seen in the
 fact that each 1st level child node (corresponding to the first
-argument specification) contains a <code class="docutils literal notranslate"><span class="pre">mark:</span> <span class="pre">DEFAULT_MARKING</span></code>
-entry. Although not existing in the original tree, this entry has been
-forcefully created because of the directive <code class="docutils literal notranslate"><span class="pre">!with_create</span></code> (see
+argument specification) contains a <code class="docutils literal notranslate"><span class="pre">mark:</span> <span class="pre">DEFAULT_MARKING</span></code> entry, as a
+result of merging the default values under <code class="docutils literal notranslate"><span class="pre">!policy:union</span></code> (see
 <a class="reference internal" href="syntax-reference.html"><span class="doc std std-doc">Syntax Reference</span></a>).</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">!ref</span></code> command has been resolved each time pointing to a valid
 node in the module trees, enabling the <code class="docutils literal notranslate"><span class="pre">!attach</span></code> command to act

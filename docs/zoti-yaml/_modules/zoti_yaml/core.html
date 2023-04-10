@@ -36,7 +36,7 @@
 <span></span><span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePosixPath</span>
-<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span><span class="p">,</span> <span class="n">pprint</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 
@@ -52,6 +52,11 @@
 <span class="n">ATTR_IMPORT</span> <span class="o">=</span> <span class="s2">&quot;import&quot;</span>
 <span class="n">ATTR_ALIAS</span> <span class="o">=</span> <span class="s2">&quot;as&quot;</span>
 
+<span class="n">POLICY_UNION</span> <span class="o">=</span> <span class="s2">&quot;union&quot;</span>
+<span class="n">POLICY_RUNION</span> <span class="o">=</span> <span class="s2">&quot;union+replace&quot;</span>
+<span class="n">POLICY_INTER</span> <span class="o">=</span> <span class="s2">&quot;intersect&quot;</span>
+<span class="n">POLICY_RINTER</span> <span class="o">=</span> <span class="s2">&quot;replace+intersect&quot;</span>
+
 
 <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -62,6 +67,8 @@
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RESERVED_KWS</span>
         <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">MergePolicy</span><span class="p">):</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">clean</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">node</span>
 
 
@@ -463,60 +470,83 @@
 <span class="c1">## !default ##</span>
 <span class="c1">##############</span>
 
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">WithCreate</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;See ``!default``.&quot;&quot;&quot;</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">MergePolicy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Policy dictating how the *defaults* object is to be recursively</span>
+<span class="sd">    merged in *originals* (see ``!default``). The current policies are:</span>
 
-    <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span>
+<span class="sd">    ``union``</span>
+<span class="sd">        performs the union between *originals* and *defaults* where</span>
+<span class="sd">        *originals* have priority if the same key is found.</span>
 
+<span class="sd">    ``union+replace``</span>
+<span class="sd">        performs the union between *originals* and *defaults* where</span>
+<span class="sd">        *defaults* have priority if the same key is found.</span>
 
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">WithReplace</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;See ``!default``.&quot;&quot;&quot;</span>
-    <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span>
+<span class="sd">    ``intersection``</span>
+<span class="sd">        ignores fields from *defaults* whose keys are not explicitly</span>
+<span class="sd">        found in *originals*. *originals* have priority when the same</span>
+<span class="sd">        key is found.</span>
 
+<span class="sd">    ``intersection+replace``</span>
+<span class="sd">        ignores fields from *defaults* whose keys are not explicitly</span>
+<span class="sd">        found in *originals*. *defaults* have priority when the same</span>
+<span class="sd">        key is found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">union</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_keyword</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">keywd</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">keywd</span> <span class="o">==</span> <span class="n">POLICY_UNION</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">union</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">keywd</span> <span class="o">==</span> <span class="n">POLICY_RUNION</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">union</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">keywd</span> <span class="o">==</span> <span class="n">POLICY_INTER</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">union</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">keywd</span> <span class="o">==</span> <span class="n">POLICY_RINTER</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">union</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="kc">False</span>
 
 <span class="k">class</span> <span class="nc">Default</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;This keyword is followed by a list of exactly 2 YAML objects (e.g.,</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This keyword is followed by a list of exactly 2 YAML objects (i.e.,</span>
 <span class="sd">    trees), *defaults* and *original*. When the document tree is being</span>
 <span class="sd">    resolved, it recursivvely fills in the contents of *original*</span>
-<span class="sd">    according to the values in *defaults* as per the following rules:</span>
+<span class="sd">    according to the values in *defaults* recursively, based on the</span>
+<span class="sd">    active merge policy (see ``!policy:&lt;merge_policy&gt;``). The default</span>
+<span class="sd">    merge policy is ``!policy:union``.</span>
 
-<span class="sd">    - both *original* and *defaults* need to be of the same</span>
-<span class="sd">      (recursive) type;</span>
-
-<span class="sd">    - whenever a list is being parsed only the first element of</span>
-<span class="sd">      *defaults* is being considered for defaulting every element of</span>
-<span class="sd">      *original*;</span>
-
-<span class="sd">    - if an object key is found both in *original* and *defaults*:</span>
-
-<span class="sd">      - if the *defaults* entry is a normal object it proceeds with</span>
-<span class="sd">        the recursive resolving as usual.</span>
-
-<span class="sd">      - if the *defaults* entry is preceded by a ``!with_replace``</span>
-<span class="sd">        keyword it completely overwrites the *original* entry.</span>
-
-<span class="sd">    - if an object key is found in *defaults* but not in *original*:</span>
-
-<span class="sd">      - if the *defaults* entry is a normal object it ignores it.</span>
-
-<span class="sd">      - if the *defaults* entry is preceded by a ``!with_create``</span>
-<span class="sd">        keyword it creates the new keyword in *original* and</span>
-<span class="sd">        associates its entry.</span>
-
-<span class="sd">    Example:</span>
+<span class="sd">    A policy is a marked YAML node in the *defaults* tree, and is</span>
+<span class="sd">    active from that node to all its childred until the last leaf node</span>
+<span class="sd">    or until a node with a policy changing marker. E.g.:</span>
 
 <span class="sd">    .. code-block:: yaml</span>
 
 <span class="sd">         !default</span>
+<span class="sd">         - !policy:A</span>
+<span class="sd">           root:          # policy A</span>
+<span class="sd">           - foo: bar     # policy A</span>
+<span class="sd">           - !policy:B</span>
+<span class="sd">             biz:         # policy B</span>
+<span class="sd">             - baz        # policy B</span>
+<span class="sd">             - buzz       # policy B</span>
+<span class="sd">           - bam: blep    # policy A</span>
+<span class="sd">         - root: ...</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">    </span>
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">         !default</span>
 <span class="sd">         - root:</span>
-<span class="sd">           - foo:</span>
+<span class="sd">           - !policy:intersect</span>
+<span class="sd">             foo:</span>
 <span class="sd">               a: this is superseded by original</span>
-<span class="sd">               b: !with_replace this supersedes the original</span>
+<span class="sd">               b: !policy:union+replace this supersedes the original</span>
 <span class="sd">               c: this will be ignored</span>
-<span class="sd">               d: !with_create this is created</span>
-<span class="sd">           - bar: this is ignored (only the first element in a list matters)</span>
+<span class="sd">               d: !policy:union this is created</span>
+<span class="sd">           - bar: this is ignored (only the first element in a list in !defaults matters)</span>
 <span class="sd">         - root:</span>
 <span class="sd">           - foo:</span>
 <span class="sd">               a: this supersedes the default value</span>
@@ -549,22 +579,22 @@
         <span class="k">return</span> <span class="s2">&quot;!default</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">pformat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_merge_dict</span><span class="p">(</span><span class="n">orig</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">_merge_dict</span><span class="p">(</span><span class="n">orig</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">MergePolicy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
             <span class="k">def</span> <span class="nf">_merge_val</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">WithReplace</span><span class="p">):</span>
-                    <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
-                    <span class="k">return</span>
-                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">WithCreate</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">MergePolicy</span><span class="p">):</span>
+                    <span class="n">new_policy</span> <span class="o">=</span> <span class="n">MergePolicy</span><span class="p">(</span><span class="n">union</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">)</span>
                     <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">obj</span>
-                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">:</span>
-                        <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-                        <span class="k">return</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_policy</span> <span class="o">=</span> <span class="n">policy</span>
+                <span class="c1"># log.warn(f&quot;policy={new_policy}&quot;)</span>
                 <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">:</span>
-                    <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_merge_dict</span><span class="p">(</span><span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+                    <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_merge_dict</span><span class="p">(</span><span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">val</span><span class="p">,</span> <span class="n">new_policy</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">new_policy</span><span class="o">.</span><span class="n">union</span><span class="p">:</span>
+                    <span class="n">orig</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
                 <span class="k">return</span>
 
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">):</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">orig</span><span class="p">)</span>
+                <span class="c1"># print(default, orig)</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot merge </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">pformat</span><span class="p">(</span><span class="n">default</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">pformat</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -576,13 +606,14 @@
                 <span class="c1"># if len(default) != 1:</span>
                 <span class="c1">#     err = f&quot;Length of default list should be 1.\n{pformat(default)}&quot;</span>
                 <span class="c1">#     raise ValueError(err)</span>
-                <span class="n">orig</span> <span class="o">=</span> <span class="p">[</span><span class="n">_merge_dict</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">default</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="ow">not</span> <span class="n">orig</span><span class="p">:</span>
+                <span class="n">orig</span> <span class="o">=</span> <span class="p">[</span><span class="n">_merge_dict</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">default</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">policy</span><span class="p">)</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">policy</span><span class="o">.</span><span class="n">replace</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">orig</span><span class="p">:</span>
                 <span class="n">orig</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">orig</span>
 
-        <span class="n">_merge_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="n">clean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">))</span>
+        <span class="n">_merge_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="n">clean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span> <span class="n">policy</span><span class="o">=</span><span class="n">MergePolicy</span><span class="p">())</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - default values applied&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span>
 </pre></div>
 

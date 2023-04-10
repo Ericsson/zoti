@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e0988365853440cbfd854d91c5910d4da724cba90012525a31ba5a4be2c9b9ec"
+            "sha256": "f1b8452dd7ba5b4dc08bc315b43ad95d0298ad7c8536618eb0b4536b7dd9e581"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -98,11 +98,11 @@
         },
         "networkx": {
             "hashes": [
-                "sha256:58058d66b1818043527244fab9d41a51fcd7dcc271748015f3c181b8a90c8e2e",
-                "sha256:9a9992345353618ae98339c2b63d8201c381c2944f38a2ab49cb45a4c667e412"
+                "sha256:4f33f68cb2afcf86f28a45f43efc27a9386b535d567d2127f8f61d51dec58d36",
+                "sha256:de346335408f84de0eada6ff9fafafff9bcda11f0a0dfaa931133debb146ab61"
             ],
             "index": "pypi",
-            "version": "==3.0"
+            "version": "==3.1"
         },
         "packaging": {
             "hashes": [
@@ -184,23 +184,23 @@
         },
         "zoti-ftn": {
             "editable": true,
-            "path": "./../../zoti-ftn"
+            "path": "./../../../zoti-ftn"
         },
         "zoti-gen": {
             "editable": true,
-            "path": "./../../zoti-gen"
+            "path": "./../../../zoti-gen"
         },
         "zoti-graph": {
             "editable": true,
-            "path": "./../../zoti-graph"
+            "path": "./../../../zoti-graph"
         },
         "zoti-tran": {
             "editable": true,
-            "path": "./../../zoti-tran"
+            "path": "./../../../zoti-tran"
         },
         "zoti-yaml": {
             "editable": true,
-            "path": "./../../zoti-yaml"
+            "path": "./../../../zoti-yaml"
         }
     },
     "develop": {}

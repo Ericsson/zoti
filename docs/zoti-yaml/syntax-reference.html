@@ -90,42 +90,37 @@ additional keywords followed by certain arguments, as documented
 below.</p>
 <section id="default-defaults-originals">
 <h4><code class="docutils literal notranslate"><span class="pre">!default</span></code> [<em>defaults</em>, <em>originals</em>]<a class="headerlink" href="#default-defaults-originals" title="Permalink to this heading">¶</a></h4>
-<p>This keyword is followed by a list of exactly 2 YAML objects (e.g.,
+<p>This keyword is followed by a list of exactly 2 YAML objects (i.e.,
 trees), <em>defaults</em> and <em>original</em>. When the document tree is being
 resolved, it recursivvely fills in the contents of <em>original</em>
-according to the values in <em>defaults</em> as per the following rules:</p>
-<ul class="simple">
-<li><p>both <em>original</em> and <em>defaults</em> need to be of the same
-(recursive) type;</p></li>
-<li><p>whenever a list is being parsed only the first element of
-<em>defaults</em> is being considered for defaulting every element of
-<em>original</em>;</p></li>
-<li><p>if an object key is found both in <em>original</em> and <em>defaults</em>:</p>
-<ul>
-<li><p>if the <em>defaults</em> entry is a normal object it proceeds with
-the recursive resolving as usual.</p></li>
-<li><p>if the <em>defaults</em> entry is preceded by a <code class="docutils literal notranslate"><span class="pre">!with_replace</span></code>
-keyword it completely overwrites the <em>original</em> entry.</p></li>
-</ul>
-</li>
-<li><p>if an object key is found in <em>defaults</em> but not in <em>original</em>:</p>
-<ul>
-<li><p>if the <em>defaults</em> entry is a normal object it ignores it.</p></li>
-<li><p>if the <em>defaults</em> entry is preceded by a <code class="docutils literal notranslate"><span class="pre">!with_create</span></code>
-keyword it creates the new keyword in <em>original</em> and
-associates its entry.</p></li>
-</ul>
-</li>
-</ul>
+according to the values in <em>defaults</em> recursively, based on the
+active merge policy (see <code class="docutils literal notranslate"><span class="pre">!policy:&lt;merge_policy&gt;</span></code>). The default
+merge policy is <code class="docutils literal notranslate"><span class="pre">!policy:union</span></code>.</p>
+<p>A policy is a marked YAML node in the <em>defaults</em> tree, and is
+active from that node to all its childred until the last leaf node
+or until a node with a policy changing marker. E.g.:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="kt">!default</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!policy:A</span>
+<span class="w">  </span><span class="nt">root</span><span class="p">:</span><span class="w">          </span><span class="c1"># policy A</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">foo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bar</span><span class="w">     </span><span class="c1"># policy A</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!policy:B</span>
+<span class="w">    </span><span class="nt">biz</span><span class="p">:</span><span class="w">         </span><span class="c1"># policy B</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">baz</span><span class="w">        </span><span class="c1"># policy B</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">buzz</span><span class="w">       </span><span class="c1"># policy B</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">bam</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">blep</span><span class="w">    </span><span class="c1"># policy A</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
 <p>Example:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="kt">!default</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">foo</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!policy:intersect</span>
+<span class="w">    </span><span class="nt">foo</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">a</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this is superseded by original</span>
-<span class="w">      </span><span class="nt">b</span><span class="p">:</span><span class="w"> </span><span class="kt">!with_replace</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this supersedes the original</span>
+<span class="w">      </span><span class="nt">b</span><span class="p">:</span><span class="w"> </span><span class="kt">!policy:union+replace</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this supersedes the original</span>
 <span class="w">      </span><span class="nt">c</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this will be ignored</span>
-<span class="w">      </span><span class="nt">d</span><span class="p">:</span><span class="w"> </span><span class="kt">!with_create</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this is created</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">bar</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this is ignored (only the first element in a list matters)</span>
+<span class="w">      </span><span class="nt">d</span><span class="p">:</span><span class="w"> </span><span class="kt">!policy:union</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this is created</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">bar</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this is ignored (only the first element in a list in !defaults matters)</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">foo</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">a</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this supersedes the default value</span>
@@ -146,13 +141,26 @@ associates its entry.</p></li>
 </pre></div>
 </div>
 </section>
-<section id="with-create-any">
-<h4><code class="docutils literal notranslate"><span class="pre">!with_create</span></code> <em>any</em><a class="headerlink" href="#with-create-any" title="Permalink to this heading">¶</a></h4>
-<p>See <code class="docutils literal notranslate"><span class="pre">!default</span></code>.</p>
-</section>
-<section id="with-replace-any">
-<h4><code class="docutils literal notranslate"><span class="pre">!with_replace</span></code> <em>any</em><a class="headerlink" href="#with-replace-any" title="Permalink to this heading">¶</a></h4>
-<p>See <code class="docutils literal notranslate"><span class="pre">!default</span></code>.</p>
+<section id="policy-merge-policy-any">
+<h4><code class="docutils literal notranslate"><span class="pre">!policy:&lt;merge_policy&gt;</span></code> <em>any</em><a class="headerlink" href="#policy-merge-policy-any" title="Permalink to this heading">¶</a></h4>
+<p>Policy dictating how the <em>defaults</em> object is to be recursively
+merged in <em>originals</em> (see <code class="docutils literal notranslate"><span class="pre">!default</span></code>). The current policies are:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">union</span></code></dt><dd><p>performs the union between <em>originals</em> and <em>defaults</em> where
+<em>originals</em> have priority if the same key is found.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">union+replace</span></code></dt><dd><p>performs the union between <em>originals</em> and <em>defaults</em> where
+<em>defaults</em> have priority if the same key is found.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">intersection</span></code></dt><dd><p>ignores fields from <em>defaults</em> whose keys are not explicitly
+found in <em>originals</em>. <em>originals</em> have priority when the same
+key is found.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">intersection+replace</span></code></dt><dd><p>ignores fields from <em>defaults</em> whose keys are not explicitly
+found in <em>originals</em>. <em>defaults</em> have priority when the same
+key is found.</p>
+</dd>
+</dl>
 </section>
 <section id="ref-module-path-name">
 <h4><code class="docutils literal notranslate"><span class="pre">!ref</span></code> {<em>module</em>, <em>path</em>, <em>name</em>}<a class="headerlink" href="#ref-module-path-name" title="Permalink to this heading">¶</a></h4>
