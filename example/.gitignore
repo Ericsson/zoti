@@ -2,6 +2,8 @@
 *.txt
 gen
 prebuilt
-target/**/*.o
+**/target/**/*.o
 __pycache__
 bins_storage
+*.bkp
+.#*
