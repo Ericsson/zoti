@@ -1,7 +1,7 @@
 import logging as log
 from copy import deepcopy
 from pathlib import Path, PurePosixPath
-from pprint import pformat
+from pprint import pformat, pprint
 from typing import Any, Dict, List, Optional, Union, Generic, TypeVar
 from dataclasses import dataclass
 
@@ -17,6 +17,11 @@ ATTR_MODULE = "module"
 ATTR_IMPORT = "import"
 ATTR_ALIAS = "as"
 
+POLICY_UNION = "union"
+POLICY_RUNION = "union+replace"
+POLICY_INTER = "intersect"
+POLICY_RINTER = "replace+intersect"
+
 
 def clean(node):
     if isinstance(node, list):
@@ -27,6 +32,8 @@ def clean(node):
             for k, v in node.items()
             if k not in RESERVED_KWS
         }
+    if isinstance(node, MergePolicy):
+        node.obj = clean(node.obj)
     return node
 
 
@@ -428,60 +435,83 @@ class Attach:
 ## !default ##
 ##############
 
-@dataclass(eq=False)
-class WithCreate:
-    """See ``!default``."""
+@dataclass
+class MergePolicy:
+    """Policy dictating how the *defaults* object is to be recursively
+    merged in *originals* (see ``!default``). The current policies are:
 
-    obj: Any
+    ``union``
+        performs the union between *originals* and *defaults* where
+        *originals* have priority if the same key is found.
 
+    ``union+replace``
+        performs the union between *originals* and *defaults* where
+        *defaults* have priority if the same key is found.
 
-@dataclass(eq=False)
-class WithReplace:
-    """See ``!default``."""
-    obj: Any
+    ``intersection``
+        ignores fields from *defaults* whose keys are not explicitly
+        found in *originals*. *originals* have priority when the same
+        key is found.
 
+    ``intersection+replace``
+        ignores fields from *defaults* whose keys are not explicitly
+        found in *originals*. *defaults* have priority when the same
+        key is found.
+    """
+    obj: Optional[Any] = None
+    union: bool = True
+    replace: bool = False
+
+    @classmethod
+    def from_keyword(cls, keywd, obj):
+        if keywd == POLICY_UNION:
+            return cls(obj, union=True, replace=False)
+        elif keywd == POLICY_RUNION:
+            return cls(obj, union=True, replace=True)
+        elif keywd == POLICY_INTER:
+            return cls(obj, union=False, replace=False)
+        elif keywd == POLICY_RINTER:
+            return cls(obj, union=False, replace=True)
+        assert False
 
 class Default:
-    """This keyword is followed by a list of exactly 2 YAML objects (e.g.,
+    """This keyword is followed by a list of exactly 2 YAML objects (i.e.,
     trees), *defaults* and *original*. When the document tree is being
     resolved, it recursivvely fills in the contents of *original*
-    according to the values in *defaults* as per the following rules:
+    according to the values in *defaults* recursively, based on the
+    active merge policy (see ``!policy:<merge_policy>``). The default
+    merge policy is ``!policy:union``.
 
-    - both *original* and *defaults* need to be of the same
-      (recursive) type;
-
-    - whenever a list is being parsed only the first element of
-      *defaults* is being considered for defaulting every element of
-      *original*;
-
-    - if an object key is found both in *original* and *defaults*:
-
-      - if the *defaults* entry is a normal object it proceeds with
-        the recursive resolving as usual.
-
-      - if the *defaults* entry is preceded by a ``!with_replace``
-        keyword it completely overwrites the *original* entry.
-
-    - if an object key is found in *defaults* but not in *original*:
-
-      - if the *defaults* entry is a normal object it ignores it.
-
-      - if the *defaults* entry is preceded by a ``!with_create``
-        keyword it creates the new keyword in *original* and
-        associates its entry.
-
-    Example:
+    A policy is a marked YAML node in the *defaults* tree, and is
+    active from that node to all its childred until the last leaf node
+    or until a node with a policy changing marker. E.g.:
 
     .. code-block:: yaml
 
          !default
+         - !policy:A
+           root:          # policy A
+           - foo: bar     # policy A
+           - !policy:B
+             biz:         # policy B
+             - baz        # policy B
+             - buzz       # policy B
+           - bam: blep    # policy A
+         - root: ...
+
+    Example:
+    
+    .. code-block:: yaml
+
+         !default
          - root:
-           - foo:
+           - !policy:intersect
+             foo:
                a: this is superseded by original
-               b: !with_replace this supersedes the original
+               b: !policy:union+replace this supersedes the original
                c: this will be ignored
-               d: !with_create this is created
-           - bar: this is ignored (only the first element in a list matters)
+               d: !policy:union this is created
+           - bar: this is ignored (only the first element in a list in !defaults matters)
          - root:
            - foo:
                a: this supersedes the default value
@@ -514,22 +544,22 @@ class Default:
         return "!default\n" + pformat([self.defaults, self.original])
 
     def resolve(self):
-        def _merge_dict(orig: Dict, default: Dict) -> Any:
+        def _merge_dict(orig: Dict, default: Dict, policy: MergePolicy) -> Any:
             def _merge_val(key, val):
-                if isinstance(val, WithReplace):
-                    orig[key] = deepcopy(val.obj)
-                    return
-                elif isinstance(val, WithCreate):
+                if isinstance(val, MergePolicy):
+                    new_policy = MergePolicy(union=val.union, replace=val.replace)
                     val = val.obj
-                    if key not in orig:
-                        orig[key] = deepcopy(val)
-                        return
+                else:
+                    new_policy = policy
+                # log.warn(f"policy={new_policy}")
                 if key in orig:
-                    orig[key] = _merge_dict(orig[key], val)
+                    orig[key] = _merge_dict(orig[key], val, new_policy)
+                elif new_policy.union:
+                    orig[key] = deepcopy(val)
                 return
 
             if type(orig) != type(default):
-                print(default, orig)
+                # print(default, orig)
                 msg = f"Cannot merge {type(default).__name__} with {type(orig).__name__}"
                 msg += f"\n  {pformat(default)}"
                 msg += f"\n  {pformat(orig)}"
@@ -541,11 +571,12 @@ class Default:
                 # if len(default) != 1:
                 #     err = f"Length of default list should be 1.\n{pformat(default)}"
                 #     raise ValueError(err)
-                orig = [_merge_dict(element, default[0]) for element in orig]
-            elif not orig:
+                orig = [_merge_dict(element, default[0], policy) for element in orig]
+            elif policy.replace or not orig:
                 orig = deepcopy(default)
             return orig
 
-        _merge_dict(self.original, clean(self.defaults))
+        _merge_dict(self.original, clean(self.defaults), policy=MergePolicy())
         log.info("  - default values applied")
+
         return self.original

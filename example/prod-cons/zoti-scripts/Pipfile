@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+marshmallow = "*"
+toml = "*"
+networkx = "*"
+pydot = "*"
+arpeggio = "*"
+jinja2 = "*"
+zoti-yaml = {editable = true, path = "./../../../zoti-yaml"}
+zoti-graph = {editable = true, path = "./../../../zoti-graph"}
+zoti-ftn = {editable = true, path = "./../../../zoti-ftn"}
+zoti-tran = {editable = true, path = "./../../../zoti-tran"}
+zoti-gen = {editable = true, path = "./../../../zoti-gen"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
