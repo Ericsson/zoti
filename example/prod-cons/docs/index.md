@@ -117,9 +117,9 @@ in the picture below.
 
 {% include image_caption.html url="pc-4.png" relative=true
 	legend="pc-5.png" help=true description="The target platform. The
-	"platform" is comprised of daemon processes aiding the system
-	orchestration, whereas the "application" part implements the
-	original dataflow application. %}
+	'platform' part is comprised of daemon processes aiding the system
+	orchestration, whereas the 'application' part implements the
+	original dataflow application." %}
 
 
 Apart from the processes running the application, here are two

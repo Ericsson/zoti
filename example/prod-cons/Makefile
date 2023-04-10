@@ -1,20 +1,42 @@
- ifeq (, $(shell which pipenv))
- $(error "pipenv not installed, Check README to install dependencies.")
- endif
+ifeq (, $(shell which pipenv))
+$(error "pipenv is not installed, Check README to install dependencies.")
+endif
 
-TOPDIR		:= $(shell pwd)
-APP_PATH 	:= apps
-APP_LIST	:= $(shell ls -I kernels $(APP_PATH))
+TC_LIST		:= $(shell ls -I kernels apps)
 TARGET_C_LIB	:= target/c_lib
+GEN_PATH	:= $(shell pwd)/gen
 ZOTI_SCRIPTS 	:= zoti-scripts
-GEN_PATH	:= gen
 DEPLOY_SCRIPTS	:= target/deploy-scripts
 
+.PHONY: help debug prepare clean clean-all download start stop cfg run traffic trig stats agents
+
+help:
+	@echo 'Usage:'
+	@echo '- First time setup                               "make prepare".'
+	@echo ''
+	@echo '- To build an example:'
+	@echo '  - in normal mode do                            "make TC=<example> build".'
+	@echo '  - in debug mode do                             "make TC=<example> debug".'
+	@echo '  (Available examples are: [$(TC_LIST)] )'
+	@echo ''
+	@echo '- To start the platorm daemon processes          "make agents"'
+	@echo ''
+	@echo '- To run an example do the following (available examples above):'
+	@echo '  - Download binaries to agent:                  "make TC=<example> download"'
+	@echo '  - Start the binaries:                          "make TC=<example> start"'
+	@echo '  - Configure the running nodes:                 "make TC=<example> cfg"'
+	@echo '  - Send a trigger packet through:               "make trig"'
+	@echo '  - Send some traffic (100000 trigger packets):  "make traffic"'
+	@echo '  - Flush stats (if example contains counters):  "make stats"'
+	@echo '  - To stop the nodes:                           "make TC=<example> stop"'
+	@echo ''
+	@echo '- To run download, start and cfg in one go do    "make TC=<example> run"'
+
 build:
-	$(MAKE) APP=$(APP) -C $(ZOTI_SCRIPTS)
+	$(MAKE) TC=$(TC) -C $(ZOTI_SCRIPTS)
 
 debug:
-	$(MAKE) APP=$(APP) DEBUG=1 -C $(ZOTI_SCRIPTS)
+	$(MAKE) TC=$(TC) DEBUG=1 -C $(ZOTI_SCRIPTS)
 
 prepare:
 	$(MAKE) -C $(TARGET_C_LIB) clean
@@ -30,19 +52,5 @@ clean-all: clean
 	rm -rf target/prebuilt
 
 download start stop cfg run traffic trig stats agents:
-	$(MAKE) GEN_DIR=$(TOPDIR)/$(GEN_PATH)/$(APP) -C $(DEPLOY_SCRIPTS) $@
+	$(MAKE) GEN_DIR=$(GEN_PATH)/$(TC) -C $(DEPLOY_SCRIPTS) $@
 
-define make-build-tgt
-.PHONY: build-$1
-build-$1:
-	$(MAKE) APP=$1 -C $(ZOTI_SCRIPTS)
-endef
-
-define make-debug-tgt
-.PHONY: debug-$1
-debug-$1:
-	$(MAKE) APP=$1 DEBUG=1 -C $(ZOTI_SCRIPTS)
-endef
-
-$(foreach tc,$(APP_LIST),$(eval $(call make-build-tgt,$(tc))))
-$(foreach tc,$(APP_LIST),$(eval $(call make-debug-tgt,$(tc))))
