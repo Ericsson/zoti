@@ -85,10 +85,8 @@ class Module:
                     k: _map(f, v, path.with_key(k) if path else None)
                     for k, v in node.original.items()
                 }
-            elif isinstance(node, ty.WithCreate):
-                raise ValueError("!with_create construct outside !default")
-            elif isinstance(node, ty.WithReplace):
-                raise ValueError("!with_replace construct outside !default")
+            elif isinstance(node, ty.MergePolicy):
+                raise ValueError("!policy:... construct outside !default")
             return f(node, path=path, **kwargs) if path else f(node, **kwargs)
 
         if with_path:

@@ -147,19 +147,43 @@ class ZotiLoader(SafeLoader):
             return self.construct_mapping(node, deep=deep)
         assert False
 
-    def construct_with_create(self, node):
-        return ty.WithCreate(self.construct_any(node))
+    def construct_policy_union(self, node):
+        try:
+            return ty.MergePolicy.from_keyword(ty.POLICY_UNION, self.construct_any(node))
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
 
-    def construct_with_replace(self, node):
-        return ty.WithReplace(self.construct_any(node))
+    def construct_policy_runion(self, node):
+        try:
+            return ty.MergePolicy.from_keyword(ty.POLICY_RUNION, self.construct_any(node))
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
+
+    def construct_policy_inter(self, node):
+        try:
+            return ty.MergePolicy.from_keyword(ty.POLICY_INTER, self.construct_any(node))
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
+
+    def construct_policy_rinter(self, node):
+        try:
+            return ty.MergePolicy.from_keyword(ty.POLICY_RINTER, self.construct_any(node))
+        except Exception as e:
+            raise yaml.MarkedYAMLError(
+                note=str(e), problem_mark=node.start_mark)
 
 
 ZotiLoader.add_constructor("!include", ZotiLoader.include)
 ZotiLoader.add_constructor("!default", ZotiLoader.construct_default)
 ZotiLoader.add_constructor("!attach", ZotiLoader.construct_attach)
 ZotiLoader.add_constructor("!ref", ZotiLoader.construct_ref)
-ZotiLoader.add_constructor("!with_create", ZotiLoader.construct_with_create)
-ZotiLoader.add_constructor("!with_replace", ZotiLoader.construct_with_replace)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_UNION}", ZotiLoader.construct_policy_union)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_RUNION}", ZotiLoader.construct_policy_runion)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_INTER}", ZotiLoader.construct_policy_inter)
+ZotiLoader.add_constructor(f"!policy:{ty.POLICY_RINTER}", ZotiLoader.construct_policy_rinter)
 
 
 def load(stream, Loader, **kwargs):

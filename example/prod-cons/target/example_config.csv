@@ -1,0 +1,9 @@
+localhost,0xdf1,atoms
+localhost,0xdf2,atoms
+localhost,0xdf3,atoms
+localhost,0xdf1,in-port,trig,localhost,1284
+localhost,0xdf2,in-port,st_data,localhost,1287
+localhost,0xdf3,in-port,stat_time,localhost,1285
+localhost,0xdf3,in-port,data,localhost,1286
+localhost,0xdf1,out-port,data,localhost,1287
+localhost,0xdf2,out-port,res_data,localhost,1286

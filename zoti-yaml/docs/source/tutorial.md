@@ -99,9 +99,8 @@ contains an `_info` entry with positional metadata.
 
 The effects of `!default` (in `main.zoml` line `8`) can be seen in the
 fact that each 1st level child node (corresponding to the first
-argument specification) contains a `mark: DEFAULT_MARKING`
-entry. Although not existing in the original tree, this entry has been
-forcefully created because of the directive `!with_create` (see
+argument specification) contains a `mark: DEFAULT_MARKING` entry, as a
+result of merging the default values under `!policy:union` (see
 [Syntax Reference](syntax-reference)).
 
 The `!ref` command has been resolved each time pointing to a valid
@@ -110,7 +109,7 @@ accordingly. `!attach` is used in three places, from last to first:
 
 - in `main.zoml` line `25`: attaches the contents of the `n1` node
   from `sub.mod` under the node `n2` in `main`. The behavior of the
-  `!include` command in `sub/mod.zoml` lines `8-11` can be seen in the
+  `!include` command in `sub/mod.zoml` lines `8-11` can be seen in the 
   result. Notice that `floating-ref` is resolved according to its new
   location (module resolved to `main` instead of `sub.mod`). Also
   notice that its metadata contains its entire history and previous

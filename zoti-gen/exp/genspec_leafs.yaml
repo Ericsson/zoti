@@ -1,0 +1,13 @@
+module: genspec_leafs
+top: mulacc
+---
+block:
+- name: mulacc
+  label:
+  - {name: in1, usage: ["p", "{{ label.$p.name }}"]}
+  - {name: in2, usage: ["p", "{{ label.$p.name }}"]}
+  - {name: acc, usage: ["p", "{{ label.$p.name }}"]}
+  - {name: out, usage: ["p", "{{ label.$p.name }}"]}
+  prototype: [name, i1, i2, acc, o, "void $name($i1, $i2, $acc, &$o) {\n {{ placeholder['code'] }} \n};"]
+  code:
+    out = acc + in1 * in2;

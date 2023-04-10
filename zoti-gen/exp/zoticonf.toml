@@ -1,0 +1,9 @@
+[zoti.gen]
+
+lib = ["exp"]
+deps = "deps.json"
+input = ["genspec_main.yaml", "genspec_leafs.yaml"]
+output = "out.c"
+begin_block = "// vvv {comp.name}\n" 
+end_block = "\n// ^^^ {comp.name}" 
+

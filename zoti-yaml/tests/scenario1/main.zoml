@@ -7,7 +7,7 @@ import:
 
 !default
 - root:
-    - mark: !with_create DEFAULT_MARKING
+    - mark: DEFAULT_MARKING
 - root:
   - name: n1
     nodes:
@@ -25,5 +25,5 @@ import:
   - !attach
     ref: !ref {module: mod2, path:  "/root/nodes[n1]"}
     name: n2
-    content-extra: "I will be ignored!"
+    content-extra: "I will be ignored!" 
     
