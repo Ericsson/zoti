@@ -31,6 +31,9 @@ help:
 	@echo '  - To stop the nodes:                           "make TC=<example> stop"'
 	@echo ''
 	@echo '- To run download, start and cfg in one go do    "make TC=<example> run"'
+	@echo ''
+	@echo '- To clean the generated files do                "make clean"'
+	@echo '- To clean everything including initial setup do "make clean-all"'
 
 build:
 	$(MAKE) TC=$(TC) -C $(ZOTI_SCRIPTS)
