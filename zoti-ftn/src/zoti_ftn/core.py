@@ -478,6 +478,9 @@ class FtnDb:
     def clear_instance():
         FtnDb.__instance = None
 
+    def to_raw(self):
+        return self._srcs
+        
     def __init__(self, srcs={}):
         """ Constructor should be called at the beginning of the program. """
         if FtnDb.__instance is not None:
