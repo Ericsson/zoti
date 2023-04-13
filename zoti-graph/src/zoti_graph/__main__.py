@@ -103,7 +103,7 @@ try:
         log.info(f"Loading graph from raw pickle: {args.input.name}")
         G = pickle.load(args.input)
     else:
-        raise ValueError("Cannot recognize extension of {args.input.name}")
+        raise ValueError(f"Cannot recognize extension of {args.input.name}")
 
     # Dumping debug files
     if conf['dump_info']:

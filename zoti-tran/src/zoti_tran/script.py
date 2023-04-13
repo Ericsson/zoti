@@ -45,6 +45,11 @@ class TransSpec:
     dump_prefix: Optional[str] = None
     """overrides the :class:`Script` member with the same name."""
 
+    dump_title: Optional[str] = None
+    """optional title for the dumped file. If left ``None`` it will be
+    replaced by the function name.
+
+    """
 
 class Script:
     """Transformation script handler. It stores an application graph and
@@ -182,14 +187,15 @@ class Script:
                         f"  ! rule '{rule.func.__name__}' returned {type(ret)}")
                 for to_clean in rule.clean:
                     delattr(self, to_clean)
+                title = rule.dump_title if rule.dump_title else name
                 if rule.dump_graph is not None:
-                    with open(prefix.joinpath(f"graph_{name}.dot"), "w") as f:
+                    with open(prefix.joinpath(f"{title}_graph.dot"), "w") as f:
                         draw_graph(self.G, f, **rule.dump_graph)
                 if rule.dump_tree is not None:
-                    with open(prefix.joinpath(f"tree_{name}.dot"), "w") as f:
+                    with open(prefix.joinpath(f"{title}_tree.dot"), "w") as f:
                         draw_tree(self.G, f, **rule.dump_tree)
                 if rule.dump_nodes:
-                    with open(prefix.joinpath(f"nodes_{name}.txt"), "w") as f:
+                    with open(prefix.joinpath(f"{title}_nodes.txt"), "w") as f:
                         dump_node_info(self.G, f)
 
             except TypeError as e:
