@@ -18,7 +18,6 @@ import:
       description: "Example Dataflow Graph"
       primitives:
         - {name: sys-trigger, type: SYSTEM}
-        # - {name: sys-flush, type: SYSTEM}
         - {name: sys-stat, type: SYSTEM}
       nodes:
         - !attach {name: Src,  ref: !ref {module: Src, path: "/nodes[Src]"}}
