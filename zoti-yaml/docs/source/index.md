@@ -13,38 +13,13 @@ document trees distributed across several modules. It consists of:
 - an API to import the various utilities in your own project,
   e.g. query-like path extraction.
 
-```{code-block} yaml
+
+```{literalinclude} ../../tests/scenario1/main.zoml
 ---
+language: yaml
+linenos: true
 caption: Toy example written with ZOTI-YAML. Check the [Tutorial](tutorial) for an explanation.
----	
-module: main
-import:
-  - {module: mod1}
-  - {module: sub.mod, as: mod2}
-
 ---
-
-!default
-- root:
-    - mark: !with_create DEFAULT_MARKING
-- root:
-  - name: n1
-    nodes:
-      - name: n1_n1
-        nodes:
-          - name: n1_n1_n1
-            data:
-              !attach
-              ref: !ref {path: "../../../nodes[n1_n2]/extra"}
-      - name: n1_n2
-        extra: "I am referenced by n1_n1_n1!"
-        data:
-          !attach
-          ref: !ref {module: mod1, path: "/root/node[n_who]/data"}
-  - !attach
-    ref: !ref {module: mod2, path:  "/root/nodes[n1]"}
-    name: n2
-    content-extra: "I will be ignored!"
 ```
 
 This language extensions has been developed as a convenience frontend

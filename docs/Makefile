@@ -65,12 +65,14 @@ example/$1:
 example/$1/%.md: ../example/$1/docs/%.md
 	cp -f $$< $$@
 
-example/$1/%.png: ../example/$1/docs/%.drawio
-	drawio --export --format xml -o tmp.xml --uncompressed $$<
-	for i in $$(shell seq 0 $$(shell echo $$(shell grep -o "<diagram" tmp.xml | wc -l)-1 | bc)); do\
+example/$1/%.xml: ../example/$1/docs/%.drawio
+	drawio --export --format xml -o $$@ --uncompressed $$<
+
+example/$1/%.png: example/$1/%.xml
+	for i in $$(shell seq 0 $$(shell echo $$(shell grep -o "<diagram" $$< | wc -l)-1 | bc)); do\
 		drawio -x --width 2400 -f png -p $$$$i -o $$(basename .png $$@)-$$$$i.png $$<;\
 	done
-#	rm tmp.xml
+	rm $$<
 
 cleanexamples-$1:
 	rm -rf $$(EXAMPLE_PATH_$1)

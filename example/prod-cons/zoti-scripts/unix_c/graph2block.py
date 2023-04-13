@@ -31,10 +31,11 @@ parser.add_argument(
     help="prints additional info statements",
 )
 parser.add_argument("-g", "--graph", metavar="FILE", type=str, required=True)
-parser.add_argument("-f", "--ftn", nargs='+', required=True)
-parser.add_argument("-p", "--prefix", type=str, default=".")
+parser.add_argument("-f", "--ftn", type=str, required=True)
+parser.add_argument("-p", "--plots", type=str, default=".")
 parser.add_argument("-o", "--output", type=str, default=".")
-parser.add_argument("-c", "--code", type=str, default=".")
+parser.add_argument(      "--typeshdr", type=str, required=True)
+parser.add_argument(      "--depl", type=str, required=True)
 parser.add_argument("--debug", action='store_true')
 args = parser.parse_args()
 
@@ -42,8 +43,7 @@ log.basicConfig(level=args.loglevel,
                 format='%(levelname)s: %(message)s', stream=sys.stderr)
 
 gpath = Path(args.graph)
-# fpaths = Path().glob(args.ftn)
-fpaths = [Path(p) for p in args.ftn]
+fpath = Path(args.ftn)
 
 if gpath.suffixes == [".raw", ".yaml"]:
     with open(gpath) as f:
@@ -51,22 +51,18 @@ if gpath.suffixes == [".raw", ".yaml"]:
 else:
     raise NotImplementedError(f"Cannot handle {gpath}")
 
-ftn_srcs = []
-for fpath in fpaths:
-    if fpath.suffix in [".yml", ".yaml"]:
-        with open(fpath) as f:
-            doc = yaml.load_all(f, Loader=yaml.Loader)
-            ftn_srcs.append(list(doc))
-    else:
-        raise NotImplementedError(f"Cannot handle {fpath}")
 
-T = ftn.FtnDb({doc[0]["module"]: doc[1]["entries"] for doc in ftn_srcs})
+if fpath.suffix == ".yaml":
+    with open(fpath) as f:
+        T = ftn.FtnDb(yaml.load(f, Loader=yaml.Loader))
+else:
+    raise NotImplementedError(f"Cannot handle {gpath}")
 
 
 ################ END NOISE. BEGIN SCRIPT ######################
 
 debug = {} if args.debug else None
-script = tran.Script(G, T, dump_prefix=args.prefix)
+script = tran.Script(G, T, dump_prefix=args.plots)
 
 script.sanity([
     sanity.port_dangling,
@@ -82,6 +78,7 @@ script.sanity([
 script.transform([
     tran.TransSpec(
         target.port_inference,
+        dump_title="tran_1_port_inference",
         dump_nodes=debug,
         dump_graph={
             "port_info": lambda p: f"{p.port_type.__class__.__name__},{p.data_type['type'].__class__.__name__}",
@@ -90,6 +87,7 @@ script.transform([
     ),
     tran.TransSpec(
         target.receiver_types,
+        dump_title="tran_2_receiver_types",
         dump_graph={
             "port_info": lambda p: f"{p.data_type['type']}",
             # "port_info": lambda p: p.dir.name,
@@ -98,6 +96,7 @@ script.transform([
     ),
     tran.TransSpec(
         target.expand_actors,
+        dump_title="tran_3_expand_actors",
         dump_nodes=debug,
         dump_graph={
             "composite_info": lambda p: ",".join([k for k in p.mark.keys()]),
@@ -106,12 +105,12 @@ script.transform([
     ),
     tran.TransSpec(
         agnostic.flatten,
-        # dump_tree={},
+        dump_title="tran_4_flatten",
         dump_graph=debug,
     ),
     tran.TransSpec(
         agnostic.fuse_actors,
-        # dump_tree={},
+        dump_title="tran_5_fuse_actors",
         dump_graph={
             "edge_info": lambda e: str(e.kind.name),
             "composite_info": lambda p: ",".join([k for k in p.mark.keys()]),
@@ -119,6 +118,7 @@ script.transform([
     ),
     tran.TransSpec(
         target.clean_ports,
+        dump_title="tran_6_clean_ports",
         dump_graph={
             "composite_info": lambda c: str(c.mark),
             "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
@@ -128,6 +128,7 @@ script.transform([
     ),
     tran.TransSpec(
         target.separate_reactions,
+        dump_title="tran_7_separate_reactions",
         dump_graph={
             "composite_info": lambda c: str(c.mark),
             "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
@@ -148,10 +149,10 @@ for node, spec in script.genspec.items():
         log.info(f"  * Dumped genspec '{f.name}'")
 
 for fname, text in script.typedefs.items():
-    with open(Path(args.code).joinpath(fname), "w") as f:
+    with open(Path(args.typeshdr).with_name(fname), "w") as f:
         f.write(text)
         log.info(f"  * Dumped typedefs '{f.name}'")
 
-with open(Path(args.output).joinpath(f"{script.gendepl['name']}.dfg"), "w") as f:
+with open(Path(args.depl), "w") as f:
     f.write(json.dumps(script.gendepl, indent=2))
     log.info(f"  * Dumped deploy spec '{f.name}'")
