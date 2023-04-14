@@ -121,7 +121,6 @@ def clean_ports(G, port_inference, **kwargs):
 
       * removes all conections to/from NULL;
       * pomotes STORAGE ports to platform level (will become global variables)
-      * marks multi-input ports for creating buffers, and promotes them to platform level
       * removes intermediate STORAGE ports. Only end connections + global remain
       * removes nodes marked as "ignore" (e.g., hook nodes)
       * identifies/creates and marks ports which will become intermediate variables
@@ -240,13 +239,6 @@ def clean_ports(G, port_inference, **kwargs):
                             G.connect(dummy, down, G.entry(
                                 ups, down), recursive=False)
 
-                # # marking timer input as global; HACK, to enable writing to it
-                # for node in G.children(scen):
-                #     for port in G.ports(node, select=lambda p: isinstance(p.port_type, ports.Timer)):
-                #         G.decouple(port)
-                #         entry = G.entry(port)
-                #         entry.mark["global_var"] = True
-
         # alter exit ports to reflect socket variables
         for oport in G.ports(
             pltf,
@@ -304,7 +296,11 @@ def separate_reactions(G, clean_ports, **kwargs):
                         G.add_mark("buff_name", name, actorp)
 
 
-def receiver_types(G, T, **kwargs):
+def receiver_types(G, T, port_inference, **kwargs):
+    """Updates all input ports of platform nodes to reflect the buffer
+    type required by the port receiver.
+    
+    """
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
         for iport in G.ports(pltf, select=lambda p: p.dir == ty.Dir.IN):
             entry = G.entry(iport)
