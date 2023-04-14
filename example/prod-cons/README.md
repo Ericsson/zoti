@@ -47,7 +47,7 @@ going through this tutorial it is also good to have:
 
 - a practical IDE with user-controlled code highlighting (e.g. [GNU
   Emacs](https://www.gnu.org/software/emacs/) with modes for C,
-  Python, YAML, JSON, TOML).
+  Python, YAML, JSON, TOML, Jinja2).
   
 - a [Graphviz](https://graphviz.org/) format viewer for plotting
   intermediate graphs (e.g. [xdot](https://pypi.org/project/xdot/)).

@@ -4,10 +4,10 @@ FLOOD 		= python3 udpflood.py
 DEPLAGENT	= python3 deployagent.py
 NAMESERV 	= python3 nameservice.py --debug
 
-DEPL_FLOW = Tst-depl
+DEPL_FLOW = ProdCons-depl
 
 BIN_DIR 	:= $(GEN_DIR)/bin
-FLOW_IFLAGS 	:= -I $(GEN_DIR)/genspec
+FLOW_IFLAGS 	:= -I $(GEN_DIR)/tran_out
 FLOW_IFLAGS 	+= -I .
 
 download start stop: 
