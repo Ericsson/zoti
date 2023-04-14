@@ -1,15 +1,17 @@
 import networkx as nx
 
-from dumputils import Ref, Default, PolInter, PolUnion
 import zoti_graph.core as ty
 from zoti_ftn.backend.c import TypeABC
 from zoti_ftn.core import Array, Structure
 from zoti_tran import ScriptError
 
 from ports import Timer, Socket
+from dumputils import Ref, Default, PolInter, PolUnion
 
-# from pprint import pprint
 
+############################
+##      GENSPEC PART      ##
+############################
 
 def _gen_arg(var, typ, T, casting=False, out=False, **kwargs):
     tt = T.get(typ)
@@ -30,17 +32,6 @@ def _gen_arg(var, typ, T, casting=False, out=False, **kwargs):
             return f"({T.c_name(typ)} *) &{var}"
         case(True, True, True):    # casting, Output, Array/struct
             return f"({T.c_name(typ)} *) {var}"
-
-    # if not out:
-    #     if isinstance(tt, Array) or isinstance(tt, Structure):
-    #         return f"({self.c_name(typ)} *) &{var}"
-    #     else:
-    #         return f"({self.c_name(typ)}) {var}"
-    # else:
-    #     if isinstance(tt, Array) or isinstance(tt, Structure):
-    #         return var
-    #     else:
-    #         return f"&{var}"
 
 
 def _mangle_c_name(fullname):
@@ -455,8 +446,7 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
             "type": {"module": "Generic.Dfl", "name": "Main"},
             "requirement": {
                 "include": T.requirements() + ["<stdio.h>"]
-                + ['"DFL_core.h"', '"DFL_util.h"', '"dfl_cfg.h"',
-                   '"dfl_evt.h"']
+                + ['"DFL_core.h"', '"DFL_util.h"', '"dfl_cfg.h"', '"dfl_evt.h"']
                 + [f'"{h}"' for h in typedefs.keys()]
             },
             "label": [a for a, _, _ in atomports] + osockets,
@@ -501,6 +491,10 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
     return specs
 
 
+#############################
+##      TYPEDEFS PART      ##
+#############################
+
 def typedefs(G, T, port_inference, **kwargs):
     types = dict()
     for port in [p for p in G.ir.nodes if isinstance(G.entry(p), ty.Port)]:
@@ -525,3 +519,139 @@ def typedefs(G, T, port_inference, **kwargs):
         tydefs += T.gen_c_typedef(typ) + "\n"
         tydefs += "".join(T.gen_access_macros(typ)) + "\n"
     return {"types.h": tydefs}
+
+
+############################
+##      GENDEPL PART      ##
+############################
+
+_port_name_LUT = {}
+
+def _port_spec(G, uid):
+    entry = G.entry(uid)
+    if entry.dir == ty.Dir.IN:
+        actor_port_name = entry.name
+    else:
+        # print([G.entry(o).name for o in G.connected_ports(uid)
+        #        if G.depth(G.commonAncestor(o, uid)) >= 1 and G.depth(o) > G.depth(uid)] )
+        actor_port_name = [G.entry(o).name for o in G.connected_ports(uid)
+                           if G.depth(G.commonAncestor(o, uid)) >= 1
+                           and G.depth(o) > G.depth(uid)][0]  # TODO: wow!
+    _port_name_LUT[uid] = actor_port_name
+    port_dir = "InputNode" if entry.dir == ty.Dir.IN else "OutputNode"
+    if entry.dir == ty.Dir.IN:
+        port_intrinsic = {
+            "name": "InputNode",
+            "description": "Declaration of InputNode",
+            "roles": ["intrinsic", "end-point", "input"],
+            "parameters": [
+                "data-type", "flow-name", "abstract",
+                "DFL-sys-trig-source", "DFL-INTR-node-slice"
+            ],
+        }
+    else:
+        port_intrinsic = {
+            "name": "OutputNode",
+            "description": "Declaration of OutputNode",
+            "roles": ["intrinsic", "end-point", "output"],
+            "expansion": ["IdentityNode", {"data": "in", "": "out"}],
+            "parameters": ["data-type", "abstract"],
+        }
+    return [
+        actor_port_name,
+        port_dir,
+        {
+            "data-type": repr(entry.data_type),
+            "node-name": entry.name
+        },
+        port_intrinsic
+    ]
+
+def _atom_spec(G, uid):
+    entry = G.entry(uid)
+    port_intrinsic = {
+        "name": "TrigCounter2",
+        "description": [],
+        "roles": ["intrinsic", "counter"],
+        "atoms": ["{counter-name}"],
+        "parameters": ["data-type", "data-type-anchor", "counter-name"],
+    }
+
+    return [
+        entry.mark["probe_buffer"],
+        "TrigCounter2",
+        {
+            "data-type-anchor": "Common.Timestamp",
+            "data-type": "Monitor.Counter64",
+            "counter-name": entry.mark["probe_buffer"],
+            "DFL-proposed-port": "trig",
+            "node-name": entry.mark["probe_buffer"]
+        },
+        port_intrinsic
+    ]
+
+def gendepl(G, **kwargs):
+    depl = {}
+    root_entry = G.entry(G.root)
+    depl["name"] = f"{root_entry.name}-depl"
+    depl["description"] = root_entry._info.get("description")
+    depl["parameters"] = ["trig-port"]
+    depl["nodes"] = []
+    depl["edges"] = []
+
+    idx = 0
+    cfg_port = 0xdf0
+    idxs = {}
+    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+        entry = G.entry(pltf)
+        idx += 1
+        cfg_port += 1
+        idxs[entry.name] = idx
+        # print(idx, entry.name)
+        node = [
+            f"proc-{idx}-{entry.name}",
+            entry.name,
+            {
+                "node-name": f"proc-{idx}-{entry.name}",
+                "deployment-host": "localhost",
+                "deployment-bin-file": f"{entry.name}.bin",
+                "deployment-cfg-port": str(hex(cfg_port)),
+                "deployment-in-window": idx,
+            },
+            {
+                "name": f"proc-{idx}-{entry.name}",
+                "nodes": [
+                    _port_spec(G, p)
+                    for p in G.ports(pltf, select=lambda x: x.dir != ty.Dir.INOUT) 
+                ] + [
+                    _atom_spec(G, p)
+                    for p in G.ports(pltf, select=lambda x: "probe_buffer" in x.mark) 
+                ]
+            }
+            
+        ]
+        
+        depl["nodes"].append(node)
+
+    idx = 0
+    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+        entry = G.entry(pltf)
+        idx += 1
+        for src, dst in G.node_edges(pltf, in_outside=True):
+            src_entry = G.entry(src)
+            dst_entry = G.entry(dst)
+            if isinstance(src_entry, ty.Primitive) and src_entry.type == ty.PrimitiveTy.SYSTEM:
+                depl["edges"].append([
+                    "SYSTEM",
+                    f"proc-{idx}-{entry.name}:{dst_entry.name}",
+                    dst_entry.port_type.to_json()
+                ])
+            else:
+                srcn_entry = G.entry(G.parent(src))
+                depl["edges"].append([
+                    f"proc-{idxs[srcn_entry.name]}-{srcn_entry.name}:{_port_name_LUT[src]}",
+                    f"proc-{idx}-{entry.name}:{dst_entry.name}",
+                    dst_entry.port_type.to_json()
+                ])
+
+    return depl

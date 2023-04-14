@@ -8,8 +8,7 @@ import logging as log
 from pathlib import Path
 from importlib.metadata import distribution
 
-import genspec
-import gendepl
+import artifacts
 import translib as target
 
 import zoti_graph as graph
@@ -126,19 +125,19 @@ script.transform([
             "edge_info": lambda e: e.kind.name,
         } if args.debug else None,
     ),
-    tran.TransSpec(
-        target.separate_reactions,
-        dump_title="tran_7_separate_reactions",
-        dump_graph={
-            "composite_info": lambda c: str(c.mark),
-            "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
-            # "port_info": lambda p: p.dir.name,
-            # "edge_info": lambda e: e.kind.name,
-        } if args.debug else None,
-    ),
-    tran.TransSpec(genspec.typedefs),
-    tran.TransSpec(genspec.genspec),
-    tran.TransSpec(gendepl.gendepl),
+    # tran.TransSpec(
+    #     target.separate_reactions,
+    #     dump_title="tran_7_separate_reactions",
+    #     dump_graph={
+    #         "composite_info": lambda c: str(c.mark),
+    #         "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
+    #         # "port_info": lambda p: p.dir.name,
+    #         # "edge_info": lambda e: e.kind.name,
+    #     } if args.debug else None,
+    # ),
+    tran.TransSpec(artifacts.typedefs),
+    tran.TransSpec(artifacts.genspec),
+    tran.TransSpec(artifacts.gendepl),
 ])
 
 # assert False

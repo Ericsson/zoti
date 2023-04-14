@@ -62,6 +62,8 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
 
     *TODO*: check if fusing on ``Relation.EVENT`` is appropriate
 
+    *TODO*: fuse FSMs
+
     """
     def _fuse_children(proj, _nodes, _edges, msg, under=[]):
         deps = nx.subgraph_view(proj, filter_node=_nodes, filter_edge=_edges)
