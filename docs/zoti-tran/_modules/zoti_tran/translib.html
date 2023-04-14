@@ -97,6 +97,8 @@
 
 <span class="sd">    *TODO*: check if fusing on ``Relation.EVENT`` is appropriate</span>
 
+<span class="sd">    *TODO*: fuse FSMs</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">_fuse_children</span><span class="p">(</span><span class="n">proj</span><span class="p">,</span> <span class="n">_nodes</span><span class="p">,</span> <span class="n">_edges</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">under</span><span class="o">=</span><span class="p">[]):</span>
         <span class="n">deps</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">subgraph_view</span><span class="p">(</span><span class="n">proj</span><span class="p">,</span> <span class="n">filter_node</span><span class="o">=</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">filter_edge</span><span class="o">=</span><span class="n">_edges</span><span class="p">)</span>
