@@ -1,7 +1,7 @@
 ---
 layout: default
 version: 0.1.0
-release-url: TBA
+release_url: TBA
 root-path: https://github.com/Ericsson/zoti/tree/main/example/prod-cons
 ---
 
@@ -16,14 +16,14 @@ this example:
 
 1. This is the very first end-to-end example developed during the
    pre-alpha stages of ZOTI and last tested with [release
-   {{version}}]({{release-url}}). While API, tools and code might
+   {{page.version}}]({{page.release_url}}). While API, tools and code might
    change in time, the general design principles should be valid
    regardless of the current state of ZOTI. For this reason this
    tutorial will not focus much on showing code examples instead you
    are supposed to browse through the source files while this document
    only guides you on how to discover the features alone. If you also
    want to compile and execute the examples you need to download and
-   install version [{{version}}]({{release-url}}) of ZOTI.
+   install version [{{page.version}}]({{page.release_url}}) of ZOTI.
    
 1. Although ZOTI helps with this task, code synthesis is by far
    non-trivial, this is why the (high-level) application itself is
@@ -338,7 +338,7 @@ are dumped at the following paths:
 Check them now and notice how they differ from the originals, as well
 as from the raw `AppGraph` serialization in the same folder.
 
-### Setting the Goals
+### Understanding What We Are Trying to Obtain
 
 Open now the generated code file for one of the examples in
 `gen/<example>/code/*.c` (start with `pc` and then `prob-pc`). Analyze
@@ -390,21 +390,300 @@ connection between `.dfc` template, `.zoc` glue entire and generated
 `.c` code and reverse-engineer how the code generation process
 happened?
 
+Hopefully, by studying the results of this ZOTI synthesis flow against
+ts inputs, you built a rough intuition on how the the scripted
+transformational process is being performed and why. Having this
+intuition is important to justify and understand the chosen
+transformations for this tutorial example presented in the next
+section. Furthermore, the final scope of this tutorial is to build the
+type of critical thinking enabling to judge both good and bad design
+decisions and adapt the synthesis flow to your own custom use case.
+
 ### Graph Transformations
 
-TBA
+We now focus on the transformational process depicted with the
+ZOTI-Tran node in the [synthesis flow](#synthesis-flow) diagram. For
+this you need to study the Python scripts in
+`zoti-scripts/unix_c`. Start by opening the main runner at
+`zoti-scripts/unix_c/graph2block.py` After importing the `AppGraph`
+and `FtnDb` graph/type representations and initiating a `Script`
+object, the first operation performed is to sanity check the
+specification graph against all the rules provided by
+[ZOTI-Graph][zoti-graph]. The subsequent transformations are described
+in the following paragraphs, where *G* denotes the graph
+representation in the current state, whereas *T* denotes the type
+database.
+
+Notice the `TransSpec` definition for each transformation stage,
+namely the title and the graph information which is plotted after the
+transformation is being performed (only in debug mode). To check each
+plot open `gen/<example>/plots/<dump_title>_graph.dot`.
+
+#### Stage 1: Port Inference
+
+| Defined in                        | Requires | Affects | Byproduct | Prerequisite |
+|:----------------------------------|:---------|---------|:----------|:-------------|
+| `zoti-scripts/unix_c/translib.py` | *G*, *T* | *G*     | flag      | none         |
+
+You might have noticed when studying the application specification
+inputs at `apps/<example>/**/*.zog` that not all ports are fully
+specified, yet for the synthesis process all information possible
+associated with a model object is mandatory. This was, by no mistake,
+a feature assumed during the specification phase, namely assuming a
+convenient type inference system that can "fill in" information based
+on port connections. This feature however is not implemented anywhere,
+instead is provided as a graph transformation function. In other
+words, the first transformation syncs all `data_type`, `port_type` and
+`mark` entries based on interconnections. If inconsistencies or
+missing data are detected, this function throws an error.
+
+#### Stage 2: Receiver Types
+
+| Defined in                        | Requires | Affects | Byproduct | Prerequisite     |
+|:----------------------------------|:---------|---------|:----------|:-----------------|
+| `zoti-scripts/unix_c/translib.py` | *G*, *T* | *G*     | none      | `port_inference` |
+
+Here we witness the first target-dependent transformation. As per the
+target platform, each port type is required to store data in a
+specific buffer-like data structure. This transformation simply
+updates every input port of each platform node to reflect this buffer
+by updating the `data_type` entry based on their `port_type`.
+
+#### Stage 3: Expand Actors
+
+| Defined in                        | Requires | Affects | Byproduct | Prerequisite |
+|:----------------------------------|:---------|---------|:----------|:-------------|
+| `zoti-scripts/unix_c/translib.py` | *G*      | *G*     | flag      | none         |
+
+Another "liberty" taken during the specification phase allowed us to
+none-verbosely describe simple actors with only one characteristic
+behavior by ignoring concepts like "detector" or "scenario". This
+transformation makes up for that and transforms all actors to a
+canonical form where detectors and scenarios are made explicit. In our
+case, even though all actors have a unique scenario, it is explicitly
+marked under a cluster called "default".
+
+#### Stage 4: Flatten
+
+| Defined in                               | Requires | Affects | Byproduct | Prerequisite |
+|:-----------------------------------------|:---------|---------|:----------|:-------------|
+| `${ZOTI_TRAN}/src/zoti_tran/translib.py` | *G*      | *G*     | flag      | none         |
+
+This transformation "dissolves" (i.e., unclusters) all composite nodes
+except for those marked as *scenario*, hence the only allowed
+hierarchy of the system is `PlatformNode` &rarr; `ActorNode` &rarr;
+`CompositeNode` (for scenarios) &rarr; `KernelNode`. All other
+clusters originated from component reuse are flattened to their basic
+components.
+
+At this stage we brought the application graph to a convenient form
+that can be matched against patterns and manipulated towards the form
+we want to achieve, i.e. the code block genspecs studied in the
+previous section.
+
+#### Stage 5: Fuse Actors
+
+| Defined in                               | Requires | Affects | Byproduct | Prerequisite |
+|:-----------------------------------------|:---------|---------|:----------|:-------------|
+| `${ZOTI_TRAN}/src/zoti_tran/translib.py` | *G*      | *G*     | flag      | `flatten`    |
+
+This transformation identifies all actors belonging to the same
+timeline in a platform node and fuses them into one actor. After this
+transformation
+
+- all actors remaining in a platform node represent an independent
+  reaction to the input stimuli; 
+- each actor exposes scenarios resulted from merging the data paths of
+  the fused actors.
+- each actor has only one composite detector FSM resulted from merging
+  the constituent FSMs.
+
+
+{% assign notetext = "At the time of writing this tutorial during
+release " | append: page.version | append: " scenario merging and
+detector FSM merging were not fully implemented yet, but only as much
+as this demonstrator required." %} {% include note.html
+content=notetext %}
+
+#### Stage 6: Clean Ports
+
+| Defined in                        | Requires | Affects | Byproduct | Prerequisite     |
+|:----------------------------------|:---------|---------|:----------|:-----------------|
+| `zoti-scripts/unix_c/translib.py` | *G*      | *G*     | flag      | `port_inference` |
+
+This is by far the most intensive transformation in terms of graph
+alterations and is concerning cleaning up redundant connections,
+ports, and creating (marked) auxiliary constructs for what will become
+global and/or intermediate variables. Please check the source code of
+the transformation and the output plots to understand what it does.
+
+This transformation brings the application graph to a form which can
+directly be parsed and translated into code blocks specifications in
+one go,
+
+{% include note.html content="Additional transformations will be
+required when considering multi-input actors with user-defined
+reaction patterns, but in the simple case of this tutorial these
+transformations suffice." %}
+
+#### Stage 7: Generate Typedefs
+
+| Defined in                         | Requires | Affects | Byproduct             | Prerequisite     |
+|:-----------------------------------|:---------|---------|:----------------------|:-----------------|
+| `zoti-scripts/unix_c/artifacts.py` | *G*, *T* | none    | contents of `types.h` | `port_inference` |
+
+Once the graph manipulations are complete and auxiliary constructs
+created, building up the typedef header is a matter of parsing the
+graph, gathering a set of types used in all ports and resolving the
+dependencies between them to determine the order of declaration. For
+each identified type, the code text for definition and access macros
+is generated from *T*. 
+
+The C code is presented as a byproduct of this transformation script
+(see documentation for [ZOTI-Tran][zoti-tran]).
+
+#### Stage 8: Generate Genspecs
+
+| Defined in                         | Requires | Affects | Byproduct        | Prerequisite                                  |
+|:-----------------------------------|:---------|---------|:-----------------|:----------------------------------------------|
+| `zoti-scripts/unix_c/artifacts.py` | *G*, *T* | none    | dict of genspecs | `clean_ports`, `expand_actors`, `fuse_actors` |
+
+{% include note.html content="It is recommended to read and understand
+the source code while looking at the plot for Stage 6." %}
+
+Creating block structure that specifies how the code is being
+constructed involves parsing through the entire application graph and
+dumping all the information necessary in the required format (see
+input format documentation for [ZOTI-Gen][zoti-gen]). Each platform
+node generates a separate genspec tree, which would eventually end up
+in a separate code file. Hence the procedure is repeated for each
+platform node and can be summarized as follows:
+
+- identify marked resources at the platform node level, such as global
+  variables, probe buffers, sockets, timers, atoms, etc. For these
+  resources create, as appropriate:
+  - blocks with declaration and initialization code.
+  - blocks for target platform routines for initialization and
+    configuration (e.g. in-ports, out-ports, atoms, timers, etc.)
+- create a block for the main function
+- for each input port belonging to a child actor node parse how the
+  data propagates and build a port reaction routine as follows:
+  - identify and create glue associated with buffers, intermediate
+    variables etc.
+  - identify and instantiate blocks for allocating, receiving and
+    unmarshalling data from the input port.
+  - identify and instantiate blocks for data preprocessing, detector
+    FSM.
+  - for each scenario belonging to the actor node build the
+    corresponding data path consisting in:
+	- instantiating blocks for each kernel node
+	- identifying and creating blocks for marshalling, sending and
+      deallocating buffer for each output port
+	- sequencing these blocks in the correct order
+  - sequence the blocks in the correct order
+- create the preamble and document tree for each genspec.
+
+#### Stage 9: Generate Deployment Spec
+
+| Defined in                         | Requires | Affects | Byproduct   | Prerequisite |
+|:-----------------------------------|:---------|---------|:------------|:-------------|
+| `zoti-scripts/unix_c/artifacts.py` | *G*      | none    | depl. spec. | none         |
+
+The final transformation stage creates a deployment specification
+document as expected from the target deployment scripts. This document
+mainly exposes platform nodes as Unix processes, associated binaries,
+and what resources are being used and need to be allocated for
+interprocess communication.
 
 ### Code Generation
 
-TBA
+The last step of the [synthesis flow](#synthesis-flow) is to generate
+the target code files. As seen in the flow diagram above, this is
+further broken down into two stages.
+
+#### Stage 1: Generate Document Text
+
+The main part of the code file is generated by [ZOTI-Gen][zoti-gen]
+based on the genspec files established in the previous step. Now that
+you went though their building process it should hopefully be more
+clear what purpose the genspec files serve. For each platform node,
+please open and compare against each other:
+
+  * the genspec file `gen/<example>/tran_out/<node-name>.zoc`
+  * the genspec plot `gen/<example>/plots/<node-name>.genspec.dot`
+  * the generated code file `gen/<example>/code/<node-name>.c`
+
+By now the relation between blocks and code should be
+self-explanatory. Pay attention however that all blocks who do not
+specify a `code` entry, have instead a `type` entry. This means that,
+instead of explicitly exposing their code template, these blocks point
+to a library template for pre-determined components. Open now and
+analyze these template blocks specifications (e.g., at
+`templatelib/Generic/Dfl.py`) and the text for their `code` entries
+(e.g. in `templatelib/Generic/dfl.c`). Can you now identify this code
+in the generated artifact in the place where its corresponding block
+was specified?
+
+Pay attention that, apart from `code`, some blocks specify other
+entries such as `prototype` and even include `requirement`s. These
+entries are carried out and reflected whenever the block is being
+instantiated in a genspec document. Moreover, see that some blocks
+define a `check` function containing mainly assertions. This is a hook
+function that enables verification that the block is instantiated as
+intended within a genspec tree, and if the conditions are not
+satisfied ZOTI-Gen would throw an error during code generation.
+
+{% include note.html content="The template components used in this
+tutorial are only stubs for quickly setting up the example. In a
+realistic production environment at least a richer API documentation,
+as well as more advanced self-validation logic, would be required." %}
+
+#### Stage 2: Generate Document Preamble
+
+While studying the previous stage you might have noticed that both
+some genspec blocks and some template library blocks contain a
+`requirement` field. In the case of C target artifacts, these
+represent dependencies upon external C libraries that appear in the
+template code. While not really caring what these requirements
+represent, ZOTI-Gen can gather them in categories, respectively build
+and solve their inter-dependency graphs. This is precisely what the
+`gen/<example>/tran_out/<node-name>.deps.json` files contain, their
+information being used by the `zoti-scripts/unic_c/postproc.py` to
+generate the text for the C file preambles.
 
 ## Compilation and Deployment
 
-TBA
+Once code files are generated compilation follows a typical procedure
+for obtaining binary files. In this case we use the
+[GCC](https://gcc.gnu.org/) compiler and link the generated `.c` files
+against the header files and pre-built target objects in
+`target/c_lib`. The compiled binaries are found at
+`gen/<example>/bin`.
+
+With the binary files in place deployment and operation follows the
+procedure presented in the [target platform
+overview](#the-target-platform), and can be controlled by the makefile
+rules (see `README.md`).
 
 ## Conclusion
 
-TBA
+This tutorial walked through a complete end-to-end synthesis process
+from a declarative specification of a streaming application containing
+all the implementation details to generate the code (i.e. resource
+allocation and usage is solved and given up-front) to its
+implementation on a Unix-based system of intercommunicating
+processes. While the exact implementation of this toy example might
+get outdated in time, the focus of the tutorial was to build an
+intuition of what resources are needed and where, as well as how to
+conceptually design a synthesis flow and adapt it to any target
+platform based on the current state of the ZOTI tools.
+
+Another reason why this tutorial focuses on "reading the source code"
+instead of "dictating what to do" is to build a critical thinking to
+identify both benefits and caveats of the current approach to generic
+multi-target code synthesis. Furthermore, we hope to inspire you to
+actively contribute to the continuous improvement of this ecosystem,
+methodology, and the community around it.
 
 ## Authors & Acknowledgements
 
@@ -416,5 +695,6 @@ and kindly provided by Leif Linderstam.
 
 
 [philosophy]: {{ "/" | prepend: site.baseurl | append: "#motivation--philosophy" }}
-
 [zoti-gen]: {{ "/zoti-gen" | prepend: site.baseurl }}
+[zoti-graph]: {{ "/zoti-graph" | prepend: site.baseurl }}
+[zoti-tran]: {{ "/zoti-tran" | prepend: site.baseurl }}
