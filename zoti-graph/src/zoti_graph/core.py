@@ -6,6 +6,22 @@ from typing import Any, Dict, List, Optional
 from zoti_graph.util import SearchableEnum, default_init, default_repr
 
 
+# meta attributes (added by the loader)
+META_UID = "__uid__"
+
+# keywords (read from the user input)
+KEY_NODE = "nodes"
+KEY_PORT = "ports"
+KEY_EDGE = "edges"
+KEY_PRIM = "primitives"
+
+# attributes (read from user input)
+ATTR_NAME = "name"
+ATTR_KIND = "kind"
+ATTR_ENT = "entry"
+ATTR_REL = "relation"
+
+
 class Uid:
     """Class denoting unique identifiers for hierarchically organized
     entities. Internally is based on ``PurePosixPath`` from `pathlib
@@ -87,27 +103,24 @@ class Uid:
 ##########
 
 
-class Relation(Flag, metaclass=SearchableEnum):
+class Rel(Flag, metaclass=SearchableEnum):
     """ Bitwise flags denoting kinds of edges. """
 
-    ONLY_TREE = 3  # :   0011
-    CHILD = 1  # :       0001 belongs to tree
-    PORT = 2  # :        0010 belongs to tree
-    ONLY_GRAPH = 12  # : 1100
-    EVENT = 4  # :       0100 belongs to graph
-    STORAGE = 8  # :     1000 belongs to graph
-    NONE = 0  # :        0000
+    TREE = 3  # :  011
+    CHILD = 1  # : 001 belongs to tree
+    PORT = 2  # :  010 belongs to tree
+    GRAPH = 4  # : 100
+    NONE = 0  # :  000
 
 
 class Edge:
     """Container for edge entry."""
     edge_type: Dict
-    kind: Relation
     mark: Dict
     _info: Dict
 
     @default_init
-    def __init__(self, edge_type, kind, mark, _info, **kwargs):
+    def __init__(self, edge_type, mark, _info, **kwargs):
         pass
 
     @default_repr
@@ -119,69 +132,43 @@ class Edge:
 ## PORT ##
 ##########
 
-
 class Dir(Flag, metaclass=SearchableEnum):
     """ Bitwise flags denoting port directions. """
 
-    NONE = 0  # :  00 (for init)
-    IN = 1  # :    01
-    OUT = 2  # :   10
-    INOUT = 3  # : 11
+    NONE = 0  # : 00 (for init)
+    IN = 1  # :   01
+    OUT = 2  # :  10
+    SIDE = 3  # : 11
 
 
 class Port:
     """Container for port entry."""
     name: str
-    dir: Dir
+    kind: Dir
     port_type: Dict
     data_type: Dict
     mark: Dict
     _info: Dict
 
     @default_init
-    def __init__(self, name, dir, port_type={}, data_type={}, mark={}, _info={}, **kwargs):
+    def __init__(self, name, kind, port_type={}, data_type={}, mark={}, _info={}, **kwargs):
         pass
 
     @default_repr
     def __repr__(self):
         pass
 
-    def is_in(self):
-        return self.dir & Dir.IN != Dir.NONE
+    def is_event(self):
+        return self.kind and self.kind != Dir.SIDE
 
-    def is_out(self):
-        return self.dir & Dir.OUT != Dir.NONE
+    def is_side(self):
+        return self.kind == Dir.SIDE
 
+    def has_dir_in(self):
+        return self.kind & Dir.IN != Dir.NONE
 
-class PrimitiveTy(Flag, metaclass=SearchableEnum):
-    """ Bitwise flags denoting types of primitives. """
-
-    NULL = 0
-    SYSTEM = 1
-    BYPASS = 2
-
-
-class Primitive():
-    """Container for primitive node entry"""
-    name: str
-    type: PrimitiveTy
-    mark: Dict
-    _info: Dict
-
-    @default_init
-    def __init__(self, name, type, mark={}, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-    def is_type(self, type):
-        if isinstance(type, PrimitiveTy):
-            return self.type == type
-        if isinstance(type, str):
-            return self.type == PrimitiveTy[type]
-        raise TypeError(type)
+    def has_dir_out(self):
+        return self.kind & Dir.OUT != Dir.NONE
 
 
 ###########
@@ -254,3 +241,31 @@ class KernelNode(NodeABC):
     @default_repr
     def __repr__(self):
         pass
+
+
+class PrimTy(Flag, metaclass=SearchableEnum):
+    """ Bitwise flags denoting types of primitives. """
+
+    NULL = 0
+    SYSTEM = 1
+    BYPASS = 2
+
+
+class BasicNode(NodeABC):
+    """Container for primitive node entry"""
+    type: PrimTy
+
+    @default_init
+    def __init__(self, name, type, parameters={}, mark={}, _info={}, **kwargs):
+        pass
+
+    @default_repr
+    def __repr__(self):
+        pass
+
+    def is_type(self, type):
+        if isinstance(type, PrimTy):
+            return self.type == type
+        if isinstance(type, str):
+            return self.type == PrimTy[type]
+        raise TypeError(type)

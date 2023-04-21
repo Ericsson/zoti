@@ -5,7 +5,6 @@ import marshmallow as mm
 import zoti_yaml as zoml
 
 import zoti_graph.core as ty
-import zoti_graph.tokens as tok
 from zoti_graph.appgraph import AppGraph
 from zoti_graph.core import Uid
 from zoti_graph.exceptions import ParseError, ValidationError
@@ -35,16 +34,10 @@ class EdgeParser(mm.Schema):
     """An edge connects two node ports and represents a data communication
     medium. It can be described using the fields below:
 
-    ``kind:`` <str>
-      the role of the edge as a transmission medium. Possible roles
-      are: ``event`` (active, always implies functional or causal
-      dependencies), and ``storage`` (passive, does not always imply a
-      dependency between sender and receiver). Default is ``event``.
-
     ``edge_type:`` <obj>
       raw dictionary containing information about the transmission
       medium relevant for generating glue code for it. It is passed
-      as-is to the tools downstream. (TODO: marked for obsoletion)
+      as-is to the tools downstream.
 
     ``connect:`` <list>
       a 4-tuple containing information about the edge connection:
@@ -74,13 +67,11 @@ class EdgeParser(mm.Schema):
             mm.fields.String(required=True, allow_none=True),
         )
     )
-    kind = mm.fields.String(load_default="event", data_key=tok.ATTR_EDGE_KIND)
     edge_type = mm.fields.Mapping(load_default={})
 
     @mm.post_load
     def pmake(self, data, **kwargs):
         try:
-            data[tok.ATTR_EDGE_KIND] = ty.Relation[data[tok.ATTR_EDGE_KIND]]
             edge = ty.Edge(**data)
             connect = data["connect"]
             src, dst = (Uid(connect[0]), Uid(connect[2]))
@@ -107,8 +98,11 @@ class PortParser(mm.Schema):
     ``name:`` <str> *required*
       A unique identifier within the scope of its parent node.
 
-    ``dir:`` <str> *required*
-      The port direction (in, out, inout).
+    ``kind:`` <str> *required*
+      The port kind (in, out, side). In and out ports represent event
+      ports triggering connected nodes within the same timeline. Side
+      ports stand for side-effects, and do not trigger their nodes,
+      i.e. connected nodes may be part of different timelines.
 
     ``port_type:`` <obj>
       Raw dictionary containing behavioral information relevant when
@@ -124,63 +118,23 @@ class PortParser(mm.Schema):
 
     """
 
-    uid = mm.fields.Raw(required=True, data_key=tok.META_UID)
     _info = mm.fields.Mapping(data_key=zoml.INFO, load_default={})
+    uid = mm.fields.Raw(required=True, data_key=ty.META_UID)
     mark = mm.fields.Mapping(load_default={})
     name = mm.fields.String(required=True)
-    dir = mm.fields.String(required=True)
+    kind = mm.fields.String(required=True)
     port_type = mm.fields.Mapping(load_default={})
     data_type = mm.fields.Mapping(load_default={})
 
     @mm.post_load
     def pmake(self, data, **kwargs):
         try:
-            data["dir"] = ty.Dir[data["dir"]]
+            data["kind"] = ty.Dir[data["kind"]]
             port = ty.Port(**data)
             __zoti__.new(data["uid"], port)
             return data["uid"]
         except Exception as e:
             raise ParseError(e, zoml.get_pos(data))
-
-
-###############
-## PRIMITIVE ##
-###############
-
-class PrimitiveParser(mm.Schema):
-    """A ``Primitive`` is a leaf node with a specific function in the
-    target platform.
-
-    *NOTE*: this element is marked for obsoletion (to be replaced with
-     ports or regular marked nodes),
-
-    ``name``: <str> *required*
-      node name. Needs to be unique within the scope of its parent.
-
-    ``type:`` <str> *required*
-      the primitive type. Possible ``SYSTEM``, marking a connection to
-      the outside world; ``NULL`` marks that the connection is dropping
-      the data.
-
-    ``parameters``: <dict>
-      directives passed downstream (TODO: redundant, marked for obsoletion)
-
-    """
-    class Meta:
-        unknown = mm.EXCLUDE
-
-    uid = mm.fields.Raw(required=True, data_key=tok.META_UID)
-    type = mm.fields.String(required=True)
-    name = mm.fields.String(required=True)
-    parameters = mm.fields.Mapping(load_default={})
-
-    @mm.post_load
-    def pmake(self, data, **kwargs):
-        data["type"] = ty.PrimitiveTy[data["type"]]
-        uid = data["uid"]
-        node = ty.Primitive(**data)
-        __zoti__.new(uid, node)
-        return uid
 
 
 ###########
@@ -192,16 +146,18 @@ class NodeChoiceField(mm.fields.Field):
         try:
             if node is None:
                 return None
-            if tok.ATTR_NODE_KIND not in node:
+            if ty.ATTR_KIND not in node:
                 ret = CompositeNodeParser().load(node)
-            elif node[tok.ATTR_NODE_KIND] == "CompositeNode":
+            elif node[ty.ATTR_KIND] == "CompositeNode":
                 ret = CompositeNodeParser().load(node)
-            elif node[tok.ATTR_NODE_KIND] == "PlatformNode":
+            elif node[ty.ATTR_KIND] == "PlatformNode":
                 ret = PlatformNodeParser().load(node)
-            elif node[tok.ATTR_NODE_KIND] == "ActorNode":
+            elif node[ty.ATTR_KIND] == "ActorNode":
                 ret = ActorNodeParser().load(node)
-            elif node[tok.ATTR_NODE_KIND] == "KernelNode":
+            elif node[ty.ATTR_KIND] == "KernelNode":
                 ret = KernelNodeParser().load(node)
+            elif node[ty.ATTR_KIND] == "BasicNode":
+                ret = BasicNodeParser().load(node)
             else:
                 raise ValueError(f"Node kind not recognized '{node['kind']}'")
             return ret
@@ -226,11 +182,17 @@ class NodeParser(mm.Schema):
       free-form text.
 
     ``mark``: <dict>
-      free-form dictionary, markings passed to graph transformer
-      (e.g., ZOTI-Tran).
+
+      free-form dictionary, markings passed as-is to graph
+      transformer. Similar to ``parameters`` but should become
+      obsolete after the transformation phase and should not be passed
+      to the code generator,
 
     ``parameters``: <dict>
-      directives passed downstream (TODO: redundant, marked for obsoletion)
+
+      free-form dictionary of parameters passed as-is to the code
+      generator. Similar to ``mark``, but should not be touched during
+      transformation, but rather handed over to the code generator.
 
     ``nodes``: `nodes`_
       list of child node entries
@@ -242,23 +204,20 @@ class NodeParser(mm.Schema):
       list of edges connecting children's ports between them or with
       their parent (this node's ports)
 
-    ``primitives``: `primitives`_
-      list of primitive nodes (TODO: marked for obsoletion)
-
     """
 
     # internal (unexposed) key
-    uid = mm.fields.Raw(required=True, data_key=tok.META_UID)
+    uid = mm.fields.Raw(required=True, data_key=ty.META_UID)
     _info = mm.fields.Mapping(data_key=zoml.INFO, load_default={})
 
     # keys that have already been used but are here for validation only
     description = mm.fields.String()
     node_type = mm.fields.String(
-        data_key=tok.ATTR_NODE_KIND,
+        data_key=ty.ATTR_KIND,
         load_default="CompositeNode",
         validate=mm.validate.OneOf(
             ["CompositeNode", "PlatformNode", "ActorNode",
-             "SkeletonNode", "KernelNode", "Primitive"]
+             "SkeletonNode", "KernelNode", "BasicNode"]
         ),
     )
 
@@ -269,7 +228,6 @@ class NodeParser(mm.Schema):
     nodes = mm.fields.List(NodeChoiceField(), load_default=[])
     ports = mm.fields.List(Nested(PortParser), load_default=[])
     edges = mm.fields.List(Nested(EdgeParser), load_default=[])
-    primitives = mm.fields.List(Nested(PrimitiveParser), load_default=[])
 
     @mm.post_load
     def pmake(self, data, constructor, **kwargs):
@@ -291,9 +249,6 @@ class NodeParser(mm.Schema):
             for port_uid in data["ports"]:
                 __zoti__.register_port(node_uid, port_uid)
                 log.info(f" - registered port {port_uid}")
-            for prim_uid in data["primitives"]:
-                __zoti__.register_child(node_uid, prim_uid)
-                log.info(f" - registered primitive {prim_uid}")
             for edge, src, dst in data["edges"]:
                 curr_scope = edge
                 src_id = node_uid.withPath(src)
@@ -440,6 +395,33 @@ class KernelNodeParser(NodeParser):
         return super(KernelNodeParser, self).pmake(data, constructor=ty.KernelNode)
 
 
+class BasicNodeParser(NodeParser):
+    """A ``BasicNode`` is a leaf node with a specific function in the
+    target platform. Unlike a ``KernelNode``, it does not carry a
+    native piece of code, and is only relevant during the
+    transformation process where it might trigger a specific
+    refinement. It needs to specify the following special field.
+
+    ``type:`` <str> *required*
+      the primitive type. Possible ``SYSTEM``, marking a connection to
+      the outside world; ``NULL`` marks that the connection is dropping
+      the data.
+
+    **OBS:** Since BasicNodes are replaced during transformation,
+    eveything passed to their ``parameters`` field will be ignored.
+
+    """
+    class Meta:
+        unknown = mm.EXCLUDE
+
+    type = mm.fields.String(required=True)
+
+    @mm.post_load
+    def pmake(self, data, **kwargs):
+        data["type"] = ty.PrimTy[data["type"]]
+        return super(BasicNodeParser, self).pmake(data, constructor=ty.BasicNode)
+
+
 def parse(*module_args) -> AppGraph:
     """Parses a complete (schema-validated) ZOTI input specification tree
     along with its metadata and returns an application graph that
@@ -463,22 +445,22 @@ def parse(*module_args) -> AppGraph:
     from pathlib import PurePath, PurePosixPath
 
     def _add_uid(node, path):
-        if not (isinstance(node, dict) and tok.ATTR_NAME in node):
+        if not (isinstance(node, dict) and ty.ATTR_NAME in node):
             return node
         node_key = re.sub(r'\[[^]]*\]', '', path.path.name)
-        if node_key not in [tok.KEY_NODE, tok.KEY_PORT, tok.KEY_PRIM]:
+        if node_key not in [ty.KEY_NODE, ty.KEY_PORT, ty.KEY_PRIM]:
             return node
         try:
             parent_uid = Uid(
                 PurePath(*re.findall(r'\[([^]]+)',
                          path.path.parent.as_posix()))
             )
-            if node_key in [tok.KEY_NODE, tok.KEY_PRIM]:
-                node[tok.META_UID] = parent_uid.withNode(node[tok.ATTR_NAME])
-                log.info(f" - added uid: {node[tok.META_UID]}")
-            elif node_key == tok.KEY_PORT:
-                node[tok.META_UID] = parent_uid.withPort(node[tok.ATTR_NAME])
-                log.info(f" - added uid: {node[tok.META_UID]}")
+            if node_key in [ty.KEY_NODE, ty.KEY_PRIM]:
+                node[ty.META_UID] = parent_uid.withNode(node[ty.ATTR_NAME])
+                log.info(f" - added uid: {node[ty.META_UID]}")
+            elif node_key == ty.KEY_PORT:
+                node[ty.META_UID] = parent_uid.withPort(node[ty.ATTR_NAME])
+                log.info(f" - added uid: {node[ty.META_UID]}")
             return node
         except Exception as e:
             msg = f"When processing UID of element at path {path.path.as_posix()}"
@@ -490,7 +472,7 @@ def parse(*module_args) -> AppGraph:
         module.map_doc(_add_uid, with_path=True)
         main_path = PurePosixPath(module.preamble["main-is"])
         top_comp = module.get(main_path)
-        __zoti__.reset(top_comp[tok.META_UID])
+        __zoti__.reset(top_comp[ty.META_UID])
         _ = CompositeNodeParser().load(top_comp)
         return __zoti__
     except mm.ValidationError as error:

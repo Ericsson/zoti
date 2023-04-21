@@ -51,8 +51,9 @@ class TransSpec:
 
     """
 
+
 class Script:
-    """Transformation script handler. It stores an application graph and
+    """Transformation script handler. It storgit ses an application graph and
     (possibly) a data type handler and contains utilities for
     executing rules.
 

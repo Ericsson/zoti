@@ -8,6 +8,8 @@ pyyaml = "*"
 zoti_yaml = {editable = true, path = "./../zoti-yaml"}
 networkx = "*"
 pydot = "*"
+marshmallow = "*"
+toml = "*"
 
 [dev-packages]
 build = "*"

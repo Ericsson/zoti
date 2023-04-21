@@ -21,8 +21,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "http://TBA.io"
-"Bug Tracker" = "http://TBA.io"
+"Homepage" = "https://ericsson.github.io/zoti/"
+"Bug Tracker" = "https://github.com/Ericsson/zoti/issues"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -41,3 +41,6 @@ omit = ["src/zoti_graph/exceptions.py", "tests/*", "*zoti_yaml*"]
 exclude_lines =[
     "pass"
 ]
+
+[tool.autopep8]
+max_line_length = 90

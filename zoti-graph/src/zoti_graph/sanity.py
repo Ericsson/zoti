@@ -5,7 +5,7 @@ import zoti_graph.core as ty
 
 def _flatten(n, G):
     entry = G.entry(n)
-    if isinstance(entry, ty.Primitive):
+    if isinstance(entry, ty.BasicNode):
         return []
     if not isinstance(entry, ty.CompositeNode):
         return [n]
@@ -28,42 +28,39 @@ def edge_direction(G, u, v):
     """Edge direction should be consistent with the hierarchy of its connecting elements.
 
     forall u,v in edges(G)
-      | u is intrinsic ⇒ v.dir ∈ {IN}
-      | v is intrinsic ⇒ u.dir ∈ {OUT, INOUT}
-      | node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, INOUT} & v.dir ∈ {IN, INOUT}
+      | u is basic and v is not basic ⇒ v.kind ∈ {IN}
+      | v is basic and u is not basic ⇒ u.kind ∈ {OUT}
+      | node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, SIDE} & v.dir ∈ {IN, SIDE}
       | node(u) is parent for node(v) ⇒ u.dir = v.dir ∈ {IN, INOUT}
       | node(u) is child for node(v) ⇒ u.dir = v.dir ∈ {OUT, INOUT}
 
     """
     port_u, port_v = (G.entry(u), G.entry(v))
-    if isinstance(port_u, ty.Primitive):
-        assert not isinstance(port_v, ty.Primitive)
-        assert port_v.dir == ty.Dir.IN  # in
+    if isinstance(port_u, ty.BasicNode) and not isinstance(port_v, ty.BasicNode):
+        assert port_v.has_dir_in()  # in
         return
-    if isinstance(port_v, ty.Primitive):
-        assert not isinstance(port_u, ty.Primitive)
-        assert port_u.dir != ty.Dir.IN  # out, inout
+    if isinstance(port_v, ty.BasicNode) and not isinstance(port_u, ty.BasicNode):
+        # assert port_u.kind == ty.Dir.OUT  # out
+        assert port_u.has_dir_out()  # out
         return
 
     node_u, node_v = (u.parent(), v.parent())
     if node_u == node_v:
-        # same node, means that the ports are shortcut
-        assert port_u.is_in()
-        assert port_v.is_out()
+        # same node, means that the ports are short-circuited
+        assert port_u.has_dir_in()
+        assert port_v.has_dir_out()
     elif node_u.parent() == node_v.parent():
         # same parent means different directions
-        assert port_u.is_out()  # out, inout
-        assert port_v.is_in()  # in, inout
+        assert port_u.has_dir_out()  # out, side
+        assert port_v.has_dir_in()  # in, side
     elif node_u < node_v:
         # different parent means same directions
-        # assert port_u.dir == ty.Dir.IN  # in
-        # assert port_v.dir == ty.Dir.IN  # in
-        assert port_u.is_in()
-        assert port_v.is_in()
+        assert port_u.has_dir_in()
+        assert port_v.has_dir_in()
     elif node_u > node_v:
         # different parent means same directions
-        assert port_u.is_out()  # out, inout
-        assert port_v.is_out()  # out, inout
+        assert port_u.has_dir_out()  # out, inout
+        assert port_v.has_dir_out()  # out, inout
 
 
 def edge_hierarchy(G, u, v):
@@ -90,9 +87,9 @@ def edge_sibling_kind(G, u, v):
            flatten(node(u)) ⋃ flatten(node(v)) are all of the same kind
 
     """
-    if isinstance(G.entry(u), ty.Primitive):
+    if isinstance(G.entry(u), ty.BasicNode):
         return
-    if isinstance(G.entry(v), ty.Primitive):
+    if isinstance(G.entry(v), ty.BasicNode):
         return
     node_u, node_v = (u.parent(), v.parent())
     if node_u.parent() == node_v.parent():
@@ -102,6 +99,21 @@ def edge_sibling_kind(G, u, v):
             for n in flattened[1:]:
                 curr_type = type(G.entry(n)).__name__
                 assert first_type == curr_type
+
+
+def node_consistent_tree(G, n):
+    """All nodes except for the root node have only one parent.
+
+    forall n in nodes(G) - root(G):
+      | ⇒ len(n.parents) = 1
+    """
+    if n == G.root:
+        return
+    parents = [
+        u for u, v in G.ir.in_edges(n)
+        if G.ir[u][v][ty.ATTR_REL] & ty.Rel.TREE
+    ]
+    assert len(parents) == 1
 
 
 def node_platform_hierarchy(G, n):
@@ -205,9 +217,9 @@ def port_dangling(G, p):
     outedges = G.port_edges(p, inp=False, out=True)
 
     if isinstance(node, ty.KernelNode):
-        pass # TODO, handle detector preproc
+        pass  # TODO, handle detector preproc
         # assert len(inedges) > 0 or len(outedges) > 0
-    elif isinstance(port, ty.Port) and port.dir == ty.Dir.INOUT:
+    elif isinstance(port, ty.Port) and port.dir == ty.Dir.SIDE:
         assert len(inedges) + len(outedges) > 1
-    else: 
+    else:
         assert len(inedges) > 0 and len(outedges) > 0
