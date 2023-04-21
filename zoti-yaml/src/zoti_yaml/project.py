@@ -26,6 +26,10 @@ class Project:
       sources. Any file with another extension that specified here
       will be ignored.
 
+    :param argfields: list of keys for fields used as placholders for,
+      e.g., argument exchange. These fields will be deleted from the
+      output result.
+
     """
 
     modules: Dict[str, Module]
@@ -37,6 +41,7 @@ class Project:
             keys: List[str] = [],
             pathvar: List[str] = [],
             ext: List[str] = [".yaml", ".yml"],
+            argfields: List[str] = ["zoti-yaml-args"],
             **kwargs
     ):
         path_var = "" if pathvar is None else pathvar
@@ -46,11 +51,12 @@ class Project:
         self._tool = tool
         self._key_nodes = keys
         self._exts = ext
+        self._argfields = argfields
         self.modules = {}
 
     def resolve_path(self, name) -> Path:
         """Return a global path where the source file for module *name* is
-        found. If none foind returns *FileNotFoundError*.
+        found. If none found returns *FileNotFoundError*.
 
         """
         log.info("Searching for module: %s", name)
@@ -138,6 +144,10 @@ class Project:
             try:
                 if isinstance(node, ty.Default):
                     return node.resolve()
+                if isinstance(node, dict):
+                    for key in self._argfields:
+                        if key in node:
+                            del node[key]
                 return node
             except Exception as e:
                 raise ModuleError(e, module=name, path=self.modules[name].path)

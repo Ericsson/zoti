@@ -1,3 +1,5 @@
+from zoti_yaml.dumper import ZotiDumper
+from zoti_yaml import Project, Module, Pos, PosStack, get_pos
 import os
 import sys
 import yaml
@@ -6,8 +8,6 @@ from pathlib import PurePosixPath
 
 sys.path.insert(0, "src")
 
-from zoti_yaml import Project, Module, Pos, PosStack, get_pos
-from zoti_yaml.dumper import ZotiDumper
 
 def test_scenario1() -> None:
     proj = Project(keys=["root", "nodes"],
@@ -17,10 +17,10 @@ def test_scenario1() -> None:
     path = proj.resolve_path("main")
     with open(path) as f:
         proj.load_module("main", f, path)
-    #pprint(proj.modules["main"].doc)
+    # pprint(proj.modules["main"].doc)
     assert len(proj.modules) == 3
     print(proj.modules.keys())
-    proj.build("sub.mod")
+    proj.build("mod1")
     proj.build("main")
     pprint(proj.modules["main"].doc)
     main = proj.modules["main"]
@@ -29,7 +29,8 @@ def test_scenario1() -> None:
     assert main.get("/root[n2]/_info/_prev_attrs/name") == "n1"
     assert main.get("/root[0]/_info") is not None
     assert main.get("/root[n1]/nodes[n1_n2]/data") == "Hello World!"
-    assert main.get("/root[n1]/nodes[n1_n1]/nodes[n1_n1_n1]/data") == "I am referenced by n1_n1_n1!"
+    assert main.get(
+        "/root[n1]/nodes[n1_n1]/nodes[n1_n1_n1]/data") == "I am referenced by n1_n1_n1!"
     print(get_pos(main.get("/root[0]")).show())
     # print(main.get("/root[0]/_info/_pos")[0].show())
 
@@ -49,9 +50,11 @@ def test_scenario1() -> None:
             assert mod.name == "main"
             assert isinstance(get_pos(mod.get("root[0]")), PosStack)
             assert isinstance(mod.get("root[0]/_info/_pos[0]"), list)
-            assert mod.get("root[n2]/floating-ref/path") == '/root/nodes[n1]'
+            assert mod.get("root[n2]/floating-ref/path") == '/root[n1]'
+            assert mod.get(
+                "root[n2]/passed-arg") == "This field is used only to pass caller argument and will be destroyed"
     except Exception as e:
         raise e
     finally:
-        os.remove("tmp.yaml")
-        
+        # os.remove("tmp.yaml")
+        pass
