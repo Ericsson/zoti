@@ -109,11 +109,13 @@ accordingly. `!attach` is used in three places, from last to first:
 
 - in `main.zoml` line `25`: attaches the contents of the `n1` node
   from `sub.mod` under the node `n2` in `main`. The behavior of the
-  `!include` command in `sub/mod.zoml` lines `8-11` can be seen in the 
-  result. Notice that `floating-ref` is resolved according to its new
-  location (module resolved to `main` instead of `sub.mod`). Also
-  notice that its metadata contains its entire history and previous
-  attributes.
+  `!include` command in `sub/mod.zoml` lines `10-13` can be seen in
+  the result. Notice that `floating-ref` is resolved according to its
+  new location (module resolved to `main` instead of `sub.mod`). This
+  node also shows an example of passing an argument from the caller to
+  the calle using a dedicated field `zoti-yaml-args` which is
+  destroyed after resolving the document.  Also notice that its
+  metadata contains its entire history and previous attributes.
   
 - in `main.zoml` line `23`: attaches the `data` entry of node `n_who`
   from `mod1` to the `data` entry of `n1_n2` from `main`. This is seen

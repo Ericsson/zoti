@@ -217,7 +217,7 @@ class AppGraph:
         """Returns all the edge identifiers entering or exiting the *ports* of
         this node, as list of ID pairs.
 
-        .. image:: assets/zoti_graph_side_edges.png
+        .. image:: assets/zoti_graph_inout_edges.png
             :scale: 120%
 
         """
