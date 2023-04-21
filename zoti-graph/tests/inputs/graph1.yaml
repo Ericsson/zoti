@@ -43,11 +43,9 @@ nodes:
     - _info:
         _pos: [59, 1, 0, 0, inputs/graph1.yaml]
       connect: [Src/src_native, inited, null1, null]
-      kind: storage
     - _info:
         _pos: [63, 1, 0, 0, inputs/graph1.yaml]
       connect: [Src/src_native, predef_data, null2, null]
-      kind: storage
     - _info:
         _pos: [67, 1, 0, 0, inputs/graph1.yaml]
       connect: [Src/src_native, data, counter, monitored_input]
@@ -77,23 +75,23 @@ nodes:
         ports:
         - _info:
             _pos: [94, 1, 0, 0, inputs/graph1.yaml]
-          dir: in
+          kind: in
           name: trig
         - _info:
             _pos: [98, 1, 0, 0, inputs/graph1.yaml]
           data_type: {name: Tst.LinkData}
-          dir: out
+          kind: out
           name: data
         - _info:
             _pos: [103, 1, 0, 0, inputs/graph1.yaml]
           data_type: {name: Common.Boolean, value: 'false'}
-          dir: inout
+          kind: side
           name: inited
           port_type: {name: assign}
         - _info:
             _pos: [109, 1, 0, 0, inputs/graph1.yaml]
           data_type: {name: Tst.PredefLinkData}
-          dir: inout
+          kind: side
           name: predef_data
           port_type: {name: assign}
     - _info:
@@ -113,7 +111,6 @@ nodes:
       - _info:
           _pos: [129, 1, 0, 0, inputs/graph1.yaml]
         connect: [packet-cnt/_kern, cnt_buff, buffer-flush/_kern, cnt_buff]
-        kind: storage
       - _info:
           _pos: [133, 1, 0, 0, inputs/graph1.yaml]
         connect: [., monitored_input, ., bypassed_data]
@@ -142,14 +139,14 @@ nodes:
             inline: true
           name: _kern
           ports:
-          - {dir: in, name: monitored}
-          - {dir: inout, name: cnt_buff}
+          - {kind: in, name: monitored}
+          - {kind: side, name: cnt_buff}
         parameters:
           external-function: counter_c.dfc
           passed-mark: {inline: true}
           passed-ports:
-          - {dir: in, name: monitored}
-          - {dir: inout, name: cnt_buff}
+          - {kind: in, name: monitored}
+          - {kind: side, name: cnt_buff}
       - _info:
           _pos: [169, 1, 0, 0, inputs/graph1.yaml]
           __prev_attrs__:
@@ -173,10 +170,10 @@ nodes:
             inline: true
           name: _kern
           ports:
-          - {dir: in, name: flush_cnt}
-          - {dir: out, name: cnt_stat}
+          - {kind: in, name: flush_cnt}
+          - {kind: out, name: cnt_stat}
           - data_type: {name: Monitor.Sample64, value: '{ (DFL_ATOM_INVALID_BIT | 0), 0 }'}
-            dir: inout
+            kind: side
             mark: {probe_buffer: true}
             name: cnt_buff
             port_type: {name: assign}
@@ -184,10 +181,10 @@ nodes:
           external-function: flusher_c.dfc
           passed-mark: {inline: true}
           passed-ports:
-          - {dir: in, name: flush_cnt}
-          - {dir: out, name: cnt_stat}
+          - {kind: in, name: flush_cnt}
+          - {kind: out, name: cnt_stat}
           - data_type: {name: Monitor.Sample64, value: '{ (DFL_ATOM_INVALID_BIT | 0), 0 }'}
-            dir: inout
+            kind: side
             mark: {probe_buffer: true}
             name: cnt_buff
             port_type: {name: assign}
@@ -196,50 +193,51 @@ nodes:
       - _info:
           _pos: [212, 1, 0, 0, inputs/graph1.yaml]
         data_type: {name: Common.Boolean}
-        dir: in
+        kind: in
         name: flush_cnt
         port_type: {name: socket}
       - _info:
           _pos: [218, 1, 0, 0, inputs/graph1.yaml]
         data_type: {name: Monitor.Collection64, value: '0'}
-        dir: out
+        kind: out
         name: cnt_stat
         port_type: {name: socket}
       - _info:
           _pos: [224, 1, 0, 0, inputs/graph1.yaml]
-        dir: in
+        kind: in
         name: monitored_input
       - _info:
           _pos: [228, 1, 0, 0, inputs/graph1.yaml]
-        dir: out
+        kind: out
         name: bypassed_data
-    primitives:
     - _info:
         _pos: [232, 1, 0, 0, inputs/graph1.yaml]
       name: null1
+      kind: BasicNode
       type: 'NULL'
     - _info:
         _pos: [237, 1, 0, 0, inputs/graph1.yaml]
       name: null2
+      kind: BasicNode
       type: 'NULL'
     ports:
     - _info:
         _pos: [243, 1, 0, 0, inputs/graph1.yaml]
       data_type: {name: Common.Timestamp}
-      dir: in
+      kind: in
       name: trig
     - _info:
         _pos: [248, 1, 0, 0, inputs/graph1.yaml]
       data_type: {name: Tst.LinkData}
-      dir: out
+      kind: out
       name: data
     - _info:
         _pos: [253, 1, 0, 0, inputs/graph1.yaml]
-      dir: in
+      kind: in
       name: flush
     - _info:
         _pos: [257, 1, 0, 0, inputs/graph1.yaml]
-      dir: out
+      kind: out
       name: stat
     target: {language: C, platform: unix-process}
   - _info:
@@ -283,11 +281,11 @@ nodes:
         ports:
         - _info:
             _pos: [301, 1, 0, 0, inputs/graph1.yaml]
-          dir: in
+          kind: in
           name: ldata
         - _info:
             _pos: [305, 1, 0, 0, inputs/graph1.yaml]
-          dir: out
+          kind: out
           name: reports
     - _info:
         _pos: [309, 1, 0, 0, inputs/graph1.yaml]
@@ -304,18 +302,18 @@ nodes:
         ports:
         - _info:
             _pos: [322, 1, 0, 0, inputs/graph1.yaml]
-          dir: in
+          kind: in
           name: sched
         - _info:
             _pos: [326, 1, 0, 0, inputs/graph1.yaml]
           data_type: {ftn: integer(0..10000)}
-          dir: out
+          kind: out
           name: block_nr
           port_type: {name: assign}
         - _info:
             _pos: [332, 1, 0, 0, inputs/graph1.yaml]
           data_type: {ftn: integer(0..200)}
-          dir: out
+          kind: out
           name: length
           port_type: {name: assign}
       - _info:
@@ -327,60 +325,65 @@ nodes:
         ports:
         - _info:
             _pos: [345, 1, 0, 0, inputs/graph1.yaml]
-          dir: in
+          kind: in
           name: block_nr
         - _info:
             _pos: [349, 1, 0, 0, inputs/graph1.yaml]
-          dir: in
+          kind: in
           name: length
         - _info:
             _pos: [353, 1, 0, 0, inputs/graph1.yaml]
-          dir: out
+          kind: out
           name: st_data
     ports:
     - _info:
         _pos: [358, 1, 0, 0, inputs/graph1.yaml]
       data_type: {name: Tst.LinkData}
-      dir: in
+      kind: in
       name: ldata
     - _info:
         _pos: [363, 1, 0, 0, inputs/graph1.yaml]
       data_type: {name: Tst.StreamSched}
-      dir: in
+      kind: in
       name: sched
     - _info:
         _pos: [368, 1, 0, 0, inputs/graph1.yaml]
       data_type: {name: Tst.BufferReport}
-      dir: out
+      kind: out
       name: reports
     - _info:
         _pos: [373, 1, 0, 0, inputs/graph1.yaml]
       data_type: {name: Tst.StreamData}
-      dir: out
+      kind: out
       name: st_data
     target: {language: C, platform: unix-process}
-  primitives:
   - _info:
       _pos: [379, 1, 0, 0, inputs/graph1.yaml]
     name: syso1
+    kind: BasicNode
     type: SYSTEM
   - _info:
       _pos: [384, 1, 0, 0, inputs/graph1.yaml]
     name: syso2
+    kind: BasicNode
     type: SYSTEM
   - _info:
       _pos: [389, 1, 0, 0, inputs/graph1.yaml]
     name: syso3
+    kind: BasicNode
     type: SYSTEM
   - _info:
       _pos: [35, 1, 0, 0, inputs/graph1.yaml]
     name: sys1
+    kind: BasicNode
     type: SYSTEM
   - _info:
       _pos: [40, 1, 0, 0, inputs/graph1.yaml]
     name: sys2
+    kind: BasicNode
     type: SYSTEM
   - _info:
       _pos: [45, 1, 0, 0, inputs/graph1.yaml]
     name: sys3
+    kind: BasicNode
     type: SYSTEM

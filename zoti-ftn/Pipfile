@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 pyyaml = "*"
 arpeggio = "*"
+toml = "*"
 marshmallow = "*"
 build = "*"
 zoti-yaml = {editable = true, path = "./../zoti-yaml"}
