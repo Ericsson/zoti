@@ -4,7 +4,7 @@ module: Lib.Utils
 nodes:
 - name: SingleKernelActor
   kind: ActorNode
-  parameters:
+  zoti-args:
     external-function: null
     passed-ports: null
     passed-marks: {}
@@ -13,11 +13,11 @@ nodes:
   - name: _kern
     kind: KernelNode
     extern:
-      !attach {ref: !ref {path: "../../parameters/external-function"}}
+      !attach {ref: !ref {path: "../../zoti-args/external-function"}}
     ports:
-      !attach {ref: !ref {path: "../../parameters/passed-ports"}}
+      !attach {ref: !ref {path: "../../zoti-args/passed-ports"}}
     mark:
-      !attach {ref: !ref {path: "../../parameters/passed-mark"}}
+      !attach {ref: !ref {path: "../../zoti-args/passed-mark"}}
     parameters:
-      !attach {ref: !ref {path: "../../parameters/passed-parameters"}}
+      !attach {ref: !ref {path: "../../zoti-args/passed-parameters"}}
       

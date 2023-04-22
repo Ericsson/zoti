@@ -38,7 +38,7 @@ parser.add_argument(
 parser.add_argument(
     "--argfields", metavar="KEY", type=str, nargs='+',
     help="Keys marking nodes used only for argument exchange.\n"
-    "Default is [zoti-yaml-args]",
+    "Default is [zoti-args]",
 )
 parser.add_argument(
     "-o", "--out", metavar="FILE",
@@ -66,7 +66,7 @@ parser.add_argument(
 )
 default_args = {
     "ext": [".yaml", ".yml"],
-    "argfields": ["zoti-yaml-args"],
+    "argfields": ["zoti-args"],
     "keys": [],
     "main": None,
 }

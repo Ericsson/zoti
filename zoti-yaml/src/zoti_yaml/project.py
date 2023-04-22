@@ -41,7 +41,7 @@ class Project:
             keys: List[str] = [],
             pathvar: List[str] = [],
             ext: List[str] = [".yaml", ".yml"],
-            argfields: List[str] = ["zoti-yaml-args"],
+            argfields: List[str] = ["zoti-args"],
             **kwargs
     ):
         path_var = "" if pathvar is None else pathvar

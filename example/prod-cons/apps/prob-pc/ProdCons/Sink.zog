@@ -6,10 +6,10 @@ nodes:
     target: {platform: unix-process, language: C} # More info?
     ports:
       - name: data
-        dir: in
+        kind: in
         data_type: {name: Tst.ResData}
       - name: stat_time
-        dir: in
+        kind: in
         data_type: {name: Common.Timespec}
         port_type: {type: timer, period: 2000000000}
     nodes:
@@ -24,18 +24,18 @@ nodes:
               begin: "// <#begin#>(Sink_data)"
               end: "// <#end#>(Sink_data)"
             ports:
-              - {name: data, dir: in}
+              - {name: data, kind: in}
               - name: packet_count
-                dir: inout
+                kind: side
                 data_type: {from_ftn: "integer(range: 0..0xFFFFFFFFFF)", value: "0"}
                 port_type: {type: "assign"}
               - !attach {name: data_count, ref: !ref {path: "../ports[packet_count]"}}
               - name: inited
-                dir: inout
+                kind: side
                 port_type: {type: assign}
                 data_type: {name: Common.Boolean, value: "false"}
               - name: predef_data
-                dir: inout
+                kind: side
                 port_type: {type: assign}
                 data_type: {name: Tst.ResData}
       - name: stat
@@ -49,11 +49,11 @@ nodes:
               begin: "// <#begin#>(Sink_stat)"
               end: "// <#end#>(Sink_stat)"
             ports:
-              - {name: stat_time, dir: in}
-              - {name: packet_count, dir: inout}
-              - {name: data_count, dir: inout}
+              - {name: stat_time, kind: in}
+              - {name: packet_count, kind: side}
+              - {name: data_count, kind: side}
               - name: last_packet_count
-                dir: inout
+                kind: side
                 data_type: {from_ftn: "integer(range: 0..0xFFFFFFFFFF);", value: "0"}
                 port_type: {type: "assign"}
               - !attach
@@ -62,19 +62,14 @@ nodes:
               - !attach
                 ref: !ref {path: "../ports[last_packet_count]"}
                 name: last_time
-    primitives:
-      - {name: null1, type: "NULL"}
-      - {name: null2, type: "NULL"}
-      - {name: null3, type: "NULL"}
-      - {name: null4, type: "NULL"}
-      - {name: null5, type: "NULL"}
+      - {name: null1, kind: BasicNode, type: "NULL"}
     edges:
       - connect: [".", data, sink/sink, data]
       - connect: [".", stat_time, stat/stat, stat_time]
-      - {connect: ["sink/sink", "packet_count", "stat/stat", "packet_count"], kind: storage}
-      - {connect: ["sink/sink", "data_count", "stat/stat", "data_count"], kind: storage}
-      - {connect: ["sink/sink", "inited", "null1", null], kind: storage}
-      - {connect: ["sink/sink", "predef_data", "null2", null], kind: storage}
-      - {connect: ["stat/stat", "last_packet_count", "null3", null], kind: storage}
-      - {connect: ["stat/stat", "last_data_count", "null4", null], kind: storage}
-      - {connect: ["stat/stat", "last_time", "null5", null], kind: storage}
+      - {connect: ["sink/sink", "packet_count", "stat/stat", "packet_count"]}
+      - {connect: ["sink/sink", "data_count", "stat/stat", "data_count"]}
+      - {connect: ["sink/sink", "inited", "null1", null]}
+      - {connect: ["sink/sink", "predef_data", "null1", null]}
+      - {connect: ["stat/stat", "last_packet_count", "null1", null]}
+      - {connect: ["stat/stat", "last_data_count", "null1", null]}
+      - {connect: ["stat/stat", "last_time", "null1", null]}
