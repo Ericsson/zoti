@@ -7,13 +7,14 @@ nodes:
   target: {platform: unix-process, language: C} # More info?
   ports:
     - name: trig
-      dir: in
+      kind: in
       data_type: {name: Common.Timestamp}       # relevant to KernelNode
       port_type: {external_name: trig}
     - name: data
-      dir: out
+      kind: out
       data_type: {name: Tst.LinkData}
   nodes:
+    - {name: null1, kind: BasicNode, type: "NULL"}
     - name: Src
       description: "Proto-dataflow of Src_compute"
       kind: ActorNode
@@ -23,25 +24,20 @@ nodes:
           extern: !include {file: ../../kernels/Src.dfc}
           ports:
             - name: trig                            # props from connection
-              dir: in
+              kind: in
             - name: data                            # props from connection
-              dir: out
+              kind: out
             - name: inited
-              dir: inout
+              kind: side
               port_type: {type: assign}
               data_type: {name: Common.Boolean, value: "false"}
             - name: predef_data 
-              dir: inout
+              kind: side
               port_type: {type: assign}
               data_type: {name: Tst.PredefLinkData}
-  primitives:
-    - {name: null1, type: "NULL"}
-    - {name: null2, type: "NULL"}
   edges:
     - connect: [".", "trig", "Src/src_native", "trig"]
     - connect: ["Src/src_native", "inited", "null1", null]
-      kind: storage
-    - connect: ["Src/src_native", "predef_data", "null2", null]
-      kind: storage
+    - connect: ["Src/src_native", "predef_data", "null1", null]
     - connect: ["Src/src_native", "data", ".", "data"]
 

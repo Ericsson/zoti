@@ -458,12 +458,12 @@ class MergePolicy:
         performs the union between *originals* and *defaults* where
         *defaults* have priority if the same key is found.
 
-    ``intersection``
+    ``intersect``
         ignores fields from *defaults* whose keys are not explicitly
         found in *originals*. *originals* have priority when the same
         key is found.
 
-    ``intersection+replace``
+    ``intersect+replace``
         ignores fields from *defaults* whose keys are not explicitly
         found in *originals*. *defaults* have priority when the same
         key is found.
