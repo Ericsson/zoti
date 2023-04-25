@@ -215,7 +215,11 @@ class AppGraph:
 
     def node_edges(self, node_id, which="all+all") -> List[Tuple[Uid, Uid]]:
         """Returns all the edge identifiers entering or exiting the *ports* of
-        this node, as list of ID pairs.
+        this node, as list of ID pairs. The list can be filtered by to
+        *which* a string formed as ``"<direction>+<view>"``, where
+
+        * ``<direction>`` can be ``in``, ``out`` or ``all``.
+        * ``<view>`` can be  ``inside``, ``outside`` or ``all``.
 
         .. image:: assets/zoti_graph_inout_edges.png
             :scale: 120%

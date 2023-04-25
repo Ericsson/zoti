@@ -39,8 +39,9 @@ def port_inference(G, T, **kwargs):
 
 def prepare_platform_ports(G, T, port_inference, **kwargs):
     """Updates all input ports of platform nodes to reflect the buffer
-    type required by the port receiver.
-    
+    type required by the port receiver, respectively the socket port
+    required by the sender.
+
     """
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
         for iport in G.ports(pltf, select=lambda p: p.kind == ty.Dir.IN):
@@ -67,6 +68,7 @@ def prepare_platform_ports(G, T, port_inference, **kwargs):
 
 
 def prepare_side_ports(G, port_inference, **kwargs):
+    """ """
     def _make_global(pltf, name, port) -> str:
         glb_key = util.unique_name(pltf.withPort(name), G.ports(pltf),
                                    modifier=lambda u, s: u.withSuffix(s))
