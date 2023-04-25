@@ -27,6 +27,12 @@ class Socket(PortTypeABC):
     def buffer_type(self):
         return {"name": "DflSys.UdpPacket"}
 
+    def out_port(self):
+        return {
+            "data_type": {"from_ftn": "integer(range: -1..0xFFFFFF)", "value": "0"},
+            "mark": {"global_var": True, "socket": True}
+        }
+
     def receiver_genspec(self, iport_name, exp_type, prefix: str, T):
         # iport_name = iport_entry.namepip instal
         exp_base_size = T.get(exp_type)._gen_base_size_expr(T.c_name(exp_type))
@@ -77,7 +83,7 @@ class Socket(PortTypeABC):
         }]
         return labels, proto, instances, blocks
 
-    def sender_genspec(self, oport_id, oport_entry, connected_name,  T):
+    def sender_genspec(self, oport_id, oport_entry, connected,  T):
         var = f"{{{{label.{oport_entry.name}.name}}}}"
         oport_ty = oport_entry.data_type
         oport_tyspec = T.get(oport_ty["type"])
@@ -112,7 +118,7 @@ class Socket(PortTypeABC):
                     "child": "data", "parent": oport_name,
                     "usage": ['p', ("" if oport_tyspec.need_malloc() else "&") + '{{label.$p.name}}']}}, 
                 {"usage_to_label": {"child": "socket",
-                                    "usage": [connected_name]}},
+                                    "usage": [connected.name]}},
                 {"usage_to_label": {"child": "size",
                                     "usage": [f"{oport_name}_size"]}},
 
@@ -143,6 +149,9 @@ class Timer(PortTypeABC):
 
     def buffer_type(self):
         return {"name": "Common.Timespec"}
+
+    def out_port(self):
+        raise Exception("Cannot send to timer!")
 
     def receiver_genspec(self, iport_name: str, exp_type: str, prefix: str,  T):
         labels = [
@@ -224,7 +233,7 @@ def make_port_type(plist, pids=None):
 
     """
     def _build_port(type, **kwargs):
-        if type == "socket":
+        if type == "UDP-socket":
             return Socket(**kwargs)
         elif type == "timer":
             return Timer(**kwargs)

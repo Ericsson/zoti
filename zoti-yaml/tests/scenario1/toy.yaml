@@ -3,37 +3,37 @@ import:
 - {module: mod1}
 - {as: mod2, module: sub.mod}
 module: main
-path: main.zoml
+path: tests/scenario1/main.zoml
 tool-log:
-- ['2023-01-30 10:48:51.798700', toy-example-0.1.0]
+- ['2023-04-22 01:35:38.854440', '']
 ---
 root:
 - _info:
     _pos:
-    - [11, 4, 148, 499, main.zoml, toy-example-0.1.0]
+    - [11, 4, 135, 486, tests/scenario1/main.zoml, '']
   mark: DEFAULT_MARKING
   name: n1
   nodes:
   - _info:
       _pos:
-      - [13, 8, 176, 338, main.zoml, toy-example-0.1.0]
+      - [13, 8, 163, 325, tests/scenario1/main.zoml, '']
     name: n1_n1
     nodes:
     - _info:
         _pos:
-        - [15, 12, 215, 338, main.zoml, toy-example-0.1.0]
+        - [15, 12, 202, 325, tests/scenario1/main.zoml, '']
       data: I am referenced by n1_n1_n1!
       name: n1_n1_n1
   - _info:
       _pos:
-      - [19, 8, 340, 499, main.zoml, toy-example-0.1.0]
+      - [19, 8, 327, 486, tests/scenario1/main.zoml, '']
     data: Hello World!
     extra: I am referenced by n1_n1_n1!
     name: n1_n2
 - _info:
     _pos:
-    - [6, 6, 43, 331, sub/mod.zoml, toy-example-0.1.0]
-    - [24, 4, 501, 622, main.zoml, 'toy-example-0.1.0:!attach']
+    - [6, 6, 43, 624, tests/scenario1/sub/mod.zoml, '']
+    - [24, 4, 488, 721, tests/scenario1/main.zoml, ':!attach']
     _prev_attrs: {name: n1}
   content1: |
     BEGIN block1
@@ -54,6 +54,7 @@ root:
     Fear me!
   content4: |
     I am a monkey! Ook!
-  floating-ref: {module: main, path: '/nodes[n1]'}
+  floating-ref: {module: main, path: '/root[n1]'}
   mark: DEFAULT_MARKING
   name: n2
+  passed-arg: This field is used only to pass caller argument and will be destroyed

@@ -6,10 +6,10 @@ nodes:
     target: {platform: unix-process, language: C} # More info?
     ports:
       - name: st_data
-        dir: in
+        kind: in
         data_type: {name: Tst.LinkData}
       - name: res
-        dir: out
+        kind: out
         data_type: {name: Tst.ResData}
         
     nodes:
@@ -21,9 +21,9 @@ nodes:
             kind: KernelNode
             extern: !include {file: ../../kernels/Preproc.dfc}
             ports:
-              - {name: st_data, dir: in}
+              - {name: st_data, kind: in}
               - name: out
-                dir: out
+                kind: out
                 data_type: {name: Tst.IntermediateData}
                 port_type: {type: assign} 
       - name: Maincomp
@@ -34,8 +34,8 @@ nodes:
             kind: KernelNode
             extern: !include {file: ../../kernels/MainComp.dfc}
             ports:
-              - {name: in, dir: in, data_type: {name: Tst.IntermediateData}}
-              - {name: res, dir: out, data_type: {name: Tst.ResData}}
+              - {name: in, kind: in, data_type: {name: Tst.IntermediateData}}
+              - {name: res, kind: out, data_type: {name: Tst.ResData}}
     edges:
       - connect: [".", st_data, Preproc/preproc_native, st_data]
       - connect: [Preproc/preproc_native, out, Maincomp/maincomp_native, in]

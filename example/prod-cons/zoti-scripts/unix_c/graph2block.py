@@ -85,12 +85,11 @@ script.transform([
         } if args.debug else None,
     ),
     tran.TransSpec(
-        target.receiver_types,
-        dump_title="tran_2_receiver_types",
+        target.prepare_platform_ports,
+        dump_title="tran_2_prepare_platform_ports",
         dump_graph={
-            "port_info": lambda p: f"{p.data_type['type']}",
-            # "port_info": lambda p: p.dir.name,
-            # "edge_info": lambda e: e.kind.name,
+            # "port_info": lambda p: f"{p.data_type['type']}",
+            "port_info": lambda p: ",".join([f"{k}-{v}" for k, v in p.mark.items()]),
         } if args.debug else None,
     ),
     tran.TransSpec(
@@ -108,33 +107,32 @@ script.transform([
         dump_graph=debug,
     ),
     tran.TransSpec(
-        agnostic.fuse_actors,
-        dump_title="tran_5_fuse_actors",
+        target.prepare_side_ports,
+        dump_title="tran_5_prepare_side_ports",
         dump_graph={
-            "edge_info": lambda e: str(e.kind.name),
+            "composite_info": lambda c: str(c.mark),
+            "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
+            # "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
+            "port_info": lambda p: p.kind.name,
+        } if args.debug else None,
+    ),
+    tran.TransSpec(
+        agnostic.fuse_actors,
+        dump_title="tran_6_fuse_actors",
+        dump_graph={
             "composite_info": lambda p: ",".join([k for k in p.mark.keys()]),
         } if args.debug else None,
     ),
     tran.TransSpec(
-        target.clean_ports,
-        dump_title="tran_6_clean_ports",
+        target.prepare_intermediate_ports,
+        dump_title="tran_7_prepare_intermediate_ports",
         dump_graph={
             "composite_info": lambda c: str(c.mark),
             "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
-            "port_info": lambda p: p.dir.name,
-            "edge_info": lambda e: e.kind.name,
+            "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
+            # "port_info": lambda p: p.kind.name,
         } if args.debug else None,
     ),
-    # tran.TransSpec(
-    #     target.separate_reactions,
-    #     dump_title="tran_7_separate_reactions",
-    #     dump_graph={
-    #         "composite_info": lambda c: str(c.mark),
-    #         "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
-    #         # "port_info": lambda p: p.dir.name,
-    #         # "edge_info": lambda e: e.kind.name,
-    #     } if args.debug else None,
-    # ),
     tran.TransSpec(artifacts.typedefs),
     tran.TransSpec(artifacts.genspec),
     tran.TransSpec(artifacts.gendepl),

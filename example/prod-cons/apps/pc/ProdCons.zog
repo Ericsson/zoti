@@ -8,18 +8,15 @@ import:
 
 !default
 - nodes:
-  - edges: 
-    - edge_type: {name: UDP}
-    nodes:
-    - ports:
-        - port_type: {type: socket}
+  - nodes: 
+    - ports: !policy:intersect
+        - port_type: !policy:union {type: UDP-socket}
 - nodes:
     - name: Tst   # kind: CompositeNode
       description: "Example Dataflow Graph"
-      primitives:
-        - {name: sys-trigger, type: SYSTEM}
-        - {name: sys-stat, type: SYSTEM}
       nodes:
+        - {name: sys-trigger, type: SYSTEM, kind: BasicNode}
+        - {name: sys-stat, type: SYSTEM, kind: BasicNode}
         - !attach {name: Src,  ref: !ref {module: Src, path: "/nodes[Src]"}}
         - !attach {name: Proc, ref: !ref {module: Proc, path: "/nodes[Proc]"}}
         - !attach {name: Sink, ref: !ref {module: Sink, path: "/nodes[Sink]"}}  

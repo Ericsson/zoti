@@ -1,12 +1,14 @@
 import zoti_graph.io as io
 from zoti_graph.parser import parse
-from zoti_graph.core import Uid, Dir, Primitive, CompositeNode
+from zoti_graph.core import Uid, Dir, BasicNode, CompositeNode
+import zoti_graph.sanity as rules
 import os
 import sys
 import yaml
 import logging as log
 from pprint import pprint
 from pathlib import PurePosixPath
+import networkx as nx
 
 sys.path.insert(0, "src")
 
@@ -17,23 +19,36 @@ def test_scenario1() -> None:
         G = parse(*yaml.load_all(f, Loader=yaml.Loader))
     print("")
 
+    log.info("Checking sanity rules...")
+
+    for n in G.ir.nodes():
+        G.sanity(rules.node_consistent_tree, n)
+        G.sanity(rules.node_platform_hierarchy, n)
+        G.sanity(rules.node_platform_hierarchy, n)
+        G.sanity(rules.node_actor_hierarchy, n)
+        G.sanity(rules.node_kernel_hierarchy, n)
+        G.sanity(rules.node_actor_consistency, n)
+
+    for u, v in G.only_graph().edges():
+        G.sanity(rules.edge_direction, u, v)
+        G.sanity(rules.edge_hierarchy, u, v)
+
     assert G.depth(
         Uid("Tst/Src/counter/buffer-flush/_kern/^flush_cnt")
     ) == 5
-    assert G.entry(
+    assert G.edge(
         Uid("Tst/Src/counter/buffer-flush/^flush_cnt"),
         Uid("Tst/Src/counter/buffer-flush/_kern/^flush_cnt")
     ) is not None
-    assert G.get_mark(
-        "probe_buffer",
+    assert G.entry(
         Uid("Tst/Src/counter/buffer-flush/_kern/^cnt_buff"),
-    ) is True
+    ).mark["probe_buffer"] is True
     assert G.entry(
         Uid("Tst/Src/counter/buffer-flush/_kern/^cnt_buff")
-    ).dir == Dir.INOUT
+    ).kind == Dir.SIDE
     assert len(G.children(
         Uid("Tst"),
-        select=lambda x: not isinstance(x, Primitive)
+        select=lambda x: not isinstance(x, BasicNode)
     )) == 2
 
     # TODO: removed from API. retest if needed
@@ -72,21 +87,22 @@ def test_scenario1() -> None:
     assert G.ir.has_edge(Uid("Tst/sys2"), Uid("Tst/Src/^flush"))
     assert G.ir.has_edge(Uid("Tst/Src/^data"), Uid("Tst/streamq/^ldata"))
 
-    assert len(G.node_projection(Uid("Tst/Src/counter")).nodes()) == 3
-    assert len(G.node_projection(
-        Uid("Tst/Src/counter"), with_parent=False)) == 2
+    count_proj = G.node_projection(Uid("Tst/Src/counter"))
+    log.info(f"Counter node projection: {count_proj}")
+    # nx.nx_pydot.write_dot(count_proj, "tmo.dot")
+    assert len(count_proj.nodes()) == 6
 
     G.bypass_port(Uid("Tst/Src/counter/buffer-flush/^cnt_buff"))
     # io.draw_graph(G, "graph.dot")
     try:
-        G.entry(
+        G.edge(
             Uid("Tst/Src/counter/buffer-flush/^cnt_buff"),
             Uid("Tst/Src/counter/buffer-flush/_kern/^cnt_buff")
         )
         assert False
     except Exception:
         pass
-    assert G.entry(
+    assert G.edge(
         Uid("Tst/Src/counter/packet-cnt/^cnt_buff"),
         Uid("Tst/Src/counter/buffer-flush/_kern/^cnt_buff")
     ) is not None
@@ -98,6 +114,8 @@ def test_scenario1() -> None:
     )
     assert (G.parent(Uid("Tst/streamq/release_data/strq_fetch_blk"))
             == G.parent(Uid("Tst/streamq/queue_data/streamq_lnk_act")))
+
+    log.info("Trying plots and exports...")
 
     try:
         with open("tmp.dot", "w") as f:
@@ -119,3 +137,4 @@ def test_scenario1() -> None:
     finally:
         os.remove("tmp.dot")
         os.remove("tmp.yaml")
+        pass

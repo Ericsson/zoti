@@ -36,6 +36,11 @@ parser.add_argument(
     help="Key nodes where position info will be attached.",
 )
 parser.add_argument(
+    "--argfields", metavar="KEY", type=str, nargs='+',
+    help="Keys marking nodes used only for argument exchange.\n"
+    "Default is [zoti-args]",
+)
+parser.add_argument(
     "-o", "--out", metavar="FILE",
     help="""Output file. If not set, prints JSON contents to stdout.""",
     type=argparse.FileType('w'),
@@ -61,6 +66,7 @@ parser.add_argument(
 )
 default_args = {
     "ext": [".yaml", ".yml"],
+    "argfields": ["zoti-args"],
     "keys": [],
     "main": None,
 }

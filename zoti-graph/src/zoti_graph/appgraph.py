@@ -4,7 +4,6 @@ from typing import Any, List, Tuple, Optional
 import networkx as nx
 
 import zoti_graph.core as ty
-import zoti_graph.tokens as tok
 import zoti_graph.util as util
 from zoti_graph.core import Uid
 from zoti_graph.exceptions import EntryError
@@ -33,35 +32,23 @@ class AppGraph:
         self.ir = nx.DiGraph()
         self.root = root
 
-    def entry(self, u: Uid, v: Optional[Uid] = None) -> Any:
-        """Returns a ZOTI graph entry with a given identifier. If only *u* is
-        provided it searches for a node or a port, if both *u* and *v*
-        are provided it searches for an edge. Returns ``None`` if the
-        identifier does not exist.
+    def entry(self, uid: Uid) -> Any:
+        """Returns a ZOTI graph node or port entry with a given identifier.
 
         """
         try:
-            if v is None:
-                return self.ir.nodes[u][tok.KEY_ENTRY]
-            else:
-                return self.ir[u][v][tok.KEY_ENTRY]
+            return self.ir.nodes[uid][ty.ATTR_ENT]
         except Exception:
-            msg = f"node {u}" if v is None else f"edge ({u}, {v})"
-            raise KeyError(msg)
+            raise KeyError(f"node {uid}")
 
-    def get_mark(self, key, u, v=None) -> Any:
-        """Gets the value of a marking named *key* associated with an entry
-        identified with *u* and *v* (see :meth:`entry`).
+    def edge(self, u: Uid, v: Uid) -> Any:
+        """Returns a ZOTI edge entry with a given identifier.
 
         """
-        return self.entry(u, v).mark.get(key)
-
-    def add_mark(self, key, value, u, v=None) -> Any:
-        """Sets the value of a marking named *key* associated with an entry
-        identified with *u* and *v* (see :meth:`entry`).
-
-        """
-        self.entry(u, v).mark[key] = value
+        try:
+            return self.ir[u][v][ty.ATTR_ENT]
+        except Exception:
+            raise KeyError(f"edge ({u}, {v})")
 
     def decouple(self, uid) -> None:
         """Makes a deepcopy of an entry and replaces the original. Useful
@@ -69,8 +56,8 @@ class AppGraph:
 
         """
         ret = self.ir.nodes.get(uid)
-        new_entry = deepcopy(ret[tok.KEY_ENTRY])
-        ret[tok.KEY_ENTRY] = new_entry
+        new_entry = deepcopy(ret[ty.ATTR_ENT])
+        ret[ty.ATTR_ENT] = new_entry
 
     def new(self, uid: Uid, obj: Any) -> Uid:
         """Adds a new ZOTI node or port object to the current app
@@ -79,7 +66,7 @@ class AppGraph:
         :meth:`register_port`)
 
         """
-        self.ir.add_node(uid, **{tok.KEY_ENTRY: obj})
+        self.ir.add_node(uid, **{ty.ATTR_ENT: obj})
         return uid
 
     def register_port(self, parent_id: Uid, port_id: Uid) -> Uid:
@@ -87,7 +74,7 @@ class AppGraph:
         *port_id*.
 
         """
-        self.ir.add_edge(parent_id, port_id, kind=ty.Relation.PORT)
+        self.ir.add_edge(parent_id, port_id, **{ty.ATTR_REL: ty.Rel.PORT})
         return port_id
 
     def register_child(self, parent_id: Uid, child_id: Uid) -> Uid:
@@ -95,8 +82,55 @@ class AppGraph:
         :meth:`new`). Returns *child_id*.
 
         """
-        self.ir.add_edge(parent_id, child_id, kind=ty.Relation.CHILD)
+        self.ir.add_edge(parent_id, child_id, **{ty.ATTR_REL: ty.Rel.CHILD})
         return child_id
+
+    def connect(self, srcport, dstport, edge=ty.Edge, recursive=True):
+        """Connects two ports through an edge. If `recursive` is set to
+        ``True`` then it recursively creates intermediate ports and
+        connections if the source and destination nodes belong to
+        different parents. If an *edge* entry is provided then all the
+        new edges will be associated with it, otherwise they will have
+        no entry.
+
+        .. image:: assets/zoti_graph_connect.png
+
+        """
+
+        def _weight(u, v, kwargs):
+            return (1 if kwargs[ty.ATTR_REL] & ty.Rel.TREE else 9999)
+
+        def _reg_port(port, node, templ):  # direction):
+            newport = util.unique_name(
+                node.withPort(port.name()),
+                self.ports(node),
+                modifier=lambda u, s: u.withSuffix(s),
+            )
+            newentry = deepcopy(templ)
+            newentry.name = newport.name()
+            self.new(newport, newentry)
+            self.register_port(node, newport)
+            return newport
+
+        attr = {ty.ATTR_REL: ty.Rel.GRAPH, ty.ATTR_ENT: edge}
+
+        try:
+            if recursive:
+                via = self.commonAncestor(srcport, dstport)
+                srcentry, dstentry = (self.entry(srcport), self.entry(dstport))
+                srcfamily = nx.shortest_path(
+                    self.ir, source=via, target=srcport, weight=_weight)[1:-2]
+                dstfamily = nx.shortest_path(
+                    self.ir, source=via, target=dstport, weight=_weight)[1:-2]
+                path = ([_reg_port(srcport, n, srcentry) for n in reversed(srcfamily)] +
+                        [_reg_port(dstport, n, dstentry) for n in dstfamily])
+                edges = list(zip([srcport] + path, path + [dstport]))
+                self.ir.add_edges_from(edges, **attr)
+            else:
+                self.ir.add_edge(srcport, dstport, **attr)
+        except Exception as e:
+            raise ValueError(
+                f"Cannot connect {srcport} to {dstport}.\n{str(e)}")
 
     def ports(self, parent_id, select=lambda x: True) -> List[Uid]:
         """Returns a list of IDs for all the ports of this parent. The result
@@ -108,8 +142,8 @@ class AppGraph:
             return [
                 v
                 for u, v in self.ir.out_edges(parent_id)
-                if self.ir[u][v][tok.ATTR_EDGE_KIND] == ty.Relation.PORT
-                if select(self.ir.nodes[v][tok.KEY_ENTRY])
+                if self.ir[u][v][ty.ATTR_REL] == ty.Rel.PORT
+                if select(self.ir.nodes[v][ty.ATTR_ENT])
             ]
         except Exception:
             raise KeyError(f"node {parent_id}")
@@ -124,8 +158,8 @@ class AppGraph:
             return [
                 v
                 for u, v in self.ir.out_edges(parent_id)
-                if self.ir[u][v][tok.ATTR_EDGE_KIND] == ty.Relation.CHILD
-                if select(self.ir.nodes[v][tok.KEY_ENTRY])
+                if self.ir[u][v][ty.ATTR_REL] == ty.Rel.CHILD
+                if select(self.ir.nodes[v][ty.ATTR_ENT])
             ]
         except Exception:
             raise KeyError(f"node {parent_id}")
@@ -139,7 +173,7 @@ class AppGraph:
             parents = [
                 u
                 for u, v in self.ir.in_edges(node_id)
-                if self.ir[u][v][tok.ATTR_EDGE_KIND] & ty.Relation.ONLY_TREE
+                if self.ir[u][v][ty.ATTR_REL] & ty.Rel.TREE
             ]
             return parents[0] if parents else None
         except Exception:
@@ -159,29 +193,27 @@ class AppGraph:
                 return this
         return None
 
-    def port_edges(self, port_id, inp=True, out=True) -> List[Tuple[Uid, Uid]]:
+    def port_edges(self, port_id, which="all") -> List[Tuple[Uid, Uid]]:
         """Returns all edge identifiers connected to/from *port_id*. Can
-        filter the in/out edges by toggling the arguments *inp* and
-        *out*.
+        filter the in/out edges with argment *which* that can be
+        ``in``, ``out`` or ``all``.
 
         """
+        assert which in ["in", "out", "all"]
         try:
-            in_edges = [
+            return [
                 (u, v)
                 for u, v in self.ir.in_edges(port_id)
-                if self.ir[u][v][tok.ATTR_EDGE_KIND] & ty.Relation.ONLY_GRAPH
-            ] if inp else []
-            out_edges = [
+                if self.ir[u][v][ty.ATTR_REL] & ty.Rel.GRAPH
+            ] if which in ["in", "all"] else [] + [
                 (u, v)
                 for u, v in self.ir.out_edges(port_id)
-                if self.ir[u][v][tok.ATTR_EDGE_KIND] & ty.Relation.ONLY_GRAPH
-            ] if out else []
-            return in_edges + out_edges
+                if self.ir[u][v][ty.ATTR_REL] & ty.Rel.GRAPH
+            ] if which in ["out", "all"] else []
         except Exception:
             raise KeyError(f"port {port_id}")
 
-    def node_edges(self, node_id, in_outside=False, in_inside=False,
-                   out_inside=False, out_outside=False) -> List[Tuple[Uid, Uid]]:
+    def node_edges(self, node_id, which="all+all") -> List[Tuple[Uid, Uid]]:
         """Returns all the edge identifiers entering or exiting the *ports* of
         this node, as list of ID pairs.
 
@@ -189,24 +221,35 @@ class AppGraph:
             :scale: 120%
 
         """
+        assert "+" in which
+        dirc, view = tuple(which.split("+"))
+        assert dirc in ["in", "out", "all"]
+        assert view in ["inside", "outside", "all"]
+        in_inside = dirc in ["in", "all"] and view in ["inside", "all"]
+        in_outside = dirc in ["in", "all"] and view in ["outside", "all"]
+        out_inside = dirc in ["out", "all"] and view in ["inside", "all"]
+        out_outside = dirc in ["out", "all"] and view in ["outside", "all"]
+        # below apply BA+C!A == (B+!A)(C+A)
         try:
             return [
                 (u, v)
                 for port in self.ports(node_id)
-                for u, v in self.port_edges(port, inp=True, out=False)
+                for u, v in self.ir.in_edges(port)
+                if self.ir[u][v][ty.ATTR_REL] == ty.Rel.GRAPH
                 if (out_inside or not self.has_ancestor(u, node_id))
                 if (in_outside or self.has_ancestor(u, node_id))
             ] + [
                 (u, v)
                 for port in self.ports(node_id)
-                for u, v in self.port_edges(port, inp=False, out=True)
+                for u, v in self.ir.out_edges(port)
+                if self.ir[u][v][ty.ATTR_REL] == ty.Rel.GRAPH
                 if (in_inside or not self.has_ancestor(v, node_id))
                 if (out_outside or self.has_ancestor(v, node_id))
             ]
         except Exception:
             raise KeyError(f"node {node_id}")
 
-    def connected_ports(self, port, graph=None) -> nx.DiGraph:
+    def connected_ports(self, port, graph=None) -> nx.Graph:
         """Returns a path graph representing the journey between two leaf
         nodes' ports passing through a given *port*, see drawing. The
         search can be minimized by passing a subgraph to the *graph*
@@ -256,60 +299,6 @@ class AppGraph:
             parent = self.parent(parent)
         return dph
 
-    def connect(self, srcport, dstport, edge=None, recursive=True):
-        """Connects two ports through an edge. If `recursive` is set to
-        ``True`` then it recursively creates intermediate ports and
-        connections if the source and destination nodes belong to
-        different parents. If an *edge* entry is provided then all the
-        new edges will be associated with it, otherwise they will have
-        no entry.
-
-        .. image:: assets/zoti_graph_connect.png
-
-        """
-
-        def _weight(u, v, kwargs):
-            return (1 if kwargs[tok.ATTR_EDGE_KIND] & ty.Relation.ONLY_TREE
-                    else 9999)
-
-        def _reg_port(port, node, templ):  # direction):
-            newport = util.unique_name(
-                node.withPort(port.name()),
-                self.ports(node),
-                modifier=lambda u, s: u.withSuffix(s),
-            )
-            newentry = deepcopy(templ)
-            newentry.name = newport.name()
-            # ty.Port(newport.name(), direction, {}, {}, {}, {}))
-            self.new(newport, newentry)
-            self.register_port(node, newport)
-            return newport
-
-        attr = {tok.ATTR_EDGE_KIND: edge.kind if edge else ty.Relation.EVENT,
-                tok.KEY_ENTRY: edge,
-                }
-        try:
-            if recursive:
-                via = self.commonAncestor(srcport, dstport)
-                srcentry, dstentry = (self.entry(srcport), self.entry(dstport))
-                srcfamily = nx.shortest_path(
-                    self.ir, source=via, target=srcport, weight=_weight
-                )[1:-2]
-                dstfamily = nx.shortest_path(
-                    self.ir, source=via, target=dstport, weight=_weight
-                )[1:-2]
-                # path = ([_reg_port(srcport, n, ty.Dir.OUT) for n in reversed(srcfamily)] +
-                #         [_reg_port(dstport, n, ty.Dir.IN) for n in dstfamily])
-                path = ([_reg_port(srcport, n, srcentry) for n in reversed(srcfamily)] +
-                        [_reg_port(dstport, n, dstentry) for n in dstfamily])
-                edges = list(zip([srcport] + path, path + [dstport]))
-                self.ir.add_edges_from(edges, **attr)
-            else:
-                self.ir.add_edge(srcport, dstport, **attr)
-        except Exception as e:
-            raise ValueError(
-                f"Cannot connect {srcport} to {dstport}.\n{str(e)}")
-
     def bypass_port(self, port, ensure_fanout=False):
         """Removes the port with a given ID and reconnects its upstream to its
         downstream connections. Useful when flattening hierarchies,
@@ -321,9 +310,9 @@ class AppGraph:
 
         delete = True
         new_connections = []
-        for ui, vi in self.port_edges(port, inp=True, out=False):
-            edge = self.entry(ui, vi)
-            for uo, vo in self.port_edges(port, inp=False, out=True):
+        for ui, vi in self.port_edges(port, which="in"):
+            edge = self.edge(ui, vi)
+            for uo, vo in self.port_edges(port, which="out"):
                 if ensure_fanout and self.depth(uo) != self.depth(vo):
                     delete = False
                 else:
@@ -393,13 +382,12 @@ class AppGraph:
             self.register_child(node, child)
             outside = [
                 (u, v)
-                for u, v in self.node_edges(
-                    child, in_outside=True, out_outside=True)
+                for u, v in self.node_edges(child, which="all+outside")
                 if not (clust.has_node(self.parent(u)) and
                         clust.has_node(self.parent(v)))
             ]
             for u, v in outside:
-                edge = self.entry(u, v)
+                edge = self.edge(u, v)
                 self.connect(u, v, edge=edge, recursive=True)
                 self.ir.remove_edge(u, v)
 
@@ -449,55 +437,61 @@ class AppGraph:
         self.ir.remove_node(n2)
         # print("REMOVED", n2)
 
-    def node_projection(self, parent, with_parent=True) -> nx.DiGraph:
+    def node_projection(self, parent, no_parent_ports=False) -> nx.MultiDiGraph:
         """Displays the projection of nodes upon a single level of hierarchy
-        for all first children of *parent*. *with_parent* toggles
-        whether the connections to/from the parent node are included
-        in the projection or not.
+        for all first children of *parent*. The first and the last
+        nodes are the parent's ports.
 
-        In the returned view each edge between two nodes will contain
-        only a ``ports`` entry holding a list of tuples reflecting the
-        original port connections between the source and target node.
+        The projection view is a multi-digraph (i.e., directed graph
+        with possibly parallel edges), where each edge contain an
+        entry *ports*=(*srcport*,*dstport*).
 
         .. image:: assets/zoti_graph_projection.png
 
         """
         def _filter(n1, n2):
-            kind = self.ir[n1][n2].get(tok.ATTR_EDGE_KIND, ty.Relation.NONE)
-            return kind & ty.Relation.ONLY_GRAPH
+            return self.ir[n1][n2].get(ty.ATTR_REL) == ty.Rel.GRAPH
 
-        nodes = set(self.ports(parent)) if with_parent else set()
-        #     [p for p in self.ports(parent) if all([
-        #         self.has_ancestor(u, parent) and self.has_ancestor(v, parent)
-        #         for u, v in self.port_edges(p, inp=True, out=True)
-        #     ])]
-        # )
-        nodes.update(self.children(
-            parent,
-            select=lambda n: True if with_parent else not isinstance(
-                n, ty.Primitive)
-        ))
-        for c in self.children(parent):
-            nodes.update(self.ports(c))
+        nodes = set(
+            ([] if no_parent_ports else self.ports(parent)) +
+            self.children(parent) +
+            [p for chld in self.children(parent) for p in self.ports(chld)]
+        )
         cluster = nx.subgraph_view(
             self.ir, filter_node=lambda n: n in nodes, filter_edge=_filter
         )
-        view = nx.DiGraph()
-        # print(cluster.edges)
-        # print(cluster.nodes)
+        view = nx.MultiDiGraph()
+        view.add_nodes_from(self.children(parent))
         for u, v in cluster.edges:
-            src = u if self.parent(u) == parent and self.entry(
-                u).dir == ty.Dir.INOUT else self.parent(u)
-            dst = v if self.parent(v) == parent and self.entry(
-                v).dir == ty.Dir.INOUT else self.parent(v)
-            if src == dst:
-                continue
-            if view.has_edge(src, dst):
-                view[src][dst]["ports"].append((u, v))
-            else:
-                view.add_edge(src, dst, ports=[(u, v)])
-
+            src = u if self.parent(u) == parent else self.parent(u)
+            dst = v if self.parent(v) == parent else self.parent(v)
+            srcport = None if self.parent(u) == parent else u
+            dstport = None if self.parent(v) == parent else v
+            view.add_edge(src, dst, ports=(srcport,dstport))
         return view
+
+    def _fast_filter_nodes(self, root, with_ports):
+        # hopefully better performance
+        def _nodes_wo_ports_wo_root(n):
+            return not isinstance(n, ty.Port)
+
+        def _nodes_wo_ports_w_root(n):
+            return self.has_ancestor(n, root) and not isinstance(n, ty.Port)
+
+        def _nodes_w_ports_wo_root(n):
+            return True
+
+        def _nodes_w_ports_w_root(n):
+            return self.has_ancestor(n, root)
+
+        if root and with_ports:
+            return _nodes_w_ports_w_root
+        elif not root and with_ports:
+            return _nodes_w_ports_wo_root
+        elif root and not with_ports:
+            return _nodes_wo_ports_w_root
+        else:
+            return _nodes_wo_ports_wo_root
 
     def only_tree(self, root=None, with_ports=True) -> nx.DiGraph:
         """Returns a graph view representing only the hierarchy between
@@ -507,16 +501,13 @@ class AppGraph:
 
         """
 
-        def _nodes(n):
-            is_in_subgraph = self.has_ancestor(n, root) if root else True
-            include_port = True if with_ports else not isinstance(n, ty.Port)
-            return is_in_subgraph and include_port
-
         def _edges(n1, n2):
-            kind = self.ir[n1][n2].get(tok.ATTR_EDGE_KIND, ty.Relation.NONE)
-            return kind & ty.Relation.ONLY_TREE
+            return self.ir[n1][n2][ty.ATTR_REL] & ty.Rel.TREE
 
-        return nx.subgraph_view(self.ir, filter_node=_nodes, filter_edge=_edges)
+        return nx.subgraph_view(
+            self.ir,
+            filter_node=self._fast_filter_nodes(root, with_ports),
+            filter_edge=_edges)
 
     def only_graph(self, root=None, with_ports=True) -> nx.DiGraph:
         """Returns a graph view representing only the application graph. If
@@ -526,16 +517,13 @@ class AppGraph:
 
         """
 
-        def _nodes(n):
-            is_in_subgraph = self.has_ancestor(n, root) if root else True
-            include_port = True if with_ports else not isinstance(n, ty.Port)
-            return is_in_subgraph and include_port
-
         def _edges(n1, n2):
-            kind = self.ir[n1][n2].get(tok.ATTR_EDGE_KIND, ty.Relation.NONE)
-            return kind & ty.Relation.ONLY_GRAPH
+            return self.ir[n1][n2][ty.ATTR_REL] == ty.Rel.GRAPH
 
-        return nx.subgraph_view(self.ir, filter_node=_nodes, filter_edge=_edges)
+        return nx.subgraph_view(
+            self.ir,
+            filter_node=self._fast_filter_nodes(root, with_ports),
+            filter_edge=_edges)
 
     def sanity(self, rule, *element_id):
         """Performs sanity checking on the graph element identified as
@@ -550,8 +538,12 @@ class AppGraph:
         try:
             rule(self, *element_id)
         except AssertionError:
-            msg = f"Sanity check failed for "
-            msg += f"node {element_id[0]}" if len(element_id) < 2 else f"edge {tuple(element_id)}"
+            msg = "Sanity check failed for "
+            if len(element_id) < 2:
+                msg += f"node {element_id[0]}"
+                obj = self.entry(*element_id)
+            else:
+                msg += f"edge {tuple(element_id)}"
+                obj = self.edge(*element_id)
             msg += f"during rule '{rule.__name__}':"
-            raise EntryError(msg, obj=self.entry(*element_id))
-
+            raise EntryError(msg, obj=obj)

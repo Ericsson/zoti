@@ -5,8 +5,14 @@ module: sub.mod
 root:
   nodes:
     - name: n1
+      zoti-args:
+        i-need-this: "This will be replaced by the caller"
       content1: !include {file: test.txt}
       content2: !include {file: test.txt, begin: 3, end: 6}
       content3: !include {file: test.txt, name: block1}
       content4: !include {file: test.txt, begin: ":(!)", end: "(!):"}
-      floating-ref: !ref {path: "../../nodes[n1]"}
+      # Recommended way to pass caller arguments
+      passed-arg: !attach {ref: !ref {path: "../zoti-args/i-need-this"}}
+      # OBS: should never be used unless you know the structure of the caller
+      floating-ref: !ref {path: "../../root[n1]"} 
+      

@@ -5,57 +5,57 @@ import:
 
 nodes:
 - name: CounterProbe
-  parameters:
+  zoti-args:
     probe-name: null
   ports:
   - name: DFL_counter_flush
-    dir: in
-    port_type: {type: socket}
+    kind: in
+    port_type: {type: UDP-socket}
     data_type: {name: Common.Boolean}
   - name: DFL_counter_samples
-    dir: out
-    port_type: {type: socket}
+    kind: out
+    port_type: {type: UDP-socket}
     data_type: {name: Monitor.Collection64, value: "0"}
-  - {name: monitored_input, dir: in}
-  - {name: bypassed_data, dir: out}
+  - {name: monitored_input, kind: in}
+  - {name: bypassed_data, kind: out}
   nodes:
   - !attach
     name: packet-cnt
     ref: !ref {module: Util, path: "/nodes[SingleKernelActor]"}
-    parameters:
+    zoti-args:
       external-function: !include
         file: probes_c.dfc
         begin: "// v counter_inject"
         end: "// ^ counter_inject"
       passed-mark: {"inline": true}
       passed-ports:
-        - {name: monitored, dir: in} 
-        - {name: cnt_buff, dir: inout} 
-        # - {name: out, dir: out}
+        - {name: monitored, kind: in} 
+        - {name: cnt_buff, kind: side} 
+        # - {name: out, kind: out}
   - !attach
     ref: !ref {module: Util, path: "/nodes[SingleKernelActor]"}
     name: buffer-flush
-    parameters:
+    zoti-args:
       external-function: !include 
         file: probes_c.dfc
         begin: "// v flush_one_buffer"
         end: "// ^ flush_one_buffer"
       passed-mark: {"inline": true}
       passed-ports:
-        - {name: DFL_counter_flush, dir: in}
-        - {name: cnt_stat, dir: out}
+        - {name: DFL_counter_flush, kind: in}
+        - {name: cnt_stat, kind: out}
         - name: cnt_buff
-          dir: inout
+          kind: side
           mark:
             probe_buffer:
-              !attach {ref: !ref {path: "../../../../../parameters/probe-name"}}
+              !attach {ref: !ref {path: "../../../../../zoti-args/probe-name"}}
           port_type: {type: assign}
           data_type: {name: Monitor.Sample64, value: "{ (DFL_ATOM_INVALID_BIT | 0), 0 }"}
   edges:
   - connect: [".", "monitored_input", "packet-cnt/_kern", "monitored"]
   - connect: [".", "DFL_counter_flush", "buffer-flush/_kern", "DFL_counter_flush"]
   - connect: ["buffer-flush/_kern", "cnt_stat", ".", "DFL_counter_samples"]
-  - {connect: ["packet-cnt/_kern", "cnt_buff", "buffer-flush/_kern", "cnt_buff"], kind: storage}
+  - connect: ["packet-cnt/_kern", "cnt_buff", "buffer-flush/_kern", "cnt_buff"]
   - connect: [".", "monitored_input", ".", "bypassed_data"]
 
 ##########################################
@@ -65,15 +65,15 @@ nodes:
   kind: PlatformNode
   target: {platform: unix-process, language: C}
   mark: {init_atom_table: True}
-  parameters:
+  zoti-args:
     flush_ports: []
   ports:
     - name: flush
-      dir: in
+      kind: in
       data_type: {name: Common.Boolean}
       port_type: {external_name: DFL-flush}
     - name: samples
-      dir: in
+      kind: in
       data_type: {name: Monitor.Collection64}
     # TODO: needs outputs defined by the caller
   # primitives:
@@ -92,9 +92,9 @@ nodes:
             begin: "// v send_flush_n"
             end: "// ^ send_flush_n"
           ports: !attach
-            ref: !ref {path: "../../../parameters/flush_ports"}
+            ref: !ref {path: "../../../zoti-args/flush_ports"}
             concat:
-            - {name: flush, dir: in}
+            - {name: flush, kind: in}
           parameters: !attach
             ref: !ref {path: "../../../parameters"}
               
@@ -108,7 +108,7 @@ nodes:
             begin: "// v print_stats"
             end: "// ^ print_stats"
           ports:
-            - {name: samples, dir: in}
+            - {name: samples, kind: in}
               
       
   edges:
