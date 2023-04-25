@@ -127,7 +127,7 @@ def draw_graph(
                 "height": 0.3,
                 "fillcolor": "yellow",
             }
-        elif entry.type == ty.PrimTy.NULL:
+        elif entry.type == ty.PrimTy.DROP:
             style = {
                 "label": "",
                 "shape": "invtriangle",
@@ -159,7 +159,7 @@ def draw_graph(
 
         src_arrow = "diamond" if _is_inout(src) else "none"
         dst_arrow = "diamond" if _is_inout(dst) else "normal"
-        label = edge_info(AG.entry(src, dst)) if edge_info else ""
+        label = edge_info(AG.edge(src, dst)) if edge_info else ""
         graph.add_edge(
             pydot.Edge(
                 src_port,

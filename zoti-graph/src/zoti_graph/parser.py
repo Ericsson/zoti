@@ -404,7 +404,7 @@ class BasicNodeParser(NodeParser):
 
     ``type:`` <str> *required*
       the primitive type. Possible ``SYSTEM``, marking a connection to
-      the outside world; ``NULL`` marks that the connection is dropping
+      the outside world; ``DROP`` marks that the connection is dropping
       the data.
 
     **OBS:** Since BasicNodes are replaced during transformation,

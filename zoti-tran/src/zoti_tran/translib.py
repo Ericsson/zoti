@@ -30,7 +30,7 @@ def flatten(G: AppGraph, **kwargs):
         and isinstance(G.entry(scen), ty.CompositeNode)
     ]
     for n in scenarios:
-        G.add_mark("scenario", True, n)
+        G.entry(n).mark["scenario"] = True
 
     # Flatten everything except scenarios
     def _recursive_flatten(parent: ty.Uid, node: ty.Uid):
@@ -39,7 +39,7 @@ def flatten(G: AppGraph, **kwargs):
             return
         for child in G.children(node):
             _recursive_flatten(node, child)
-        if isinstance(entry, ty.CompositeNode) and not G.get_mark("scenario", node):
+        if isinstance(entry, ty.CompositeNode) and not G.entry(node).mark.get("scenario"):
             G.uncluster(node, parent=parent)
             log.info(f"  - Unclustered {node} to {parent}")
 
@@ -67,38 +67,38 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
     """
     def _fuse_children(proj, _nodes, _edges, msg, under=[]):
         deps = nx.subgraph_view(proj, filter_node=_nodes, filter_edge=_edges)
-        # print("!!!!deps:", deps.nodes())
-        # for d in deps.nodes():
-        #     print(type(G.entry(d)))
         for cluster in list(nx.connected_components(deps.to_undirected())):
             if len(cluster) <= 1:
                 continue
             depgraph = proj.subgraph(cluster)
-            for u, v in depgraph.edges:
-                if depgraph.has_edge(v, u):
-                    proj[u][v]["ports"].extend(proj[v][u]["ports"])
-                    proj.remove_edge(v, u)
             if under:
                 fused_id = under[0]
             else:
-                fused_id, _ = list(depgraph.edges)[0]
-            parsed_dep = list(nx.edge_bfs(
-                depgraph, fused_id, orientation="ignore"))
+                fused_id, _, _ = list(depgraph.edges)[0]
+            parsed_dep = list(nx.edge_bfs(depgraph, fused_id, orientation="ignore"))
             log.info(f"{msg} {cluster} under {fused_id}")
-            for u, v, orientation in parsed_dep:
+            for u, v, idx, orientation in parsed_dep:
+                fuse_edgs = [k for s, t, k in proj.edges(data="ports")
+                             if (s,t) == (u,v) or (s,t) == (v,u)]
                 if orientation == "forward":
-                    G.fuse_nodes(fused_id, v, proj[u][v]["ports"])
+                    G.fuse_nodes(fused_id, v, fuse_edgs)
                 else:
-                    G.fuse_nodes(fused_id, u, proj[u][v]["ports"])
+                    G.fuse_nodes(fused_id, u, fuse_edgs)
             yield fused_id
 
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
-        proj = G.node_projection(pltf, with_parent=False)
+        # Double check if SIDE connections are marked (or at least have been disconnected)
+        for actor in G.children(pltf):
+            for port in G.ports(actor, select=lambda p: p.kind == ty.Dir.SIDE):
+                for s, d in G.port_edges(port):
+                    if "storage" not in G.edge(s, d).mark:
+                        raise Exception("found non-marked connection between SIDE ports")
+        
+        proj = G.node_projection(pltf, no_parent_ports=True)
         fused_actors = _fuse_children(
             proj,
-            _nodes=lambda n: not isinstance(n, ty.Primitive),
-            _edges=lambda u, v: any([G.entry(s, d).kind == ty.Relation.EVENT
-                                     for s, d in proj[u][v]["ports"]]),
+            _nodes=lambda n: not isinstance(n, ty.BasicNode),
+            _edges=lambda u, v, k: "storage" not in G.edge(*proj[u][v][k]["ports"]).mark,
             msg="  - Fusing actors in the same timeline",
             under=G.children(pltf, select=lambda n: not n.mark)
         )
@@ -110,12 +110,10 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
                 raise NotImplementedError  # TODO
 
             # Fusing scenarios (OBS: force yield)
-            sc_proj = G.node_projection(actor, with_parent=True)  # !!!
+            sc_proj = G.node_projection(actor, no_parent_ports=True)  # !!!
             list(_fuse_children(
                 sc_proj,
-                _nodes=lambda n: G.get_mark("scenario", n),
-                _edges=lambda u, v: any([G.entry(s, d).kind == ty.Relation.EVENT
-                                         for s, d in sc_proj[u][v]["ports"]]),
+                _nodes=lambda n: G.entry(n).mark.get("scenario"),
+                _edges=lambda u, v, k: True,
                 msg="  - Fusing scenarios"))
-    # assert False
     return True

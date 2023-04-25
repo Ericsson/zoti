@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from zoti_yaml import get_pos
-from zoti_graph import AppGraph, Port, Primitive, dump_node_info, draw_graph, draw_tree
+from zoti_graph import AppGraph, Port, BasicNode, dump_node_info, draw_graph, draw_tree
 
 
 @dataclass(eq=False, repr=False)
@@ -106,7 +106,7 @@ class Script:
 
         * ``port_[name]`` are applied only on ports;
         * ``edge_[name]`` are applied only on edges;
-        * ``primitive_[name]`` are applied only on primitives;
+        * ``basic_[name]`` are applied only on primitive (basic) nodes;
         * ``node_[name]`` are applied only on regular nodes;
         * in all other cases it applies the rule on the entire graph
           (i.e., the root node).
@@ -115,11 +115,11 @@ class Script:
 
         port_rules = [r for r in rules if r.__name__.startswith("port")]
         node_rules = [r for r in rules if r.__name__.startswith("node")]
-        primitive_rules = [
-            r for r in rules if r.__name__.startswith("primitive")]
+        basic_rules = [
+            r for r in rules if r.__name__.startswith("basic")]
         edge_rules = [r for r in rules if r.__name__.startswith("edge")]
         graph_rules = [r for r in rules if r not in
-                       port_rules + node_rules + primitive_rules + edge_rules]
+                       port_rules + node_rules + basic_rules + edge_rules]
 
         def _check(collection, *element):
             for rule in collection:
@@ -132,12 +132,12 @@ class Script:
         for node in self.G.ir.nodes:
             if isinstance(self.G.entry(node), Port):
                 _check(port_rules, node,)
-            elif isinstance(self.G.entry(node), Primitive):
-                _check(primitive_rules, node)
+            elif isinstance(self.G.entry(node), BasicNode):
+                _check(basic_rules, node)
             else:
                 _check(node_rules, node)
         log.info(
-            f"  - passed {[f.__name__ for f in port_rules + primitive_rules + node_rules]}")
+            f"  - passed {[f.__name__ for f in port_rules + basic_rules + node_rules]}")
 
         _check(graph_rules, self.G.root)
         log.info(f"  - passed {[f.__name__ for f in graph_rules]}")
@@ -249,7 +249,7 @@ class ContextError(Exception):
         self.context = context
         self.pos = f"\n{get_pos(obj).show()}" if get_pos(obj) else ""
         self.ctx_pos = f"\ncontext {get_pos(context_obj).show()}" if get_pos(
-            obj) else ""
+            context_obj) else ""
 
     def __str__(self):
         return f"{self.context}{self.ctx_pos}\n{self.what}{self.pos}"

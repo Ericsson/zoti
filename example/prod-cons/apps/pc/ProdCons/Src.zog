@@ -14,7 +14,6 @@ nodes:
       kind: out
       data_type: {name: Tst.LinkData}
   nodes:
-    - {name: null1, kind: BasicNode, type: "NULL"}
     - name: Src
       description: "Proto-dataflow of Src_compute"
       kind: ActorNode
@@ -35,9 +34,14 @@ nodes:
               kind: side
               port_type: {type: assign}
               data_type: {name: Tst.PredefLinkData}
+      # One way to ensure visibility of SIDE ports at actor level is
+      # to connect them to "DROP" nodes and let the parser do the
+      # instantiations
+    - {name: null1, kind: BasicNode, type: DROP}
+    - {name: null2, kind: BasicNode, type: DROP}
   edges:
-    - connect: [".", "trig", "Src/src_native", "trig"]
-    - connect: ["Src/src_native", "inited", "null1", null]
-    - connect: ["Src/src_native", "predef_data", "null1", null]
-    - connect: ["Src/src_native", "data", ".", "data"]
+    - connect: [.,               trig,         Src/src_native,  trig]
+    - connect: [Src/src_native,  data,         .,               data]
+    - connect: [Src/src_native,  inited,       null1,           null]
+    - connect: [Src/src_native,  predef_data,  null2,           null]
 

@@ -10,11 +10,11 @@ nodes:
   ports:
   - name: DFL_counter_flush
     kind: in
-    port_type: {type: socket}
+    port_type: {type: UDP-socket}
     data_type: {name: Common.Boolean}
   - name: DFL_counter_samples
     kind: out
-    port_type: {type: socket}
+    port_type: {type: UDP-socket}
     data_type: {name: Monitor.Collection64, value: "0"}
   - {name: monitored_input, kind: in}
   - {name: bypassed_data, kind: out}

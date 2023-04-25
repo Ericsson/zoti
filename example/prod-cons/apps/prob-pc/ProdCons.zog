@@ -11,7 +11,7 @@ import:
 - nodes:
   - nodes:
     - ports: !policy:intersect
-        - port_type: {type: socket, transport: UDP}
+        - port_type: !policy:union {type: UDP-socket}
 - nodes:
     - name: Tst   # kind: CompositeNode
       description: "Example Dataflow Graph"
@@ -30,13 +30,13 @@ import:
               - {name: flush1, kind: out}
               - {name: flush2, kind: out}
       edges:
-        - connect: ["sys-stat", null,  "Src", "trig"]
-        - connect: ["sys-trigger", null,  "Sink", "stat_time"]
-        - connect: ["Src", "data", "Proc", "st_data"]
-        - connect: ["Proc", "res", "Sink", "data"]
+        - connect: [sys-stat,                     null,                Src,              trig       ]
+        - connect: [sys-trigger,                  null,                Sink,             stat_time  ]
+        - connect: [Src,                          data,                Proc,             st_data    ]
+        - connect: [Proc,                         res,                 Sink,             data       ]
         ### probe connections ###
-        - connect: ["sys-flush", null,  "DFL_counter_stat", "flush"]
-        - connect: ["DFL_counter_stat/Flush/flush", "flush1", "Src", "DFL_counter_flush"]
-        - connect: ["DFL_counter_stat/Flush/flush", "flush2", "Proc", "DFL_counter_flush"]
-        - connect: ["Src", "DFL_counter_samples",  "DFL_counter_stat", "samples"]
-        - connect: ["Proc", "DFL_counter_samples", "DFL_counter_stat", "samples"]
+        - connect: [sys-flush,                    null,                DFL_counter_stat, flush      ]
+        - connect: [DFL_counter_stat/Flush/flush, flush1,              Src,       DFL_counter_flush ]
+        - connect: [DFL_counter_stat/Flush/flush, flush2,              Proc,      DFL_counter_flush ]
+        - connect: [Src,                          DFL_counter_samples, DFL_counter_stat, samples    ]
+        - connect: [Proc,                         DFL_counter_samples, DFL_counter_stat, samples    ]

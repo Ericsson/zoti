@@ -10,7 +10,7 @@ import:
 - nodes:
   - nodes: 
     - ports: !policy:intersect
-        - port_type: {type: socket, transport: UDP}
+        - port_type: !policy:union {type: UDP-socket}
 - nodes:
     - name: Tst   # kind: CompositeNode
       description: "Example Dataflow Graph"

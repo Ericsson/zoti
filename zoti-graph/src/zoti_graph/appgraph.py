@@ -437,14 +437,14 @@ class AppGraph:
         self.ir.remove_node(n2)
         # print("REMOVED", n2)
 
-    def node_projection(self, parent) -> nx.MultiDiGraph:
+    def node_projection(self, parent, no_parent_ports=False) -> nx.MultiDiGraph:
         """Displays the projection of nodes upon a single level of hierarchy
         for all first children of *parent*. The first and the last
         nodes are the parent's ports.
 
         The projection view is a multi-digraph (i.e., directed graph
-        with possibly parallel edges), where each edge contain a
-        *srcport* and *dstport* enttry.
+        with possibly parallel edges), where each edge contain an
+        entry *ports*=(*srcport*,*dstport*).
 
         .. image:: assets/zoti_graph_projection.png
 
@@ -452,19 +452,22 @@ class AppGraph:
         def _filter(n1, n2):
             return self.ir[n1][n2].get(ty.ATTR_REL) == ty.Rel.GRAPH
 
-        nodes = set(self.ports(parent) + self.children(parent) + [
-            p for chld in self.children(parent) for p in self.ports(chld)])
+        nodes = set(
+            ([] if no_parent_ports else self.ports(parent)) +
+            self.children(parent) +
+            [p for chld in self.children(parent) for p in self.ports(chld)]
+        )
         cluster = nx.subgraph_view(
             self.ir, filter_node=lambda n: n in nodes, filter_edge=_filter
         )
         view = nx.MultiDiGraph()
+        view.add_nodes_from(self.children(parent))
         for u, v in cluster.edges:
             src = u if self.parent(u) == parent else self.parent(u)
             dst = v if self.parent(v) == parent else self.parent(v)
             srcport = None if self.parent(u) == parent else u
             dstport = None if self.parent(v) == parent else v
-            view.add_edge(src, dst, srcport=srcport, dstport=dstport)
-
+            view.add_edge(src, dst, ports=(srcport,dstport))
         return view
 
     def _fast_filter_nodes(self, root, with_ports):

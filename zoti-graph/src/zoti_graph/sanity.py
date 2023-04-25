@@ -203,23 +203,43 @@ def node_actor_consistency(G, n):
         # TODO: scenarios are decoupled using projection
 
 
+# def port_dangling(G, p):
+#     """There is no dangling port in the graph.
+
+#     forall p in ports(G):
+#       | node(p) is kernel node ⇒ exists e in edges(G) such that p = e.src or p = e.dst
+#       | p is inout port ⇒ exists e1, e2 in edges(G) such that p = e1 ∩ e2
+#       | otherwise ⇒ exists e1, e2 in edges(G) such that p = e1.src and p = e2.dst
+#     """
+#     node = G.entry(p.parent())
+#     port = G.entry(p)
+#     inedges = G.port_edges(p, which="in")
+#     outedges = G.port_edges(p, which="out")
+
+#     if isinstance(node, ty.KernelNode):
+#         pass  # TODO, handle detector preproc
+#         # assert len(inedges) > 0 or len(outedges) > 0
+#     elif isinstance(port, ty.Port) and port.kind == ty.Dir.SIDE:
+#         assert len(inedges) + len(outedges) > 1
+#     else:
+#         assert len(inedges) > 0 and len(outedges) > 0
+
+
 def port_dangling(G, p):
-    """There is no dangling port in the graph.
+    """'Dangling port' means either an event port which is not connected
+    (is triggered by nothing or triggers nothing) or a side-effect
+    port which is not exposed at the actor level (that might be
+    ignored).
 
-    forall p in ports(G):
-      | node(p) is kernel node ⇒ exists e in edges(G) such that p = e.src or p = e.dst
-      | p is inout port ⇒ exists e1, e2 in edges(G) such that p = e1 ∩ e2
-      | otherwise ⇒ exists e1, e2 in edges(G) such that p = e1.src and p = e2.dst
     """
-    node = G.entry(p.parent())
-    port = G.entry(p)
-    inedges = G.port_edges(p, inp=True, out=False)
-    outedges = G.port_edges(p, inp=False, out=True)
-
-    if isinstance(node, ty.KernelNode):
-        pass  # TODO, handle detector preproc
-        # assert len(inedges) > 0 or len(outedges) > 0
-    elif isinstance(port, ty.Port) and port.dir == ty.Dir.SIDE:
-        assert len(inedges) + len(outedges) > 1
+    if G.entry(p).kind == ty.Dir.SIDE:
+        assert any([
+            isinstance(G.entry(G.parent(q)), ty.ActorNode)
+            for q in G.connected_ports(p)
+        ])
     else:
-        assert len(inedges) > 0 and len(outedges) > 0
+        assert all([
+            isinstance(G.entry(G.parent(q)), ty.KernelNode) or
+            isinstance(G.entry(q), ty.BasicNode) 
+            for q in G.end_ports(p)
+        ])

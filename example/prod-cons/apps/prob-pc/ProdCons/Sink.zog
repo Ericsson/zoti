@@ -15,6 +15,9 @@ nodes:
     nodes:
       - name: sink
         kind: ActorNode
+        ports:       
+          - {name: inited, kind: side}
+          - {name: predef_data, kind: side}
         nodes:
           - name: sink
             kind: KernelNode
@@ -40,6 +43,10 @@ nodes:
                 data_type: {name: Tst.ResData}
       - name: stat
         kind: ActorNode
+        ports:
+          - {name: last_packet_count, kind: side}
+          - {name: last_data_count, kind: side}
+          - {name: last_time, kind: side}
         nodes:
           - name: stat
             kind: KernelNode
@@ -62,14 +69,13 @@ nodes:
               - !attach
                 ref: !ref {path: "../ports[last_packet_count]"}
                 name: last_time
-      - {name: null1, kind: BasicNode, type: "NULL"}
     edges:
-      - connect: [".", data, sink/sink, data]
-      - connect: [".", stat_time, stat/stat, stat_time]
-      - {connect: ["sink/sink", "packet_count", "stat/stat", "packet_count"]}
-      - {connect: ["sink/sink", "data_count", "stat/stat", "data_count"]}
-      - {connect: ["sink/sink", "inited", "null1", null]}
-      - {connect: ["sink/sink", "predef_data", "null1", null]}
-      - {connect: ["stat/stat", "last_packet_count", "null1", null]}
-      - {connect: ["stat/stat", "last_data_count", "null1", null]}
-      - {connect: ["stat/stat", "last_time", "null1", null]}
+      - connect: [".",        data,               sink/sink,  data]
+      - connect: [".",        stat_time,          stat/stat,  stat_time]
+      - connect: [sink/sink,  packet_count,       stat/stat,  packet_count]
+      - connect: [sink/sink,  data_count,         stat/stat,  data_count]
+      - connect: [sink/sink,  inited,             sink,       inited]
+      - connect: [sink/sink,  predef_data,        sink,       predef_data]
+      - connect: [stat/stat,  last_packet_count,  stat,       last_packet_count]
+      - connect: [stat/stat,  last_data_count,    stat,       last_data_count]
+      - connect: [stat/stat,  last_time,          stat,       last_time]
