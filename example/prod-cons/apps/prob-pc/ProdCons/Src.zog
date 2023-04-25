@@ -48,14 +48,15 @@ nodes:
       ref: !ref {module: Lib.Probes, path: "/nodes[CounterProbe]"}
       zoti-args:
         probe-name: "Src-trig-pkts"
-    - {name: null1, kind: BasicNode, type: "NULL"}
+    - {name: null1, kind: BasicNode, type: DROP}
+    - {name: null2, kind: BasicNode, type: DROP}
   edges:
-    - connect: [".", "trig", "Src/src_native", "trig"]
-    - connect: ["Src/src_native", "inited", "null1", null]
-    - connect: ["Src/src_native", "predef_data", "null1", null]
-    - connect: [".", "DFL_counter_flush", "counter", "DFL_counter_flush"]
-    - connect: ["counter", "DFL_counter_samples", ".", "DFL_counter_samples"]
-    # - connect: ["src/src_native", "data", ".", "data"]
-    - connect: ["Src/src_native", "data", "counter", "monitored_input"]
-    - connect: ["counter", "bypassed_data", ".", "data"]
+    - connect: [.,                 trig,                 Src/src_native,  trig                ]
+    - connect: [Src/src_native,    inited,               null1,           null                ]
+    - connect: [Src/src_native,    predef_data,          null2,           null                ]
+    - connect: [.,                 DFL_counter_flush,    counter,         DFL_counter_flush   ]
+    - connect: [counter,           DFL_counter_samples,  .,               DFL_counter_samples ]
+    # - connect: [src/src_native,  data,                 .,               data                ]
+    - connect: [Src/src_native,    data,                 counter,         monitored_input     ]
+    - connect: [counter,           bypassed_data,        .,               data                ]
 

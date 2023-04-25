@@ -246,7 +246,7 @@ class KernelNode(NodeABC):
 class PrimTy(Flag, metaclass=SearchableEnum):
     """ Bitwise flags denoting types of primitives. """
 
-    NULL = 0
+    DROP = 0
     SYSTEM = 1
     BYPASS = 2
 

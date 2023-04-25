@@ -36,6 +36,111 @@ def port_inference(G, T, **kwargs):
     return True  # Byproduct is a flag
 
 
+
+def prepare_platform_ports(G, T, port_inference, **kwargs):
+    """Updates all input ports of platform nodes to reflect the buffer
+    type required by the port receiver.
+    
+    """
+    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+        for iport in G.ports(pltf, select=lambda p: p.kind == ty.Dir.IN):
+            entry = G.entry(iport)
+            entry.data_type = T.make_type(**entry.port_type.buffer_type())
+            log.info(f"  - Changed type for in port: {iport}")
+            
+        # alter exit ports to reflect socket variables
+        for oport in G.ports(pltf, select=lambda p: p.kind == ty.Dir.OUT):
+            entry = G.entry(oport)
+            socket_id = oport.withSuffix(f"{pltf.name()}_socket")
+            for p in G.connected_ports(oport):
+                if G.has_ancestor(p, pltf):
+                    G.decouple(p)
+                    G.entry(p).mark["socket_port"] = socket_id
+
+            attrs = entry.port_type.out_port()
+            attrs["data_type"] = T.make_type(**attrs["data_type"])
+            G.register_port(pltf, G.new(socket_id, ty.Port(
+                name=socket_id.name(), kind=ty.Dir.SIDE, **attrs
+            )))
+            log.info(f"  - Added global out port for: {oport}")
+    return True
+
+
+def prepare_side_ports(G, port_inference, **kwargs):
+    def _make_global(pltf, name, port) -> str:
+        glb_key = util.unique_name(pltf.withPort(name), G.ports(pltf),
+                                   modifier=lambda u, s: u.withSuffix(s))
+        newport = deepcopy(port)
+        newport.name = f"_{pltf.name()}_{glb_key.name()}".replace(".", "_")
+        G.register_port(pltf, G.new(glb_key, newport))
+        G.entry(glb_key).mark["global_var"] = True
+        return newport.name
+
+    def _remove_selected_ports(connected, select):
+        to_remove = [p for p in connected.nodes() if select(p)]
+        for p in to_remove:
+            G.ir.remove_node(p)
+        return to_remove
+
+    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+        for actor in G.children(pltf, select=lambda n: isinstance(n, ty.ActorNode)):
+            ports_to_remove = set()
+            for port in G.ports(actor):
+                conn = G.connected_ports(port)
+                ends = G.end_ports(port, graph=conn)
+                entry = G.entry(port)
+
+                # sync names of interconneted storage ports and make globals for them
+                if (G.entry(port).kind == ty.Dir.SIDE # and not G.entry(port).mark.get("global_var")
+                    ):
+                    glb_name = _make_global(pltf, entry.name, entry)
+                    for p in [e for e in ends if isinstance(G.entry(e), ty.Port)]:
+                        G.entry(p).name = glb_name
+                        G.entry(p).mark["global_var"] = True
+                    log.info(f"  - Promoted to global '{glb_name}': {conn.nodes}")
+                    
+                    # remove all intermediate "side" connections
+                    def _to_remove(p):
+                        return not isinstance(G.entry(G.parent(p)), ty.KernelNode)
+                    rmd = _remove_selected_ports(conn, _to_remove)
+                    log.info(f"  - Removed intermediate storage ports {rmd}")
+
+    return True
+
+def prepare_intermediate_ports(G, port_inference, **kwargs):
+    def _new_intermediate_connection(parent, src, dst):
+        edge = G.edge(src, dst)
+        # check if there is already a CompositeNode's port which can act as a via
+        exist = [v for u, v in G.ir.out_edges(src) if G.parent(v) == parent]
+        if exist:
+            inter = exist[0]
+            # TODO: does it need to be marked?
+        else:
+            # othewise make a new one and connect to it
+            pentry = deepcopy(G.entry(dst))
+            inter = parent.withPort(pentry.name)
+            G.register_port(parent, G.new(inter, pentry))
+            G.entry(inter).mark["inter_var"] = True
+            pentry.dir = ty.Dir.SIDE
+            for new_src in [u for u, v in G.port_edges(dst, which="in")]:
+                G.connect(new_src, inter, edge, recursive=False)
+        G.ir.remove_edge(src, dst)
+        G.connect(inter, dst, edge, recursive=False)
+        return inter
+
+    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+        for actor in G.children(pltf, select=lambda n: isinstance(n, ty.ActorNode)):
+            for scen in G.children(actor, select=lambda n: isinstance(n, ty.CompositeNode)):
+                # expose intermediate variables in scenarios
+                proj = G.node_projection(scen, no_parent_ports=True)
+                for src_kern, dst_kern, ports in proj.edges(data="ports"):
+                    inter = _new_intermediate_connection(scen, *ports)
+                    log.info(f"  - Using {inter} as intemediate between {ports}")
+
+    return True
+
+
+    
 def expand_actors(G, T, **kwargs):
     """Expands actor descriptions to their explicit basic
     components. Assumes actors have been checked for consistency.
@@ -92,216 +197,25 @@ def expand_actors(G, T, **kwargs):
             # tag preprocessor
             if entry.detector.preproc is not None:
                 G.decouple(actor.withNode(entry.detector.preproc))
-                G.add_mark("preproc", True, actor.withNode(
-                    entry.detector.preproc))
+                ppc_id = actor.withNode(entry.detector.preproc)
+                G.entry(ppc_id).mark["preproc"] = True
                 log.info(
                     f"  - Found preproc {actor.withNode(entry.detector.preproc)}")
             # tag scenarios
             if entry.detector.scenarios is not None:
                 for scen in entry.detector.scenarios:
-                    G.add_mark("scenario", True, actor.withNode(scen))
+                    scen_id = actor.withNode(scen)
+                    G.entry(scen_id).mark["scenario"] = True
             # create FSM node and mark it with the FSM description for posterity
             fsm = _make_actor_fsm(actor, entry.detector, entry._info)
-            G.add_mark("detector", entry.detector, fsm)
+            G.entry(fsm).mark["detector"] = entry.detector
 
         # select all untagged nodes under a "default scenario"
         tags = ["preproc", "scenario", "detector"]
-        kerns = G.children(actor, select=lambda n: all(
-            [t not in n.mark for t in tags]))
+        kerns = G.children(actor, select=lambda n: all([t not in n.mark for t in tags]))
         if len(kerns) > 0:
             clus = _cluster_underneath("default", actor, kerns, entry._info,)
-            G.add_mark("scenario", True, clus)
+            G.entry(clus).mark["scenario"] = True
             log.info(f"  - Created default scenario from {kerns}")
 
     return True
-
-
-def clean_ports(G, port_inference, **kwargs):
-    """This transformation performs the following: 
-
-      * removes all conections to/from NULL;
-      * pomotes STORAGE ports to platform level (will become global variables)
-      * removes intermediate STORAGE ports. Only end connections + global remain
-      * removes nodes marked as "ignore" (e.g., hook nodes)
-      * identifies/creates and marks ports which will become intermediate variables
-
-    """
-    def _make_global(pltf, name, port) -> str:
-        glb_key = util.unique_name(pltf.withPort(name), G.ports(pltf),
-                                   modifier=lambda u, s: u.withSuffix(s))
-        newport = deepcopy(port)
-        newport.name = f"_{pltf.name()}_{glb_key.name()}".replace(".", "_")
-        G.register_port(pltf, G.new(glb_key, newport))
-        G.add_mark("global_var", True, glb_key)
-        return newport.name
-
-    def _remove_selected_ports(connected, select):
-        to_remove = [p for p in connected.nodes() if select(p)]
-        for p in to_remove:
-            G.ir.remove_node(p)
-        return to_remove
-
-    def _new_intermediate_connection(src, dst, parent):
-        edge = G.entry(src, dst)
-        # check if there is already a CompositeNode's port which can act as a via
-        exist = [v for u, v in G.ir.out_edges(src) if G.parent(v) == parent]
-        if exist:
-            inter = exist[0]
-            # TODO: does it need to be marked?
-        else:
-            # othewise make a new one and connect to it
-            pentry = deepcopy(G.entry(dst))
-            inter = parent.withPort(pentry.name)
-            G.register_port(parent, G.new(inter, pentry))
-            G.add_mark("inter_var", True, inter)
-            pentry.dir = ty.Dir.INOUT
-            for new_src in [u for u, v in G.port_edges(dst, out=False)]:
-                G.connect(new_src, inter, edge, recursive=False)
-        G.ir.remove_edge(src, dst)
-        G.connect(inter, dst, edge, recursive=False)
-        return inter
-
-    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
-        for actor in G.children(pltf, select=lambda n: isinstance(n, ty.ActorNode)):
-            for port in G.ports(actor):
-                conn = G.connected_ports(port)
-                ends = G.end_ports(port, graph=conn)
-                entry = G.entry(port)
-
-                # sync names of interconneted storage ports and make globals for them
-                if (G.entry(*G.port_edges(port)[0]).kind == ty.Relation.STORAGE
-                        and not G.get_mark("global_var", port)):
-                    glb_name = _make_global(pltf, entry.name, entry)
-                    for p in [e for e in ends if isinstance(G.entry(e), ty.Port)]:
-                        G.entry(p).name = glb_name
-                        G.add_mark("global_var", True, p)
-                    log.info(
-                        f"  - Promoted to global '{glb_name}': {conn.nodes}")
-
-                # # change type of input ports to reflect their mechanism
-                # if entry.dir == ty.Dir.IN:
-                #     G.decouple_entry(port)
-                #     entry = G.entry(port)
-                #     entry.data_type = entry.port_type.get_port_type()
-
-                # remove all actor ports connected to NULL (and the NULL connections)
-                nulls = [snk for snk in ends
-                         if isinstance(G.entry(snk), ty.Primitive)
-                         and G.entry(snk).is_type(ty.PrimitiveTy.NULL)]
-                if nulls:
-                    def _to_remove(p):
-                        is_outside = not G.has_ancestor(p, G.parent(port))
-                        is_intermediate = conn.degree(p) > 1
-                        return is_outside or is_intermediate
-                    rmd = _remove_selected_ports(conn, _to_remove)
-                    log.info(f"  - Removed dangling ports {rmd}")
-
-                # remove all intermediate storage connections
-                elif G.entry(*G.port_edges(port)[0]).kind == ty.Relation.STORAGE:
-                    # G.depth(p) <= G.depth(port)
-                    def _to_remove(p):
-                        return conn.degree(p) > 1
-                    rmd = _remove_selected_ports(conn, _to_remove)
-                    log.info(f"  - Removed intermediate storage ports {rmd}")
-
-            for scen in G.children(actor,
-                                   select=lambda n: isinstance(n, ty.CompositeNode)):
-
-                # remove ignore nodes and downstream ports propagated
-                for node in G.children(scen, select=lambda n: "ignore" in n.mark):
-                    dsts = G.ports(node)
-                    while dsts:
-                        tmp = []
-                        for p in dsts:
-                            conns = G.bypass_port(p)
-                            tmp.extend([v for u, v in conns
-                                        if G.depth(v) <= G.depth(node)])
-                        dsts = tmp
-                    G.ir.remove_node(node)
-
-                # expose intermediate variables in scenarios
-                proj = G.node_projection(scen, with_parent=False)
-                for src_kern, dst_kern in proj.edges():
-                    for src, dst in proj[src_kern][dst_kern]["ports"]:
-                        inter = _new_intermediate_connection(src, dst, scen)
-                        log.info(
-                            f"  - Using {inter} as intemediate between ({src}, {dst})")
-
-                # add forced dependency to "probe_counter" nodes
-                for node in G.children(scen, select=lambda n: "probe_counter" in n.mark):
-                    for ups, _ in G.node_edges(node, in_outside=True):
-                        for down in [v for u, v in G.port_edges(ups, inp=False, out=True)
-                                     if G.parent(v) != node]:
-                            entry = deepcopy(G.entry(ups))
-                            entry.dir = ty.Dir.OUT
-                            dummy = G.register_port(node, G.new(
-                                node.withPort("_dummy"), entry))
-                            G.connect(dummy, down, G.entry(
-                                ups, down), recursive=False)
-
-        # alter exit ports to reflect socket variables
-        for oport in G.ports(
-            pltf,
-            select=lambda p: p.dir == ty.Dir.OUT
-            and isinstance(p.port_type, ports.Socket),  # TODO
-        ):
-            G.decouple(oport)
-            entry = G.entry(oport)
-            entry.name = f"{pltf.name()}_{entry.name}_ram2udp_socket"
-            entry.data_type = {"usage": "int", "value": "0"}
-            entry.mark["global_var"] = True
-            entry.mark["socket"] = True
-    return True
-
-
-def separate_reactions(G, clean_ports, **kwargs):
-    def _make_global(pltf, name, port) -> str:
-        glb_key = util.unique_name(pltf.withPort(name), G.ports(pltf),
-                                   modifier=lambda u, s: u.withSuffix(s))
-        newport = deepcopy(port)
-        newport.name = f"_{pltf.name()}_{glb_key.name()}".replace(".", "_")
-        G.register_port(pltf, G.new(glb_key, newport))
-        G.add_mark("global_var", True, glb_key)
-        return newport.name
-
-    def _duplicate_scenario(port, scen):
-        new = G.copy_tree(scen, f"A_{port.name()}_A")
-        iports = G.ports(new, select=lambda p: p.dir == ty.Dir.IN)
-        # G.ir.remove_nodes_from([p for p in iports if p.name() != port.name()])
-        for p in iports:
-            if p.name() != port.name():
-                for ep in G.end_ports(p):
-                    G.decouple(ep)
-                    G.add_mark("global_var", True, ep)
-                G.ir.remove_node(p)
-        for u, v in G.node_edges(scen, in_outside=True):
-            for iport in G.ports(new):
-                if v.name() == iport.name():
-                    G.connect(u, iport, G.entry(u, v), recursive=False)
-        for u, v in G.node_edges(scen, out_outside=True):
-            for oport in G.ports(new):
-                if u.name() == oport.name():
-                    G.connect(oport, v, G.entry(u, v), recursive=False)
-
-    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
-        for actor in G.children(pltf, select=lambda n: isinstance(n, ty.ActorNode)):
-            for scen in G.children(actor, select=lambda n: "scenario" in n.mark):
-                iports = [(p, q)
-                          for p in G.ports(actor, select=lambda p: p.dir == ty.Dir.IN)
-                          for q in G.connected_ports(p) if G.parent(q) == actor]
-                if len(iports) > 1:
-                    for scenp, actorp in iports:
-                        name = _make_global(pltf, scenp.name(), G.entry(scenp))
-                        G.decouple(actorp)
-                        G.add_mark("buff_name", name, actorp)
-
-
-def receiver_types(G, T, port_inference, **kwargs):
-    """Updates all input ports of platform nodes to reflect the buffer
-    type required by the port receiver.
-    
-    """
-    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
-        for iport in G.ports(pltf, select=lambda p: p.dir == ty.Dir.IN):
-            entry = G.entry(iport)
-            entry.data_type = T.make_type(**entry.port_type.buffer_type())
