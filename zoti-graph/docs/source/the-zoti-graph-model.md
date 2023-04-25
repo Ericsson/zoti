@@ -73,6 +73,13 @@ described specific information, as documented below.
 .. autosimple:: zoti_graph.parser.KernelNodeParser
 ```
 
+##### BasicNode
+
+```{eval-rst}
+.. autosimple:: zoti_graph.parser.BasicNodeParser
+
+```
+
 ### ports
 
 ```{eval-rst}
@@ -83,13 +90,6 @@ described specific information, as documented below.
 
 ```{eval-rst}
 .. autosimple:: zoti_graph.parser.EdgeParser
-
-```
-
-### primitives
-
-```{eval-rst}
-.. autosimple:: zoti_graph.parser.PrimitiveParser
 
 ```
 

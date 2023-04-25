@@ -5,7 +5,6 @@ import pydot
 from yaml import Dumper, Loader, dump_all, load_all
 
 import zoti_graph.core as ty
-import zoti_graph.tokens as tok
 from zoti_graph.appgraph import AppGraph
 
 dist = distribution("zoti_graph")
@@ -17,7 +16,7 @@ def dump_node_info(AG, stream):
 
     """
     for n in AG.ir.nodes:
-        line = f"* {n}\n  {AG.ir.nodes[n][tok.KEY_ENTRY]}"
+        line = f"* {n}\n  {AG.ir.nodes[n][ty.KEY_ENTRY]}"
         stream.write(line + "\n")
 
 
@@ -74,9 +73,9 @@ def draw_graph(
 
     def _draw_ports(parent, node):
         ports = AG.ports(
-            node, select=lambda p: p.dir == ty.Dir.IN or p.dir == ty.Dir.OUT
+            node, select=lambda p: p.kind == ty.Dir.IN or p.kind == ty.Dir.OUT
         )
-        ioports = AG.ports(node, select=lambda p: p.dir == ty.Dir.INOUT)
+        ioports = AG.ports(node, select=lambda p: p.kind == ty.Dir.SIDE)
 
         for port in ports:
             parent.add_node(
@@ -99,15 +98,15 @@ def draw_graph(
         pydot_id = _clusName(node)
         iports = [
             f"<{p.name()}> {_label(p, port_info)}"
-            for p in AG.ports(node, select=lambda p: p.dir == ty.Dir.IN)
+            for p in AG.ports(node, select=lambda p: p.kind == ty.Dir.IN)
         ]
         oports = [
             f"<{p.name()}> {_label(p, port_info)}"
-            for p in AG.ports(node, select=lambda p: p.dir == ty.Dir.OUT)
+            for p in AG.ports(node, select=lambda p: p.kind == ty.Dir.OUT)
         ]
         ioport = [
             f"<{p.name()}> {_label(p, port_info)}"
-            for p in AG.ports(node, select=lambda p: p.dir == ty.Dir.INOUT)
+            for p in AG.ports(node, select=lambda p: p.kind == ty.Dir.SIDE)
         ]
         label = f"{{ {' | '.join(iports)} }}"
         label += f" | {{ {pydot_lbl} | {{ {' | '.join(ioport)} }} }} | "
@@ -119,7 +118,7 @@ def draw_graph(
 
     def _draw_primitive(parent, node, entry):
         pydot_id = _clusName(node)
-        if entry.type == ty.PrimitiveTy.SYSTEM:
+        if entry.type == ty.PrimTy.SYSTEM:
             style = {
                 "label": "",
                 "shape": "doublecircle",
@@ -128,7 +127,7 @@ def draw_graph(
                 "height": 0.3,
                 "fillcolor": "yellow",
             }
-        elif entry.type == ty.PrimitiveTy.NULL:
+        elif entry.type == ty.PrimTy.DROP:
             style = {
                 "label": "",
                 "shape": "invtriangle",
@@ -142,7 +141,7 @@ def draw_graph(
     def _draw_edge(src, dst):
         def _is_inout(port_id):
             try:
-                return AG.entry(port_id).dir == ty.Dir.INOUT
+                return AG.entry(port_id).kind == ty.Dir.SIDE
             except AttributeError:
                 return False
 
@@ -160,7 +159,7 @@ def draw_graph(
 
         src_arrow = "diamond" if _is_inout(src) else "none"
         dst_arrow = "diamond" if _is_inout(dst) else "normal"
-        label = edge_info(AG.entry(src, dst)) if edge_info else ""
+        label = edge_info(AG.edge(src, dst)) if edge_info else ""
         graph.add_edge(
             pydot.Edge(
                 src_port,
@@ -175,7 +174,7 @@ def draw_graph(
     def _recursive_build(parent, node, depth):
         pydot_id = _clusName(node)
         children = AG.children(node)
-        entry = AG.ir.nodes[node][tok.KEY_ENTRY]
+        entry = AG.ir.nodes[node][ty.ATTR_ENT]
         if children and depth > 0:
             mark = entry._info.get("old-name")
             if isinstance(entry, ty.ActorNode):
@@ -201,7 +200,7 @@ def draw_graph(
                 parent.add_subgraph(cluster)
                 _draw_ports(cluster, node)
         else:
-            if isinstance(entry, ty.Primitive):
+            if isinstance(entry, ty.BasicNode):
                 _draw_primitive(parent, node, entry)
             else:
                 _draw_leaf(parent, node)
@@ -266,30 +265,30 @@ class AppGraphLoader(Loader):
         return ty.Port(**self.construct_mapping(node, deep=True))
 
     def cons_relation(self, node):
-        return ty.Relation[self.construct_scalar(node)]
+        return ty.Rel[self.construct_scalar(node)]
 
     def cons_dir(self, node):
         return ty.Dir[self.construct_scalar(node)]
 
     def cons_primtype(self, node):
-        return ty.PrimitiveTy[self.construct_scalar(node)]
+        return ty.PrimTy[self.construct_scalar(node)]
 
     def cons_fsm(self, node):
         return ty.ActorNode.FSM(**self.construct_mapping(node, deep=True))
 
-    def cons_compositenode(self, node):
+    def cons_compositen(self, node):
         return ty.CompositeNode(**self.construct_mapping(node, deep=True))
 
-    def cons_primitivenode(self, node):
-        return ty.Primitive(**self.construct_mapping(node, deep=True))
+    def cons_primitiven(self, node):
+        return ty.BasicNode(**self.construct_mapping(node, deep=True))
 
-    def cons_platformnode(self, node):
+    def cons_platformn(self, node):
         return ty.PlatformNode(**self.construct_mapping(node, deep=True))
 
-    def cons_actornode(self, node):
+    def cons_actorn(self, node):
         return ty.ActorNode(**self.construct_mapping(node, deep=True))
 
-    def cons_kernelnode(self, node):
+    def cons_kerneln(self, node):
         return ty.KernelNode(**self.construct_mapping(node, deep=True))
 
 
@@ -297,17 +296,15 @@ AppGraphLoader.add_constructor("!tuple", AppGraphLoader.cons_tuple)
 AppGraphLoader.add_constructor("!Uid", AppGraphLoader.cons_uid)
 AppGraphLoader.add_constructor("!Edge", AppGraphLoader.cons_edge)
 AppGraphLoader.add_constructor("!Port", AppGraphLoader.cons_port)
-AppGraphLoader.add_constructor("!Relation", AppGraphLoader.cons_relation)
+AppGraphLoader.add_constructor("!Rel", AppGraphLoader.cons_relation)
 AppGraphLoader.add_constructor("!Dir", AppGraphLoader.cons_dir)
-AppGraphLoader.add_constructor("!PrimitiveTy", AppGraphLoader.cons_primtype)
-AppGraphLoader.add_constructor(
-    "!CompositeNode", AppGraphLoader.cons_compositenode)
-AppGraphLoader.add_constructor("!Primitive", AppGraphLoader.cons_primitivenode)
-AppGraphLoader.add_constructor(
-    "!PlatformNode", AppGraphLoader.cons_platformnode)
-AppGraphLoader.add_constructor("!ActorNode", AppGraphLoader.cons_actornode)
+AppGraphLoader.add_constructor("!PrimTy", AppGraphLoader.cons_primtype)
+AppGraphLoader.add_constructor("!CompositeNode", AppGraphLoader.cons_compositen)
+AppGraphLoader.add_constructor("!BasicNode", AppGraphLoader.cons_primitiven)
+AppGraphLoader.add_constructor("!PlatformNode", AppGraphLoader.cons_platformn)
+AppGraphLoader.add_constructor("!ActorNode", AppGraphLoader.cons_actorn)
 AppGraphLoader.add_constructor("!FSM", AppGraphLoader.cons_fsm)
-AppGraphLoader.add_constructor("!KernelNode", AppGraphLoader.cons_kernelnode)
+AppGraphLoader.add_constructor("!KernelNode", AppGraphLoader.cons_kerneln)
 
 
 def dump_raw_yaml(G, stream):
