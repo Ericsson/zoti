@@ -15,24 +15,23 @@ from dumputils import Ref, Default, PolInter, PolUnion
 
 def _gen_arg(var, typ, T, casting=False, out=False, **kwargs):
     tt = T.get(typ)
-    match (casting, out, (isinstance(tt, Array) or isinstance(tt, Structure)) and (tt.need_malloc())):
-        case(False, False, False):  # not casting, Input, no Array/struct
-            return f"&{var}"
-        case(False, False, True):  # not casting, Input, Array/struct
-            return f"{var}"
-        case(False, True, False):  # not casting, Output, no Array/struct
-            return f"&{var}"
-        case(False, True, True):   # not casting, Output, Array/struct
-            return f"{var}"
-        case(True, False, False):  # casting, Input, no Array/struct
-            return f"({T.c_name(typ)} *) &{var}"
-        case(True, False, True):   # casting, Input, Array/struct
-            return f"({T.c_name(typ)} *) &{var}"
-        case(True, True, False):   # casting, Output, no Array/struct
-            return f"({T.c_name(typ)} *) &{var}"
-        case(True, True, True):    # casting, Output, Array/struct
-            return f"({T.c_name(typ)} *) {var}"
-
+    need_malloc = (isinstance(tt, Array) or isinstance(tt, Structure)) and tt.need_malloc()
+    if (not casting)   and (not out) and (not need_malloc):
+        return f"&{var}"
+    elif (not casting) and (not out) and need_malloc:
+        return f"{var}"
+    elif (not casting) and out       and (not need_malloc):
+        return f"&{var}"
+    elif (not casting) and out       and need_malloc:
+        return f"{var}"
+    elif casting       and (not out) and (not need_malloc):
+        return f"({T.c_name(typ)} *) &{var}"
+    elif casting       and (not out) and need_malloc:
+        return f"({T.c_name(typ)} *) &{var}"
+    elif casting       and out       and (not need_malloc):
+        return f"({T.c_name(typ)} *) &{var}"
+    elif casting       and  out      and need_malloc:
+        return f"({T.c_name(typ)} *) {var}"
 
 def _mangle_c_name(fullname):
     return str(fullname).replace("/", "_").replace("-", "_").replace(".", "_")
@@ -163,9 +162,9 @@ def _make_kernel_component(node, parent, G, T):
     entry = G.entry(node)
     globs = G.ports(node, select=lambda p: not _is_local(p))
     iports = G.ports(node, select=lambda p: _is_local(p)
-                     and p.dir == ty.Dir.IN)
+                     and p.kind == ty.Dir.IN)
     oports = G.ports(node, select=lambda p: _is_local(p)
-                     and p.dir == ty.Dir.OUT)
+                     and p.kind == ty.Dir.OUT)
 
     # TODO: casting should happen as part of type handling (i.e. by FTN)
     portinfo = [{
@@ -176,7 +175,7 @@ def _make_kernel_component(node, parent, G, T):
         "usearg": _gen_arg(
             f"{{{{ label.${p.name()}.name }}}}", G.entry(
                 p).data_type['type'], T,
-            casting=(any([G.entry(i).dir == ty.Dir.IN
+            casting=(any([G.entry(i).kind == ty.Dir.IN
                           for i in G.connected_ports(p)
                           if G.parent(i) == parent])))
     } for p in iports]
@@ -190,9 +189,6 @@ def _make_kernel_component(node, parent, G, T):
                            G.entry(p).data_type['type'], T, out=True)
     } for p in oports]
 
-    # print("¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤")
-    # print(iports + oports)
-    # print([[o.name() for o in G.connected_ports(p) if G.parent(o) == parent] for p in iports + oports])
     inst = {
         "placeholder": str(node),
         "block": Ref(_mangle_c_name(node)),
@@ -255,12 +251,12 @@ def _make_actor_scenario(node, G, T):
 
     snd_specs = [
         G.entry(p).port_type.sender_genspec(
-            p, G.entry(p),
-            [G.entry(o).name for o in G.connected_ports(p)
-             if "udp_socket" in G.entry(o).name
-             and G.depth(G.commonAncestor(p, o)) >= 1][0], 
+            p, G.entry(p), G.entry(G.entry(p).mark["socket_port"]),
+            # [G.entry(o).name for o in G.connected_ports(p)
+            #  if "udp_socket" in G.entry(o).name
+            #  and G.depth(G.commonAncestor(p, o)) >= 1][0], 
             T)
-        for p in G.ports(node, select=lambda n: n.dir == ty.Dir.OUT)
+        for p in G.ports(node, select=lambda n: n.kind == ty.Dir.OUT)
     ]
     ############
 
@@ -286,9 +282,8 @@ def _make_actor_scenario(node, G, T):
 
     # proj = G.node_projection(node)
     # nx.nx_pydot.write_dot(proj, f"proj_{_mangle_c_name(str(node))}.dot")
-    sched = list(nx.dfs_preorder_nodes(
-        G.node_projection(node), source=node))[1:]
-    # nx.nx_pydot.write_dot(nx.path_graph(sched), f"sched_{_mangle_c_name(str(node))}.dot")
+    sched = [n for n in list(nx.dfs_preorder_nodes(G.node_projection(node)))
+             if not isinstance(G.entry(n), ty.Port)]
 
     kerns = [_make_kernel_component(
         n, node, G, T) for n in sched if isinstance(G.entry(n), ty.KernelNode)]
@@ -314,18 +309,16 @@ def _make_actor_scenario(node, G, T):
 def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
     iport = G.entry(port_id)
     expected_type = iport.data_type["type"]
-    pltf_port, _ = G.port_edges(port_id, inp=True, out=False)[0]
+    pltf_port, _ = G.port_edges(port_id, which="in")[0]
     iport.data_type = G.entry(pltf_port).data_type
     oports = [G.entry(p)
-              for p in G.ports(actor_id, select=lambda p: p.dir == ty.Dir.OUT)]
+              for p in G.ports(actor_id, select=lambda p: p.kind == ty.Dir.OUT)]
     rcv_ports, rcv_proto, rcv_insts, rcv_blocks = iport.port_type.receiver_genspec(
         iport.name, expected_type, pltf_name, T)
     # print("===================", iport.name, expected_type, iport.data_type)
     proj = G.node_projection(actor_id)
-    port_scenarios = [y
-                      for x, y in proj.edges(actor_id)
-                      for u, v in proj[x][y]["ports"]
-                      if u == port_id and G.get_mark("scenario", y)]
+    port_scenarios = [y for x, y in proj.out_edges(port_id)
+                      if G.entry(y).mark.get("scenario")]
     assert port_scenarios
     #############
 
@@ -333,7 +326,7 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
     ports = (rcv_ports +
              [{"name": p.name} for p in oports] +
              [{"name": G.entry(p).name, "usage": [G.get_mark("buff_name", p)]}
-              for p in G.ports(actor_id, select=lambda p: p.dir == ty.Dir.IN)
+              for p in G.ports(actor_id, select=lambda p: p.kind == ty.Dir.IN)
               if p != port_id])
 
     proto = rcv_proto[:-1] + [
@@ -372,7 +365,8 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
     return [comp] + rcv_blocks + [blk for _, blks in scens for blk in blks]
 
 
-def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
+def genspec(G, T, prepare_platform_ports, expand_actors, fuse_actors,
+            prepare_intermediate_ports, typedefs, **kwargs):
     specs = {}
 
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
@@ -405,27 +399,24 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
 
         glbs_inst, glbs_comp = _make_global_inits(name, atomports, glbs, G, T)
 
-        # buffs = [G.entry(p).port_type.header_funcs(G.entry(p).name)
-        #          for p in G.ports(pltf, select=lambda p: isinstance(p.port_type, BlockBuffer))]
-        # buff_inst, buff_comp = ([j for i, c in buffs for j in i],
-        #                         [j for i, c in buffs for j in c])
-
         stg1_inst, stg1_comp = _make_init_stage1(name, [], T)
 
         stg2_inst, stg2_comp = _make_init_stage2(name, probes, timers, G, T)
 
         iport = [
             G.entry(p).name
-            for src in G.ports(pltf, select=lambda p: p.dir == ty.Dir.IN and isinstance(p.port_type, Socket))
+            for src in G.ports(pltf, select=lambda p: p.kind == ty.Dir.IN
+                               and isinstance(p.port_type, Socket))
             for p in G.connected_ports(src)
             if G.parent(p) and G.parent(G.parent(p)) and G.parent(G.parent(p)) == pltf
         ]
         icfg_inst, icfg_comp = _make_cfg_iport(name, iport, T)
 
         oport = [
-            # (p, G.entry(p).name + "_socket")
-            (p, G.entry(p).name)
-            for p in G.ports(pltf, select=lambda p: p.dir == ty.Dir.OUT)
+            (p, G.entry(G.entry(p).mark["socket_port"]).name)
+            # (p, G.entry(p).name)
+            for p in G.ports(pltf, select=lambda p: p.kind == ty.Dir.OUT)
+            # for p in G.ports(pltf, select=lambda p: p.mark.get("socket"))
         ]
         ocfg_inst, ocfg_comp = _make_cfg_oport(name, oport, T)
 
@@ -434,9 +425,6 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
             [a for a, _, _ in atomports],
             "init_atom_table" in G.entry(pltf).mark, T)
 
-        # iffy
-        osockets = [{"name": p[1]}
-                    for p in oport]  # , "usage": f"DFLBUF_{p[1]}"
         cfg_names = {"atom": acfg_comp["name"],
                      "inport": icfg_comp["name"],
                      "outport": ocfg_comp["name"]}
@@ -449,7 +437,7 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
                 + ['"DFL_core.h"', '"DFL_util.h"', '"dfl_cfg.h"', '"dfl_evt.h"']
                 + [f'"{h}"' for h in typedefs.keys()]
             },
-            "label": [a for a, _, _ in atomports] + osockets,
+            "label": [a for a, _, _ in atomports] + [{"name": p} for _, p in oport],
             "param": {"CFG": cfg_names},
             "prototype": [
                 'int main(int argc, char * argv[]) { {{placeholder.code}} }'],
@@ -465,7 +453,7 @@ def genspec(G, T, clean_ports, expand_actors, fuse_actors, typedefs, **kwargs):
 
         child_cps = []
         for actor in G.children(pltf, select=lambda n: isinstance(n, ty.ActorNode)):
-            for port in G.ports(actor, select=lambda p: p.dir == ty.Dir.IN):
+            for port in G.ports(actor, select=lambda p: p.kind == ty.Dir.IN):
                 child_cps.extend(_make_iport_reaction(name, actor, port, G, T))
         unique_child_cps = {cp["name"]: cp for cp in child_cps}
         cps = [main, glbs_comp, stg1_comp, stg2_comp, icfg_comp, ocfg_comp,
@@ -506,16 +494,19 @@ def typedefs(G, T, port_inference, **kwargs):
         types[typ].append(port)
 
     deps = nx.DiGraph()
+    deps.add_node("__root__")
     for typ, ports in types.items():
         try:
-            tydep = [t.ref for t in T.get(typ).select_types(of_class="ref")]
-            nx.add_path(deps, tydep + [typ])
+            for typdep in [t.ref for t in T.get(typ).select_types(of_class="ref")]:
+                deps.add_edge(typ, typdep)
+            deps.add_edge("__root__", typ)
         except Exception as e:
             msg = f"Cannot load type '{typ}' needed for {ports}:\n{e}"
             raise ScriptError(msg, G.entry(ports[0]))
     tydefs = ""
-    # print(list(nx.dfs_preorder_nodes(deps)))
-    for typ in nx.dfs_preorder_nodes(deps):
+    # print(deps.edges)
+    # print(list(nx.dfs_postorder_nodes(deps)))
+    for typ in list(nx.dfs_postorder_nodes(deps))[:-1]:
         tydefs += T.gen_c_typedef(typ) + "\n"
         tydefs += "".join(T.gen_access_macros(typ)) + "\n"
     return {"types.h": tydefs}
@@ -529,17 +520,13 @@ _port_name_LUT = {}
 
 def _port_spec(G, uid):
     entry = G.entry(uid)
-    if entry.dir == ty.Dir.IN:
-        actor_port_name = entry.name
+    if entry.kind == ty.Dir.IN:
+        socket_name = entry.name
     else:
-        # print([G.entry(o).name for o in G.connected_ports(uid)
-        #        if G.depth(G.commonAncestor(o, uid)) >= 1 and G.depth(o) > G.depth(uid)] )
-        actor_port_name = [G.entry(o).name for o in G.connected_ports(uid)
-                           if G.depth(G.commonAncestor(o, uid)) >= 1
-                           and G.depth(o) > G.depth(uid)][0]  # TODO: wow!
-    _port_name_LUT[uid] = actor_port_name
-    port_dir = "InputNode" if entry.dir == ty.Dir.IN else "OutputNode"
-    if entry.dir == ty.Dir.IN:
+        socket_name = G.entry(entry.mark["socket_port"]).name
+    _port_name_LUT[uid] = entry.name
+    port_dir = "InputNode" if entry.kind == ty.Dir.IN else "OutputNode"
+    if entry.kind == ty.Dir.IN:
         port_intrinsic = {
             "name": "InputNode",
             "description": "Declaration of InputNode",
@@ -558,11 +545,10 @@ def _port_spec(G, uid):
             "parameters": ["data-type", "abstract"],
         }
     return [
-        actor_port_name,
+        entry.name,
         port_dir,
         {
-            "data-type": repr(entry.data_type),
-            "node-name": entry.name
+            "node-name": socket_name
         },
         port_intrinsic
     ]
@@ -599,30 +585,27 @@ def gendepl(G, **kwargs):
     depl["nodes"] = []
     depl["edges"] = []
 
-    idx = 0
     cfg_port = 0xdf0
-    idxs = {}
-    for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+    for idx, pltf in enumerate(G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode))):
         entry = G.entry(pltf)
-        idx += 1
         cfg_port += 1
-        idxs[entry.name] = idx
-        # print(idx, entry.name)
         node = [
-            f"proc-{idx}-{entry.name}",
+            f"proc-{entry.name}",
+            # f"proc-{idx}-{entry.name}",
             entry.name,
             {
-                "node-name": f"proc-{idx}-{entry.name}",
+                "node-name": f"proc-{entry.name}",
                 "deployment-host": "localhost",
                 "deployment-bin-file": f"{entry.name}.bin",
                 "deployment-cfg-port": str(hex(cfg_port)),
-                "deployment-in-window": idx,
+                "deployment-in-window": idx+1,
             },
             {
-                "name": f"proc-{idx}-{entry.name}",
+                "name": f"proc-{entry.name}",
+                # "name": f"proc-{idx}-{entry.name}",
                 "nodes": [
                     _port_spec(G, p)
-                    for p in G.ports(pltf, select=lambda x: x.dir != ty.Dir.INOUT) 
+                    for p in G.ports(pltf, select=lambda x: x.kind != ty.Dir.SIDE) 
                 ] + [
                     _atom_spec(G, p)
                     for p in G.ports(pltf, select=lambda x: "probe_buffer" in x.mark) 
@@ -633,24 +616,25 @@ def gendepl(G, **kwargs):
         
         depl["nodes"].append(node)
 
-    idx = 0
+    # idx = 0
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
         entry = G.entry(pltf)
-        idx += 1
-        for src, dst in G.node_edges(pltf, in_outside=True):
+        # idx += 1
+        for src, dst in G.node_edges(pltf, which="in+outside"):
             src_entry = G.entry(src)
             dst_entry = G.entry(dst)
-            if isinstance(src_entry, ty.Primitive) and src_entry.type == ty.PrimitiveTy.SYSTEM:
+            if isinstance(src_entry, ty.BasicNode) and src_entry.type == ty.PrimTy.SYSTEM:
                 depl["edges"].append([
                     "SYSTEM",
-                    f"proc-{idx}-{entry.name}:{dst_entry.name}",
+                    f"proc-{entry.name}:{dst_entry.name}",
+                    # f"proc-{idx}-{entry.name}:{dst_entry.name}",
                     dst_entry.port_type.to_json()
                 ])
             else:
                 srcn_entry = G.entry(G.parent(src))
                 depl["edges"].append([
-                    f"proc-{idxs[srcn_entry.name]}-{srcn_entry.name}:{_port_name_LUT[src]}",
-                    f"proc-{idx}-{entry.name}:{dst_entry.name}",
+                    f"proc-{srcn_entry.name}:{_port_name_LUT[src]}",
+                    f"proc-{entry.name}:{dst_entry.name}",
                     dst_entry.port_type.to_json()
                 ])
 

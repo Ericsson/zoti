@@ -25,5 +25,7 @@ import:
   - !attach
     ref: !ref {module: mod2, path:  "/root/nodes[n1]"}
     name: n2
+    zoti-args:
+      i-need-this: "This field is used only to pass caller argument and will be destroyed"
     content-extra: "I will be ignored!" 
     

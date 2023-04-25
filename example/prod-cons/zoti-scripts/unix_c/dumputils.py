@@ -25,13 +25,17 @@ class Incl:
     incl: str
     
 class SpecDumper(SafeDumper):
+    # def represent_data(self, data):
+    #     print(data)
+    #     return super(SpecDumper, self).represent_data(data)
+    
     def repr_ref(self, ref):
         return self.represent_mapping("!ref", ref.ref)
 
     def repr_default(self, df):
         return self.represent_sequence("!default", df.obj)
+    
     def repr_policy_intersect(self, wc):
-
         return self.represent_sequence("!policy:intersect", wc.obj)
 
     def repr_policy_union(self, wc):

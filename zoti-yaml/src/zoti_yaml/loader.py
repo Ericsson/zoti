@@ -10,7 +10,7 @@ import zoti_yaml.core as ty
 
 
 class ZotiLoader(SafeLoader):
-    """YAML loader class with extra spices."""
+    """YAML loader class cwith extra spices."""
 
     def __init__(self, stream, path=".", tool="", key_nodes=[], **kwargs):
         self._path = Path(path)

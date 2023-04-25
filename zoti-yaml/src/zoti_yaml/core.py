@@ -195,7 +195,7 @@ class Ref(Generic[T]):
       none is specified it is assumed to be the current module.
 
     *path*: (mutually exlusive with *name*, string)
-      A path to an element in the tree (see :class:`TreePath`).
+      A path to an element in the tree (see :class:`zoti_yaml.core.TreePath`).
 
     *name*: (mutually exlusive with *path*, string)
       An identifier of the element in a certain module.
@@ -203,10 +203,10 @@ class Ref(Generic[T]):
     The type of the reference depends on which tool in the downstream
     uses it. If the tool works with, e.g. JSON trees (similar to
     ZOTI-YAML) then specifying *path* is more reasonable as it is
-    being constructed into a :class:`TreePath` handler. However, if
-    the tool works with other type of element identifiers, *name*
-    should be used, as it preserves the string for downstream
-    manipulation.
+    being constructed into a :class:`zoti_yaml.core.TreePath`
+    handler. However, if the tool works with other type of element
+    identifiers, *name* should be used, as it preserves the string for
+    downstream manipulation.
 
     Example:
 
@@ -229,6 +229,7 @@ class Ref(Generic[T]):
          root:
            - ref1: {module: Foo, path: ../../ref2}
            - ref2: {module: Foo.Bar, name: "egg"}
+
     """
 
     module: Optional[str]
@@ -264,9 +265,6 @@ class TreePath:
     The ``{path/to/node}`` part is stored as a PurePosixPath, thus it
     can also be a relative path.
 
-    OBS: dot separator between the module part and the path part is
-    mandatory even if no module is specified (i.e. current module).
-
     """
 
     path: PurePosixPath
@@ -282,9 +280,11 @@ class TreePath:
         return self.path.as_posix()
 
     def is_relative(self):
+        """Root paths always start with ``/``. If not, then it is relative. """
         return self.path.root == ""
 
     def relative_to(self, root: "TreePath") -> "TreePath":
+        """Returns the path obtained by concatenating this one to a root."""
         glob = list(root.path.joinpath(self.path).parts)
         done = False
         while not done:
@@ -298,6 +298,8 @@ class TreePath:
         return TreePath(PurePosixPath(*glob))
 
     def resolve(self, root) -> None:
+        """Resolves this path (see :meth:`relative-to`) and marks it as
+        resolved"""
         if self.is_resolved:
             return
         if root is not None and self.is_relative():
@@ -306,9 +308,14 @@ class TreePath:
         self.is_resolved = True
 
     def with_key(self, key):
+        """appends a key at the end of this path (see :class:`Module`)."""
         return TreePath(self.path.joinpath(key))
 
     def with_name(self, name):
+        """appends a name or an index at te end of this path (see
+        :class:`Module`).
+
+        """
         name = name if isinstance(name, str) else str(name)
         parent = self.path.name
         return TreePath(self.path.with_name(f"{parent}[{name}]"))
@@ -323,8 +330,8 @@ class Attach:
     can have any number of keyword arguments, of which one needs to be
     *ref*.
 
-    *ref*: (object)
-      Qualified :class:`TreePath` reference. The *path* is absolute
+    *ref*: (object) Qualified :class:`zoti_yaml.core.TreePath`-based
+      reference to another node (see ``!ref``). The *path* is absolute
       (i.e. relative to the root of the *module*) if it starts with a
       ``/`` or relative to this node otherwise.
 
@@ -343,7 +350,7 @@ class Attach:
           original entry is stored at path ``_info/_prev_attrs``
           underneath the attached node.
 
-    *OBS*: If both the parent and referenced nodes contain positional
+    *OBS1*: If both the parent and referenced nodes contain positional
     information, this will be captured in the ``_info/_pos`` entry,
     whose head will point to the original position of the referenced
     node.
@@ -351,6 +358,9 @@ class Attach:
     *OBS2*: ``!ref`` commands are resolved before ``!attach``, thus
     they can be used to construct references.
 
+    *OBS3*: when exchanging arguments between the caller and callee it
+    is recommended to use a dedicated field (e.g., check the
+    *argfields* argument of :class:`zoti_yaml.project.Project`)
 
     Example:
 
@@ -448,12 +458,12 @@ class MergePolicy:
         performs the union between *originals* and *defaults* where
         *defaults* have priority if the same key is found.
 
-    ``intersection``
+    ``intersect``
         ignores fields from *defaults* whose keys are not explicitly
         found in *originals*. *originals* have priority when the same
         key is found.
 
-    ``intersection+replace``
+    ``intersect+replace``
         ignores fields from *defaults* whose keys are not explicitly
         found in *originals*. *defaults* have priority when the same
         key is found.
@@ -473,6 +483,7 @@ class MergePolicy:
         elif keywd == POLICY_RINTER:
             return cls(obj, union=False, replace=True)
         assert False
+
 
 class Default:
     """This keyword is followed by a list of exactly 2 YAML objects (i.e.,
@@ -500,7 +511,7 @@ class Default:
          - root: ...
 
     Example:
-    
+
     .. code-block:: yaml
 
          !default
@@ -547,7 +558,8 @@ class Default:
         def _merge_dict(orig: Dict, default: Dict, policy: MergePolicy) -> Any:
             def _merge_val(key, val):
                 if isinstance(val, MergePolicy):
-                    new_policy = MergePolicy(union=val.union, replace=val.replace)
+                    new_policy = MergePolicy(
+                        union=val.union, replace=val.replace)
                     val = val.obj
                 else:
                     new_policy = policy
@@ -571,7 +583,8 @@ class Default:
                 # if len(default) != 1:
                 #     err = f"Length of default list should be 1.\n{pformat(default)}"
                 #     raise ValueError(err)
-                orig = [_merge_dict(element, default[0], policy) for element in orig]
+                orig = [_merge_dict(element, default[0], policy)
+                        for element in orig]
             elif policy.replace or not orig:
                 orig = deepcopy(default)
             return orig

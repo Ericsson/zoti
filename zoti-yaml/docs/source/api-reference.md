@@ -16,6 +16,14 @@ module below.
 	:undoc-members:
 ```
 
+## Dcument Tree Paths 
+
+```{eval-rst}
+.. autoclass:: zoti_yaml.core.TreePath
+	:members:
+	:undoc-members:
+	
+```
 
 ## Position Helpers
 
