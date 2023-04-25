@@ -93,7 +93,7 @@ class AppGraph:
         new edges will be associated with it, otherwise they will have
         no entry.
 
-        .. image:: assets/zoti_graph_connect.png
+        .. image:: assets/api-0.png
 
         """
 
@@ -221,8 +221,7 @@ class AppGraph:
         * ``<direction>`` can be ``in``, ``out`` or ``all``.
         * ``<view>`` can be  ``inside``, ``outside`` or ``all``.
 
-        .. image:: assets/zoti_graph_inout_edges.png
-            :scale: 120%
+        .. image:: assets/api-2.png
 
         """
         assert "+" in which
@@ -259,7 +258,7 @@ class AppGraph:
         search can be minimized by passing a subgraph to the *graph*
         argument containing the desired path.
 
-        .. image:: assets/zoti_graph_connected_ports.png
+        .. image:: assets/api-1.png
 
         """
         graph = self.only_graph()
@@ -269,7 +268,7 @@ class AppGraph:
         """Variant of :meth:`connected_ports` which returns a list with end
         ports insdead of the entire connected subgraph, i.e., ports
         whose connectivity degree is 1. In the previous example this
-        would mean ``["/node1/node2/^o1", "/node3/node4/^i1"]``
+        would mean ``[/n1/n2/^o1, /n3/n4/^i1]``
 
         """
         conn = self.connected_ports(port, graph)
@@ -450,7 +449,7 @@ class AppGraph:
         with possibly parallel edges), where each edge contain an
         entry *ports*=(*srcport*,*dstport*).
 
-        .. image:: assets/zoti_graph_projection.png
+        .. image:: assets/api-3.png
 
         """
         def _filter(n1, n2):
