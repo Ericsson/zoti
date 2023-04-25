@@ -31,10 +31,29 @@ cleandists:
 
 # BUILD SPHINX
 
-sphinx: $(TOOL_DOCS) $(TOOLS) 
+TOOLDOC_ROOTS	= zoti-graph
+TOOLDOC_DRAW	:= $(shell find $(HUB)  -wholename "../**/docs/source/assets/*.drawio")
+TOOLDOC_PICS	:= $(patsubst %.drawio, %.png, $(TOOLDOC_DRAW))
+
+test:
+	echo $(TOOLDOC_PICS)
+
+sphinx: $(TOOLDOC_PICS) $(TOOL_DOCS) $(TOOLS)
+
+define make-tooldoc-pics
+../$1/docs/source/assets/%.xml: ../$1/docs/source/assets/%.drawio
+	drawio --export --format xml -o $$@ --uncompressed $$<
+
+../$1/docs/source/assets/%.png: ../$1/docs/source/assets/%.xml
+	for i in $$(shell seq 0 $$(shell echo $$(shell grep -o "<diagram" $$< | wc -l)-1 | bc)); do\
+		drawio -x --width 1800 -f png -p $$$$i -o $$(basename .png $$@)-$$$$i.png $$<;\
+	done
+endef
+
+$(foreach example,$(TOOLDOC_ROOTS),$(eval $(call make-tooldoc-pics,$(example))))
 
 ../%/docs/build: FORCE
-	[ -d $(@D) ] && (cd $(@D); pipenv run sphinx-build -M html source build) || echo 
+	[ -d $(@D) ] && (cd $(@D); pipenv run sphinx-build -M html source build) || echo
 
 %: ../%/docs/build/html
 	rm -rf $@; cp -rf $< $@
@@ -43,6 +62,7 @@ cleansphinx:
 	rm -rf $(TOOLS)
 
 # EXAMPLES
+
 
 examples: examples-prod-cons
 

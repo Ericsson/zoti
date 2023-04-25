@@ -10,9 +10,6 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -43,7 +40,7 @@ explicit module import.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_tran.script.Script">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zoti_graph.appgraph.AppGraph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_tran/script.html#Script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_tran.script.Script" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transformation script handler. It stores an application graph and
+<dd><p>Transformation script handler. It storgit ses an application graph and
 (possibly) a data type handler and contains utilities for
 executing rules.</p>
 <dl class="field-list simple">
@@ -90,7 +87,7 @@ formation:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">port_[name]</span></code> are applied only on ports;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">edge_[name]</span></code> are applied only on edges;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">primitive_[name]</span></code> are applied only on primitives;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">basic_[name]</span></code> are applied only on primitive (basic) nodes;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">node_[name]</span></code> are applied only on regular nodes;</p></li>
 <li><p>in all other cases it applies the rule on the entire graph
 (i.e., the root node).</p></li>
@@ -132,7 +129,7 @@ a byproduct.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_tran.script.TransSpec">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TransSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">typing.Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean:</span> <span class="pre">typing.List[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_tree:</span> <span class="pre">typing.Optional[typing.Dict]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_graph:</span> <span class="pre">typing.Optional[typing.Dict]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_nodes:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_prefix:</span> <span class="pre">typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_title:</span> <span class="pre">typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_tran/script.html#TransSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_tran.script.TransSpec" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TransSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">typing.Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean:</span> <span class="pre">typing.List[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_tree:</span> <span class="pre">typing.Dict</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_graph:</span> <span class="pre">typing.Dict</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_nodes:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_prefix:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump_title:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_tran/script.html#TransSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_tran.script.TransSpec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transformation specification wrapper. Extends the transformatiion
 with some control flags and arguments, e.g., useful when
 debugging.</p>
@@ -151,14 +148,14 @@ be <em>completely removed</em> from the handler’s state.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_tran.script.TransSpec.dump_tree">
-<span class="sig-name descname"><span class="pre">dump_tree</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_tree" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dump_tree</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_tree" title="Permalink to this definition">¶</a></dt>
 <dd><p>keyword-arguments sent to <a class="reference external" href="../zoti-graph/api-reference">zoti_graph.io.draw_tree()</a>. If left <code class="docutils literal notranslate"><span class="pre">None</span></code>, the tree
 structure will not be dumped.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_tran.script.TransSpec.dump_graph">
-<span class="sig-name descname"><span class="pre">dump_graph</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_graph" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dump_graph</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>keyword-arguments sent to <a class="reference external" href="../zoti-graph/api-reference">zoti_graph.io.draw_graph()</a>. If left <code class="docutils literal notranslate"><span class="pre">None</span></code>, the graph
 structure will not be dumped.</p>
 </dd></dl>
@@ -171,13 +168,13 @@ structure will not be dumped.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_tran.script.TransSpec.dump_prefix">
-<span class="sig-name descname"><span class="pre">dump_prefix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dump_prefix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_prefix" title="Permalink to this definition">¶</a></dt>
 <dd><p>overrides the <a class="reference internal" href="#zoti_tran.script.Script" title="zoti_tran.script.Script"><code class="xref py py-class docutils literal notranslate"><span class="pre">Script</span></code></a> member with the same name.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_tran.script.TransSpec.dump_title">
-<span class="sig-name descname"><span class="pre">dump_title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_title" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dump_title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_tran.script.TransSpec.dump_title" title="Permalink to this definition">¶</a></dt>
 <dd><p>optional title for the dumped file. If left <code class="docutils literal notranslate"><span class="pre">None</span></code> it will be
 replaced by the function name.</p>
 </dd></dl>
@@ -342,7 +339,7 @@ platform node, i.e., the following holds:</p>
       &copy;2022-2023 Ericsson.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

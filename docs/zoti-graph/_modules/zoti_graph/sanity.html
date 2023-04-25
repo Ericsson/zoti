@@ -40,7 +40,7 @@
 
 <span class="k">def</span> <span class="nf">_flatten</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
     <span class="n">entry</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">CompositeNode</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span>
@@ -63,42 +63,39 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Edge direction should be consistent with the hierarchy of its connecting elements.</span>
 
 <span class="sd">    forall u,v in edges(G)</span>
-<span class="sd">      | u is intrinsic ⇒ v.dir ∈ {IN}</span>
-<span class="sd">      | v is intrinsic ⇒ u.dir ∈ {OUT, INOUT}</span>
-<span class="sd">      | node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, INOUT} &amp; v.dir ∈ {IN, INOUT}</span>
+<span class="sd">      | u is basic and v is not basic ⇒ v.kind ∈ {IN}</span>
+<span class="sd">      | v is basic and u is not basic ⇒ u.kind ∈ {OUT}</span>
+<span class="sd">      | node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, SIDE} &amp; v.dir ∈ {IN, SIDE}</span>
 <span class="sd">      | node(u) is parent for node(v) ⇒ u.dir = v.dir ∈ {IN, INOUT}</span>
 <span class="sd">      | node(u) is child for node(v) ⇒ u.dir = v.dir ∈ {OUT, INOUT}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">port_u</span><span class="p">,</span> <span class="n">port_v</span> <span class="o">=</span> <span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_u</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_v</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="o">.</span><span class="n">IN</span>  <span class="c1"># in</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_u</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_v</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">has_dir_in</span><span class="p">()</span>  <span class="c1"># in</span>
         <span class="k">return</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_v</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_u</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">dir</span> <span class="o">!=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="o">.</span><span class="n">IN</span>  <span class="c1"># out, inout</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_v</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_u</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">):</span>
+        <span class="c1"># assert port_u.kind == ty.Dir.OUT  # out</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">has_dir_out</span><span class="p">()</span>  <span class="c1"># out</span>
         <span class="k">return</span>
 
     <span class="n">node_u</span><span class="p">,</span> <span class="n">node_v</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">parent</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">node_u</span> <span class="o">==</span> <span class="n">node_v</span><span class="p">:</span>
-        <span class="c1"># same node, means that the ports are shortcut</span>
-        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>
-        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>
+        <span class="c1"># same node, means that the ports are short-circuited</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">has_dir_in</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">has_dir_out</span><span class="p">()</span>
     <span class="k">elif</span> <span class="n">node_u</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span> <span class="o">==</span> <span class="n">node_v</span><span class="o">.</span><span class="n">parent</span><span class="p">():</span>
         <span class="c1"># same parent means different directions</span>
-        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>  <span class="c1"># out, inout</span>
-        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>  <span class="c1"># in, inout</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">has_dir_out</span><span class="p">()</span>  <span class="c1"># out, side</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">has_dir_in</span><span class="p">()</span>  <span class="c1"># in, side</span>
     <span class="k">elif</span> <span class="n">node_u</span> <span class="o">&lt;</span> <span class="n">node_v</span><span class="p">:</span>
         <span class="c1"># different parent means same directions</span>
-        <span class="c1"># assert port_u.dir == ty.Dir.IN  # in</span>
-        <span class="c1"># assert port_v.dir == ty.Dir.IN  # in</span>
-        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>
-        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_in</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">has_dir_in</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">has_dir_in</span><span class="p">()</span>
     <span class="k">elif</span> <span class="n">node_u</span> <span class="o">&gt;</span> <span class="n">node_v</span><span class="p">:</span>
         <span class="c1"># different parent means same directions</span>
-        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>  <span class="c1"># out, inout</span>
-        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">is_out</span><span class="p">()</span>  <span class="c1"># out, inout</span></div>
+        <span class="k">assert</span> <span class="n">port_u</span><span class="o">.</span><span class="n">has_dir_out</span><span class="p">()</span>  <span class="c1"># out, inout</span>
+        <span class="k">assert</span> <span class="n">port_v</span><span class="o">.</span><span class="n">has_dir_out</span><span class="p">()</span>  <span class="c1"># out, inout</span></div>
 
 
 <div class="viewcode-block" id="edge_hierarchy"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.edge_hierarchy">[docs]</a><span class="k">def</span> <span class="nf">edge_hierarchy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
@@ -125,9 +122,9 @@
 <span class="sd">           flatten(node(u)) ⋃ flatten(node(v)) are all of the same kind</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">):</span>
         <span class="k">return</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">):</span>
         <span class="k">return</span>
     <span class="n">node_u</span><span class="p">,</span> <span class="n">node_v</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">parent</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">node_u</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span> <span class="o">==</span> <span class="n">node_v</span><span class="o">.</span><span class="n">parent</span><span class="p">():</span>
@@ -137,6 +134,21 @@
             <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">flattened</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
                 <span class="n">curr_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="vm">__name__</span>
                 <span class="k">assert</span> <span class="n">first_type</span> <span class="o">==</span> <span class="n">curr_type</span></div>
+
+
+<div class="viewcode-block" id="node_consistent_tree"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.node_consistent_tree">[docs]</a><span class="k">def</span> <span class="nf">node_consistent_tree</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;All nodes except for the root node have only one parent.</span>
+
+<span class="sd">    forall n in nodes(G) - root(G):</span>
+<span class="sd">      | ⇒ len(n.parents) = 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">G</span><span class="o">.</span><span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">u</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">ir</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">ir</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_REL</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Rel</span><span class="o">.</span><span class="n">TREE</span>
+    <span class="p">]</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span></div>
 
 
 <div class="viewcode-block" id="node_platform_hierarchy"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.node_platform_hierarchy">[docs]</a><span class="k">def</span> <span class="nf">node_platform_hierarchy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
@@ -226,26 +238,46 @@
         <span class="c1"># TODO: scenarios are decoupled using projection</span>
 
 
+<span class="c1"># def port_dangling(G, p):</span>
+<span class="c1">#     &quot;&quot;&quot;There is no dangling port in the graph.</span>
+
+<span class="c1">#     forall p in ports(G):</span>
+<span class="c1">#       | node(p) is kernel node ⇒ exists e in edges(G) such that p = e.src or p = e.dst</span>
+<span class="c1">#       | p is inout port ⇒ exists e1, e2 in edges(G) such that p = e1 ∩ e2</span>
+<span class="c1">#       | otherwise ⇒ exists e1, e2 in edges(G) such that p = e1.src and p = e2.dst</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     node = G.entry(p.parent())</span>
+<span class="c1">#     port = G.entry(p)</span>
+<span class="c1">#     inedges = G.port_edges(p, which=&quot;in&quot;)</span>
+<span class="c1">#     outedges = G.port_edges(p, which=&quot;out&quot;)</span>
+
+<span class="c1">#     if isinstance(node, ty.KernelNode):</span>
+<span class="c1">#         pass  # TODO, handle detector preproc</span>
+<span class="c1">#         # assert len(inedges) &gt; 0 or len(outedges) &gt; 0</span>
+<span class="c1">#     elif isinstance(port, ty.Port) and port.kind == ty.Dir.SIDE:</span>
+<span class="c1">#         assert len(inedges) + len(outedges) &gt; 1</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         assert len(inedges) &gt; 0 and len(outedges) &gt; 0</span>
+
+
 <div class="viewcode-block" id="port_dangling"><a class="viewcode-back" href="../../the-zoti-graph-model.html#zoti_graph.sanity.port_dangling">[docs]</a><span class="k">def</span> <span class="nf">port_dangling</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;There is no dangling port in the graph.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;&#39;Dangling port&#39; means either an event port which is not connected</span>
+<span class="sd">    (is triggered by nothing or triggers nothing) or a side-effect</span>
+<span class="sd">    port which is not exposed at the actor level (that might be</span>
+<span class="sd">    ignored).</span>
 
-<span class="sd">    forall p in ports(G):</span>
-<span class="sd">      | node(p) is kernel node ⇒ exists e in edges(G) such that p = e.src or p = e.dst</span>
-<span class="sd">      | p is inout port ⇒ exists e1, e2 in edges(G) such that p = e1 ∩ e2</span>
-<span class="sd">      | otherwise ⇒ exists e1, e2 in edges(G) such that p = e1.src and p = e2.dst</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">node</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
-    <span class="n">port</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-    <span class="n">inedges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">port_edges</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">outedges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">port_edges</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">KernelNode</span><span class="p">):</span>
-        <span class="k">pass</span> <span class="c1"># TODO, handle detector preproc</span>
-        <span class="c1"># assert len(inedges) &gt; 0 or len(outedges) &gt; 0</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Port</span><span class="p">)</span> <span class="ow">and</span> <span class="n">port</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="o">.</span><span class="n">INOUT</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inedges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">outedges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
-    <span class="k">else</span><span class="p">:</span> 
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inedges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">outedges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="o">.</span><span class="n">SIDE</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">([</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">parent</span><span class="p">(</span><span class="n">q</span><span class="p">)),</span> <span class="n">ty</span><span class="o">.</span><span class="n">ActorNode</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">connected_ports</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">parent</span><span class="p">(</span><span class="n">q</span><span class="p">)),</span> <span class="n">ty</span><span class="o">.</span><span class="n">KernelNode</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="n">q</span><span class="p">),</span> <span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">)</span> 
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">end_ports</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="p">])</span></div>
 </pre></div>
 
           </div>

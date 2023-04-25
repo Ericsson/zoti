@@ -152,11 +152,11 @@ merged in <em>originals</em> (see <code class="docutils literal notranslate"><sp
 <dt><code class="docutils literal notranslate"><span class="pre">union+replace</span></code></dt><dd><p>performs the union between <em>originals</em> and <em>defaults</em> where
 <em>defaults</em> have priority if the same key is found.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">intersection</span></code></dt><dd><p>ignores fields from <em>defaults</em> whose keys are not explicitly
+<dt><code class="docutils literal notranslate"><span class="pre">intersect</span></code></dt><dd><p>ignores fields from <em>defaults</em> whose keys are not explicitly
 found in <em>originals</em>. <em>originals</em> have priority when the same
 key is found.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">intersection+replace</span></code></dt><dd><p>ignores fields from <em>defaults</em> whose keys are not explicitly
+<dt><code class="docutils literal notranslate"><span class="pre">intersect+replace</span></code></dt><dd><p>ignores fields from <em>defaults</em> whose keys are not explicitly
 found in <em>originals</em>. <em>defaults</em> have priority when the same
 key is found.</p>
 </dd>
@@ -171,7 +171,7 @@ have the following keyword arguments:</p>
 <dt><em>module</em>: (optional, string)</dt><dd><p>A module name or an alias. It resolves to an explicit name. If
 none is specified it is assumed to be the current module.</p>
 </dd>
-<dt><em>path</em>: (mutually exlusive with <em>name</em>, string)</dt><dd><p>A path to an element in the tree (see <code class="xref py py-class docutils literal notranslate"><span class="pre">TreePath</span></code>).</p>
+<dt><em>path</em>: (mutually exlusive with <em>name</em>, string)</dt><dd><p>A path to an element in the tree (see <a class="reference internal" href="api-reference.html#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.core.TreePath</span></code></a>).</p>
 </dd>
 <dt><em>name</em>: (mutually exlusive with <em>path</em>, string)</dt><dd><p>An identifier of the element in a certain module.</p>
 </dd>
@@ -179,10 +179,10 @@ none is specified it is assumed to be the current module.</p>
 <p>The type of the reference depends on which tool in the downstream
 uses it. If the tool works with, e.g. JSON trees (similar to
 ZOTI-YAML) then specifying <em>path</em> is more reasonable as it is
-being constructed into a <code class="xref py py-class docutils literal notranslate"><span class="pre">TreePath</span></code> handler. However, if
-the tool works with other type of element identifiers, <em>name</em>
-should be used, as it preserves the string for downstream
-manipulation.</p>
+being constructed into a <a class="reference internal" href="api-reference.html#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.core.TreePath</span></code></a>
+handler. However, if the tool works with other type of element
+identifiers, <em>name</em> should be used, as it preserves the string for
+downstream manipulation.</p>
 <p>Example:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Foo</span>
 <span class="nt">import</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="nv">Foo.Bar</span><span class="p p-Indicator">,</span><span class="nt"> as</span><span class="p">:</span><span class="w"> </span><span class="nv">Baz</span><span class="p p-Indicator">}</span>
@@ -208,7 +208,7 @@ manipulation.</p>
 can have any number of keyword arguments, of which one needs to be
 <em>ref</em>.</p>
 <dl>
-<dt><em>ref</em>: (object)</dt><dd><p>Qualified <code class="xref py py-class docutils literal notranslate"><span class="pre">TreePath</span></code> reference. The <em>path</em> is absolute
+<dt><em>ref</em>: (object) Qualified <a class="reference internal" href="api-reference.html#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.core.TreePath</span></code></a>-based</dt><dd><p>reference to another node (see <code class="docutils literal notranslate"><span class="pre">!ref</span></code>). The <em>path</em> is absolute
 (i.e. relative to the root of the <em>module</em>) if it starts with a
 <code class="docutils literal notranslate"><span class="pre">/</span></code> or relative to this node otherwise.</p>
 </dd>
@@ -228,12 +228,15 @@ underneath the attached node.</p></li>
 </div></blockquote>
 </dd>
 </dl>
-<p><em>OBS</em>: If both the parent and referenced nodes contain positional
+<p><em>OBS1</em>: If both the parent and referenced nodes contain positional
 information, this will be captured in the <code class="docutils literal notranslate"><span class="pre">_info/_pos</span></code> entry,
 whose head will point to the original position of the referenced
 node.</p>
 <p><em>OBS2</em>: <code class="docutils literal notranslate"><span class="pre">!ref</span></code> commands are resolved before <code class="docutils literal notranslate"><span class="pre">!attach</span></code>, thus
 they can be used to construct references.</p>
+<p><em>OBS3</em>: when exchanging arguments between the caller and callee it
+is recommended to use a dedicated field (e.g., check the
+<em>argfields</em> argument of <a class="reference internal" href="api-reference.html#zoti_yaml.project.Project" title="zoti_yaml.project.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.project.Project</span></code></a>)</p>
 <p>Example:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Foo</span>
 <span class="nn">---</span>

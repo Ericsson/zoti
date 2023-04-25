@@ -93,7 +93,7 @@ class AppGraph:
         new edges will be associated with it, otherwise they will have
         no entry.
 
-        .. image:: assets/zoti_graph_connect.png
+        .. image:: assets/api-0.png
 
         """
 
@@ -217,8 +217,7 @@ class AppGraph:
         """Returns all the edge identifiers entering or exiting the *ports* of
         this node, as list of ID pairs.
 
-        .. image:: assets/zoti_graph_inout_edges.png
-            :scale: 120%
+        .. image:: assets/api-2.png
 
         """
         assert "+" in which
@@ -255,7 +254,7 @@ class AppGraph:
         search can be minimized by passing a subgraph to the *graph*
         argument containing the desired path.
 
-        .. image:: assets/zoti_graph_connected_ports.png
+        .. image:: assets/api-1.png
 
         """
         graph = self.only_graph()
@@ -446,7 +445,7 @@ class AppGraph:
         with possibly parallel edges), where each edge contain an
         entry *ports*=(*srcport*,*dstport*).
 
-        .. image:: assets/zoti_graph_projection.png
+        .. image:: assets/api-3.png
 
         """
         def _filter(n1, n2):

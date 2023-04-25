@@ -42,7 +42,6 @@
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
- | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
@@ -63,11 +62,9 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference.html#zoti_graph.core.ActorNode">ActorNode (class in zoti_graph.core)</a>
 </li>
-      <li><a href="api-reference.html#zoti_graph.core.ActorNode.FSM">ActorNode.FSM (class in zoti_graph.core)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.add_mark">add_mark() (AppGraph method)</a>
+      <li><a href="api-reference.html#zoti_graph.core.ActorNode.FSM">ActorNode.FSM (class in zoti_graph.core)</a>
 </li>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph">AppGraph (class in zoti_graph.appgraph)</a>
 </li>
@@ -76,6 +73,10 @@
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference.html#zoti_graph.core.BasicNode">BasicNode (class in zoti_graph.core)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.bypass_port">bypass_port() (AppGraph method)</a>
 </li>
@@ -115,11 +116,9 @@
 </li>
       <li><a href="api-reference.html#zoti_graph.core.ActorNode.detector">detector (ActorNode attribute)</a>
 </li>
-      <li><a href="api-reference.html#zoti_graph.core.Dir">Dir (class in zoti_graph.core)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference.html#zoti_graph.core.Port.dir">dir (Port attribute)</a>
+      <li><a href="api-reference.html#zoti_graph.core.Dir">Dir (class in zoti_graph.core)</a>
 </li>
       <li><a href="api-reference.html#zoti_graph.io.draw_graph">draw_graph() (in module zoti_graph.io)</a>
 </li>
@@ -136,6 +135,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference.html#zoti_graph.core.Edge">Edge (class in zoti_graph.core)</a>
+</li>
+      <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.edge">edge() (AppGraph method)</a>
 </li>
       <li><a href="the-zoti-graph-model.html#zoti_graph.sanity.edge_direction">edge_direction() (in module zoti_graph.sanity)</a>
 </li>
@@ -170,18 +171,16 @@
   </ul></td>
 </tr></table>
 
-<h2 id="G">G</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.get_mark">get_mark() (AppGraph method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.has_ancestor">has_ancestor() (AppGraph method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference.html#zoti_graph.core.Port.has_dir_in">has_dir_in() (Port method)</a>
+</li>
+      <li><a href="api-reference.html#zoti_graph.core.Port.has_dir_out">has_dir_out() (Port method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -193,15 +192,15 @@
 </li>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.ir">ir (AppGraph attribute)</a>
 </li>
-      <li><a href="api-reference.html#zoti_graph.core.Port.is_in">is_in() (Port method)</a>
+      <li><a href="api-reference.html#zoti_graph.core.Port.is_event">is_event() (Port method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.is_leaf">is_leaf() (AppGraph method)</a>
 </li>
-      <li><a href="api-reference.html#zoti_graph.core.Port.is_out">is_out() (Port method)</a>
+      <li><a href="api-reference.html#zoti_graph.core.Port.is_side">is_side() (Port method)</a>
 </li>
-      <li><a href="api-reference.html#zoti_graph.core.Primitive.is_type">is_type() (Primitive method)</a>
+      <li><a href="api-reference.html#zoti_graph.core.BasicNode.is_type">is_type() (BasicNode method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -213,7 +212,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference.html#zoti_graph.core.Edge.kind">kind (Edge attribute)</a>
+      <li><a href="api-reference.html#zoti_graph.core.Port.kind">kind (Port attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -227,8 +226,6 @@
         <li><a href="api-reference.html#zoti_graph.core.NodeABC.mark">(NodeABC attribute)</a>
 </li>
         <li><a href="api-reference.html#zoti_graph.core.Port.mark">(Port attribute)</a>
-</li>
-        <li><a href="api-reference.html#zoti_graph.core.Primitive.mark">(Primitive attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -255,16 +252,16 @@
       <ul>
         <li><a href="api-reference.html#zoti_graph.core.Port.name">(Port attribute)</a>
 </li>
-        <li><a href="api-reference.html#zoti_graph.core.Primitive.name">(Primitive attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-reference.html#zoti_graph.core.Uid.name">name() (Uid method)</a>
 </li>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.new">new() (AppGraph method)</a>
 </li>
+      <li><a href="the-zoti-graph-model.html#zoti_graph.sanity.node_actor_hierarchy">node_actor_hierarchy() (in module zoti_graph.sanity)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="the-zoti-graph-model.html#zoti_graph.sanity.node_actor_hierarchy">node_actor_hierarchy() (in module zoti_graph.sanity)</a>
+      <li><a href="the-zoti-graph-model.html#zoti_graph.sanity.node_consistent_tree">node_consistent_tree() (in module zoti_graph.sanity)</a>
 </li>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.node_edges">node_edges() (AppGraph method)</a>
 </li>
@@ -320,9 +317,7 @@
 </li>
       <li><a href="api-reference.html#zoti_graph.core.ActorNode.FSM.preproc">preproc (ActorNode.FSM attribute)</a>
 </li>
-      <li><a href="api-reference.html#zoti_graph.core.Primitive">Primitive (class in zoti_graph.core)</a>
-</li>
-      <li><a href="api-reference.html#zoti_graph.core.PrimitiveTy">PrimitiveTy (class in zoti_graph.core)</a>
+      <li><a href="api-reference.html#zoti_graph.core.PrimTy">PrimTy (class in zoti_graph.core)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -334,7 +329,7 @@
 </li>
       <li><a href="api-reference.html#zoti_graph.appgraph.AppGraph.register_port">register_port() (AppGraph method)</a>
 </li>
-      <li><a href="api-reference.html#zoti_graph.core.Relation">Relation (class in zoti_graph.core)</a>
+      <li><a href="api-reference.html#zoti_graph.core.Rel">Rel (class in zoti_graph.core)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -370,7 +365,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference.html#zoti_graph.core.Primitive.type">type (Primitive attribute)</a>
+      <li><a href="api-reference.html#zoti_graph.core.BasicNode.type">type (BasicNode attribute)</a>
 </li>
   </ul></td>
 </tr></table>

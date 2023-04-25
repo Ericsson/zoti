@@ -59,7 +59,13 @@
 
 
 <div class="viewcode-block" id="Module"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module">[docs]</a><span class="k">class</span> <span class="nc">Module</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Module&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A ZOTI-YAML module wraps a document with metadata and a bunch of</span>
+<span class="sd">    utilities used for convenient data access and manipulation.</span>
+
+<span class="sd">    The basic constructor requires the (possibly pre-stored)</span>
+<span class="sd">    *preamble* and *doc* trees (see :meth:`to_dump`).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">path</span><span class="p">:</span> <span class="n">Path</span>
     <span class="n">preamble</span><span class="p">:</span> <span class="n">Dict</span>
@@ -76,6 +82,21 @@
 
 <div class="viewcode-block" id="Module.from_zoml"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.from_zoml">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_zoml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tool</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">key_nodes</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;:class:`Module` constructor which incoprorates both file loader and</span>
+<span class="sd">        parser.</span>
+
+<span class="sd">        :param stream: input stream (e.g., file or stdin)</span>
+
+<span class="sd">        :param filepath: mandatory identifier for source of</span>
+<span class="sd">          input. Used in debug and error handling.</span>
+
+<span class="sd">        :param tool: optional identifier for tool downstream. Used in</span>
+<span class="sd">          logging.</span>
+
+<span class="sd">        :param key_nodes: nodes whose children will be marked with</span>
+<span class="sd">          positional info.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># print(key_nodes)</span>
         <span class="n">docs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">filepath</span><span class="p">,</span> <span class="n">tool</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span>
                          <span class="n">Loader</span><span class="o">=</span><span class="n">ZotiLoader</span><span class="p">,</span> <span class="n">key_nodes</span><span class="o">=</span><span class="n">key_nodes</span><span class="p">))</span>
@@ -97,6 +118,14 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">preamble</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Module.map_doc"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.map_doc">[docs]</a>    <span class="k">def</span> <span class="nf">map_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">with_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Functor on a Module document. Maps function *f(n)* on each node *n*</span>
+<span class="sd">        in the document tree. If *with_path* is set to True, it</span>
+<span class="sd">        expects function to be of form *f(n, path)* where *path* is</span>
+<span class="sd">        this node&#39;s path relative to the document root (see</span>
+<span class="sd">        :class:`TreePath`).&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">def</span> <span class="nf">_get_name</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span><span class="p">]</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span> <span class="ow">in</span> <span class="n">node</span>
@@ -131,6 +160,24 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Module.get"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">TreePath</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an arbitrary node in the document tree vased on its path</span>
+<span class="sd">        relative to the document root (see :class:`TreePath`). The</span>
+<span class="sd">        path is formed like::</span>
+
+<span class="sd">            /key1/key2[index2]/key3[index3]/....</span>
+
+<span class="sd">        where ``keyN`` is the dictionary key of that node,</span>
+<span class="sd">        respectively ``indexN`` can be either the index postion of the</span>
+<span class="sd">        node in a list, or the node in a list which has a field</span>
+<span class="sd">        ``name: indexN``.</span>
+
+<span class="sd">        The *strict* argument controls whether this method throws an</span>
+<span class="sd">        exception or returns None if the path is not found.</span>
+
+<span class="sd">        *OBS*: it is the designer&#39;s responsibility to ensure that no</span>
+<span class="sd">        two nodes in a list share the same ``name`` value.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">_get_element_with_name</span><span class="p">(</span><span class="n">nm_idx</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">prev_path</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -181,6 +228,7 @@
         <span class="k">return</span> <span class="n">_recursive_node_getter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">,</span> <span class="n">parts</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Module.to_dump"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.to_dump">[docs]</a>    <span class="k">def</span> <span class="nf">to_dump</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the *preamble* and *doc* as a list suitable for storing.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">preamble</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">]</span></div></div>
 </pre></div>
 

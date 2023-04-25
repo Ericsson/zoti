@@ -40,7 +40,6 @@
 <span class="kn">import</span> <span class="nn">zoti_yaml</span> <span class="k">as</span> <span class="nn">zoml</span>
 
 <span class="kn">import</span> <span class="nn">zoti_graph.core</span> <span class="k">as</span> <span class="nn">ty</span>
-<span class="kn">import</span> <span class="nn">zoti_graph.tokens</span> <span class="k">as</span> <span class="nn">tok</span>
 <span class="kn">from</span> <span class="nn">zoti_graph.appgraph</span> <span class="kn">import</span> <span class="n">AppGraph</span>
 <span class="kn">from</span> <span class="nn">zoti_graph.core</span> <span class="kn">import</span> <span class="n">Uid</span>
 <span class="kn">from</span> <span class="nn">zoti_graph.exceptions</span> <span class="kn">import</span> <span class="n">ParseError</span><span class="p">,</span> <span class="n">ValidationError</span>
@@ -70,16 +69,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An edge connects two node ports and represents a data communication</span>
 <span class="sd">    medium. It can be described using the fields below:</span>
 
-<span class="sd">    ``kind:`` &lt;str&gt;</span>
-<span class="sd">      the role of the edge as a transmission medium. Possible roles</span>
-<span class="sd">      are: ``event`` (active, always implies functional or causal</span>
-<span class="sd">      dependencies), and ``storage`` (passive, does not always imply a</span>
-<span class="sd">      dependency between sender and receiver). Default is ``event``.</span>
-
 <span class="sd">    ``edge_type:`` &lt;obj&gt;</span>
 <span class="sd">      raw dictionary containing information about the transmission</span>
 <span class="sd">      medium relevant for generating glue code for it. It is passed</span>
-<span class="sd">      as-is to the tools downstream. (TODO: marked for obsoletion)</span>
+<span class="sd">      as-is to the tools downstream.</span>
 
 <span class="sd">    ``connect:`` &lt;list&gt;</span>
 <span class="sd">      a 4-tuple containing information about the edge connection:</span>
@@ -109,13 +102,11 @@
             <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    <span class="n">kind</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">load_default</span><span class="o">=</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_EDGE_KIND</span><span class="p">)</span>
     <span class="n">edge_type</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
 
     <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
     <span class="k">def</span> <span class="nf">pmake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_EDGE_KIND</span><span class="p">]</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Relation</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_EDGE_KIND</span><span class="p">]]</span>
             <span class="n">edge</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Edge</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
             <span class="n">connect</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;connect&quot;</span><span class="p">]</span>
             <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="o">=</span> <span class="p">(</span><span class="n">Uid</span><span class="p">(</span><span class="n">connect</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">Uid</span><span class="p">(</span><span class="n">connect</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
@@ -142,8 +133,11 @@
 <span class="sd">    ``name:`` &lt;str&gt; *required*</span>
 <span class="sd">      A unique identifier within the scope of its parent node.</span>
 
-<span class="sd">    ``dir:`` &lt;str&gt; *required*</span>
-<span class="sd">      The port direction (in, out, inout).</span>
+<span class="sd">    ``kind:`` &lt;str&gt; *required*</span>
+<span class="sd">      The port kind (in, out, side). In and out ports represent event</span>
+<span class="sd">      ports triggering connected nodes within the same timeline. Side</span>
+<span class="sd">      ports stand for side-effects, and do not trigger their nodes,</span>
+<span class="sd">      i.e. connected nodes may be part of different timelines.</span>
 
 <span class="sd">    ``port_type:`` &lt;obj&gt;</span>
 <span class="sd">      Raw dictionary containing behavioral information relevant when</span>
@@ -159,63 +153,23 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">uid</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">)</span>
     <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="n">zoml</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
+    <span class="n">uid</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">META_UID</span><span class="p">)</span>
     <span class="n">mark</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="nb">dir</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">port_type</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
     <span class="n">data_type</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
 
     <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
     <span class="k">def</span> <span class="nf">pmake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;dir&quot;</span><span class="p">]]</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;kind&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Dir</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;kind&quot;</span><span class="p">]]</span>
             <span class="n">port</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Port</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
             <span class="n">__zoti__</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;uid&quot;</span><span class="p">],</span> <span class="n">port</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;uid&quot;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ParseError</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">zoml</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-
-
-<span class="c1">###############</span>
-<span class="c1">## PRIMITIVE ##</span>
-<span class="c1">###############</span>
-
-<span class="k">class</span> <span class="nc">PrimitiveParser</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A ``Primitive`` is a leaf node with a specific function in the</span>
-<span class="sd">    target platform.</span>
-
-<span class="sd">    *NOTE*: this element is marked for obsoletion (to be replaced with</span>
-<span class="sd">     ports or regular marked nodes),</span>
-
-<span class="sd">    ``name``: &lt;str&gt; *required*</span>
-<span class="sd">      node name. Needs to be unique within the scope of its parent.</span>
-
-<span class="sd">    ``type:`` &lt;str&gt; *required*</span>
-<span class="sd">      the primitive type. Possible ``SYSTEM``, marking a connection to</span>
-<span class="sd">      the outside world; ``NULL`` marks that the connection is dropping</span>
-<span class="sd">      the data.</span>
-
-<span class="sd">    ``parameters``: &lt;dict&gt;</span>
-<span class="sd">      directives passed downstream (TODO: redundant, marked for obsoletion)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
-        <span class="n">unknown</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">EXCLUDE</span>
-
-    <span class="n">uid</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">)</span>
-    <span class="nb">type</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">parameters</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
-
-    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
-    <span class="k">def</span> <span class="nf">pmake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">PrimitiveTy</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]]</span>
-        <span class="n">uid</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;uid&quot;</span><span class="p">]</span>
-        <span class="n">node</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Primitive</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
-        <span class="n">__zoti__</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">uid</span>
 
 
 <span class="c1">###########</span>
@@ -227,16 +181,18 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NODE_KIND</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ty</span><span class="o">.</span><span class="n">ATTR_KIND</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
                 <span class="n">ret</span> <span class="o">=</span> <span class="n">CompositeNodeParser</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NODE_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;CompositeNode&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;CompositeNode&quot;</span><span class="p">:</span>
                 <span class="n">ret</span> <span class="o">=</span> <span class="n">CompositeNodeParser</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NODE_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;PlatformNode&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;PlatformNode&quot;</span><span class="p">:</span>
                 <span class="n">ret</span> <span class="o">=</span> <span class="n">PlatformNodeParser</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NODE_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ActorNode&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ActorNode&quot;</span><span class="p">:</span>
                 <span class="n">ret</span> <span class="o">=</span> <span class="n">ActorNodeParser</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NODE_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;KernelNode&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;KernelNode&quot;</span><span class="p">:</span>
                 <span class="n">ret</span> <span class="o">=</span> <span class="n">KernelNodeParser</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_KIND</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;BasicNode&quot;</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">BasicNodeParser</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node kind not recognized &#39;</span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ret</span>
@@ -261,11 +217,17 @@
 <span class="sd">      free-form text.</span>
 
 <span class="sd">    ``mark``: &lt;dict&gt;</span>
-<span class="sd">      free-form dictionary, markings passed to graph transformer</span>
-<span class="sd">      (e.g., ZOTI-Tran).</span>
+
+<span class="sd">      free-form dictionary, markings passed as-is to graph</span>
+<span class="sd">      transformer. Similar to ``parameters`` but should become</span>
+<span class="sd">      obsolete after the transformation phase and should not be passed</span>
+<span class="sd">      to the code generator,</span>
 
 <span class="sd">    ``parameters``: &lt;dict&gt;</span>
-<span class="sd">      directives passed downstream (TODO: redundant, marked for obsoletion)</span>
+
+<span class="sd">      free-form dictionary of parameters passed as-is to the code</span>
+<span class="sd">      generator. Similar to ``mark``, but should not be touched during</span>
+<span class="sd">      transformation, but rather handed over to the code generator.</span>
 
 <span class="sd">    ``nodes``: `nodes`_</span>
 <span class="sd">      list of child node entries</span>
@@ -277,23 +239,20 @@
 <span class="sd">      list of edges connecting children&#39;s ports between them or with</span>
 <span class="sd">      their parent (this node&#39;s ports)</span>
 
-<span class="sd">    ``primitives``: `primitives`_</span>
-<span class="sd">      list of primitive nodes (TODO: marked for obsoletion)</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># internal (unexposed) key</span>
-    <span class="n">uid</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">)</span>
+    <span class="n">uid</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">META_UID</span><span class="p">)</span>
     <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="n">zoml</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
 
     <span class="c1"># keys that have already been used but are here for validation only</span>
     <span class="n">description</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
     <span class="n">node_type</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span>
-        <span class="n">data_key</span><span class="o">=</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NODE_KIND</span><span class="p">,</span>
+        <span class="n">data_key</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_KIND</span><span class="p">,</span>
         <span class="n">load_default</span><span class="o">=</span><span class="s2">&quot;CompositeNode&quot;</span><span class="p">,</span>
         <span class="n">validate</span><span class="o">=</span><span class="n">mm</span><span class="o">.</span><span class="n">validate</span><span class="o">.</span><span class="n">OneOf</span><span class="p">(</span>
             <span class="p">[</span><span class="s2">&quot;CompositeNode&quot;</span><span class="p">,</span> <span class="s2">&quot;PlatformNode&quot;</span><span class="p">,</span> <span class="s2">&quot;ActorNode&quot;</span><span class="p">,</span>
-             <span class="s2">&quot;SkeletonNode&quot;</span><span class="p">,</span> <span class="s2">&quot;KernelNode&quot;</span><span class="p">,</span> <span class="s2">&quot;Primitive&quot;</span><span class="p">]</span>
+             <span class="s2">&quot;SkeletonNode&quot;</span><span class="p">,</span> <span class="s2">&quot;KernelNode&quot;</span><span class="p">,</span> <span class="s2">&quot;BasicNode&quot;</span><span class="p">]</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -304,7 +263,6 @@
     <span class="n">nodes</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">NodeChoiceField</span><span class="p">(),</span> <span class="n">load_default</span><span class="o">=</span><span class="p">[])</span>
     <span class="n">ports</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">Nested</span><span class="p">(</span><span class="n">PortParser</span><span class="p">),</span> <span class="n">load_default</span><span class="o">=</span><span class="p">[])</span>
     <span class="n">edges</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">Nested</span><span class="p">(</span><span class="n">EdgeParser</span><span class="p">),</span> <span class="n">load_default</span><span class="o">=</span><span class="p">[])</span>
-    <span class="n">primitives</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">Nested</span><span class="p">(</span><span class="n">PrimitiveParser</span><span class="p">),</span> <span class="n">load_default</span><span class="o">=</span><span class="p">[])</span>
 
     <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
     <span class="k">def</span> <span class="nf">pmake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">constructor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -326,9 +284,6 @@
             <span class="k">for</span> <span class="n">port_uid</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;ports&quot;</span><span class="p">]:</span>
                 <span class="n">__zoti__</span><span class="o">.</span><span class="n">register_port</span><span class="p">(</span><span class="n">node_uid</span><span class="p">,</span> <span class="n">port_uid</span><span class="p">)</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - registered port </span><span class="si">{</span><span class="n">port_uid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">prim_uid</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primitives&quot;</span><span class="p">]:</span>
-                <span class="n">__zoti__</span><span class="o">.</span><span class="n">register_child</span><span class="p">(</span><span class="n">node_uid</span><span class="p">,</span> <span class="n">prim_uid</span><span class="p">)</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - registered primitive </span><span class="si">{</span><span class="n">prim_uid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">edge</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">]:</span>
                 <span class="n">curr_scope</span> <span class="o">=</span> <span class="n">edge</span>
                 <span class="n">src_id</span> <span class="o">=</span> <span class="n">node_uid</span><span class="o">.</span><span class="n">withPath</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
@@ -475,6 +430,33 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">KernelNodeParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">pmake</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">constructor</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">KernelNode</span><span class="p">)</span>
 
 
+<span class="k">class</span> <span class="nc">BasicNodeParser</span><span class="p">(</span><span class="n">NodeParser</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A ``BasicNode`` is a leaf node with a specific function in the</span>
+<span class="sd">    target platform. Unlike a ``KernelNode``, it does not carry a</span>
+<span class="sd">    native piece of code, and is only relevant during the</span>
+<span class="sd">    transformation process where it might trigger a specific</span>
+<span class="sd">    refinement. It needs to specify the following special field.</span>
+
+<span class="sd">    ``type:`` &lt;str&gt; *required*</span>
+<span class="sd">      the primitive type. Possible ``SYSTEM``, marking a connection to</span>
+<span class="sd">      the outside world; ``DROP`` marks that the connection is dropping</span>
+<span class="sd">      the data.</span>
+
+<span class="sd">    **OBS:** Since BasicNodes are replaced during transformation,</span>
+<span class="sd">    eveything passed to their ``parameters`` field will be ignored.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">EXCLUDE</span>
+
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
+    <span class="k">def</span> <span class="nf">pmake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">PrimTy</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">BasicNodeParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">pmake</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">constructor</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">BasicNode</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.parser.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="o">*</span><span class="n">module_args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AppGraph</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parses a complete (schema-validated) ZOTI input specification tree</span>
 <span class="sd">    along with its metadata and returns an application graph that</span>
@@ -498,22 +480,22 @@
     <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PurePath</span><span class="p">,</span> <span class="n">PurePosixPath</span>
 
     <span class="k">def</span> <span class="nf">_add_uid</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NAME</span> <span class="ow">in</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span> <span class="ow">in</span> <span class="n">node</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">node</span>
         <span class="n">node_key</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\[[^]]*\]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">path</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">node_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">KEY_NODE</span><span class="p">,</span> <span class="n">tok</span><span class="o">.</span><span class="n">KEY_PORT</span><span class="p">,</span> <span class="n">tok</span><span class="o">.</span><span class="n">KEY_PRIM</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">node_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">KEY_NODE</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">KEY_PORT</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">KEY_PRIM</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">node</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">parent_uid</span> <span class="o">=</span> <span class="n">Uid</span><span class="p">(</span>
                 <span class="n">PurePath</span><span class="p">(</span><span class="o">*</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\[([^]]+)&#39;</span><span class="p">,</span>
                          <span class="n">path</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()))</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">node_key</span> <span class="ow">in</span> <span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">KEY_NODE</span><span class="p">,</span> <span class="n">tok</span><span class="o">.</span><span class="n">KEY_PRIM</span><span class="p">]:</span>
-                <span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent_uid</span><span class="o">.</span><span class="n">withNode</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NAME</span><span class="p">])</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - added uid: </span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">node_key</span> <span class="o">==</span> <span class="n">tok</span><span class="o">.</span><span class="n">KEY_PORT</span><span class="p">:</span>
-                <span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent_uid</span><span class="o">.</span><span class="n">withPort</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">ATTR_NAME</span><span class="p">])</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - added uid: </span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node_key</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">KEY_NODE</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">KEY_PRIM</span><span class="p">]:</span>
+                <span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent_uid</span><span class="o">.</span><span class="n">withNode</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span><span class="p">])</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - added uid: </span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">node_key</span> <span class="o">==</span> <span class="n">ty</span><span class="o">.</span><span class="n">KEY_PORT</span><span class="p">:</span>
+                <span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent_uid</span><span class="o">.</span><span class="n">withPort</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_NAME</span><span class="p">])</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - added uid: </span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">META_UID</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">node</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;When processing UID of element at path </span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -525,7 +507,7 @@
         <span class="n">module</span><span class="o">.</span><span class="n">map_doc</span><span class="p">(</span><span class="n">_add_uid</span><span class="p">,</span> <span class="n">with_path</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">main_path</span> <span class="o">=</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">preamble</span><span class="p">[</span><span class="s2">&quot;main-is&quot;</span><span class="p">])</span>
         <span class="n">top_comp</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">main_path</span><span class="p">)</span>
-        <span class="n">__zoti__</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">top_comp</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">META_UID</span><span class="p">])</span>
+        <span class="n">__zoti__</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">top_comp</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">META_UID</span><span class="p">])</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">CompositeNodeParser</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">top_comp</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">__zoti__</span>
     <span class="k">except</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>

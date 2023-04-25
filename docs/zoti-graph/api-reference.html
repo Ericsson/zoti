@@ -142,25 +142,14 @@ algorithms directly on its <code class="docutils literal notranslate"><span clas
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.entry">
-<span class="sig-name descname"><span class="pre">entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.entry" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a ZOTI graph entry with a given identifier. If only <em>u</em> is
-provided it searches for a node or a port, if both <em>u</em> and <em>v</em>
-are provided it searches for an edge. Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> if the
-identifier does not exist.</p>
+<span class="sig-name descname"><span class="pre">entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a ZOTI graph node or port entry with a given identifier.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.get_mark">
-<span class="sig-name descname"><span class="pre">get_mark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.get_mark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.get_mark" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the value of a marking named <em>key</em> associated with an entry
-identified with <em>u</em> and <em>v</em> (see <a class="reference internal" href="#zoti_graph.appgraph.AppGraph.entry" title="zoti_graph.appgraph.AppGraph.entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">entry()</span></code></a>).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.add_mark">
-<span class="sig-name descname"><span class="pre">add_mark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.add_mark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.add_mark" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets the value of a marking named <em>key</em> associated with an entry
-identified with <em>u</em> and <em>v</em> (see <a class="reference internal" href="#zoti_graph.appgraph.AppGraph.entry" title="zoti_graph.appgraph.AppGraph.entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">entry()</span></code></a>).</p>
+<dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.edge">
+<span class="sig-name descname"><span class="pre">edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a ZOTI edge entry with a given identifier.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -191,6 +180,18 @@ graph. Returns <em>uid</em> for chaining it with other functions (see
 <span class="sig-name descname"><span class="pre">register_child</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.register_child"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.register_child" title="Permalink to this definition">¶</a></dt>
 <dd><p>Registers a pre-created child node to a parent (see
 <a class="reference internal" href="#zoti_graph.appgraph.AppGraph.new" title="zoti_graph.appgraph.AppGraph.new"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new()</span></code></a>). Returns <em>child_id</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.connect">
+<span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srcport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dstport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge=&lt;class</span> <span class="pre">'zoti_graph.core.Edge'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects two ports through an edge. If <cite>recursive</cite> is set to
+<code class="docutils literal notranslate"><span class="pre">True</span></code> then it recursively creates intermediate ports and
+connections if the source and destination nodes belong to
+different parents. If an <em>edge</em> entry is provided then all the
+new edges will be associated with it, otherwise they will have
+no entry.</p>
+<img alt="_images/api-0.png" src="_images/api-0.png" />
 </dd></dl>
 
 <dl class="py method">
@@ -225,28 +226,28 @@ they have no common ancestor it returns None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.port_edges">
-<span class="sig-name descname"><span class="pre">port_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.port_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.port_edges" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">port_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.port_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.port_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all edge identifiers connected to/from <em>port_id</em>. Can
-filter the in/out edges by toggling the arguments <em>inp</em> and
-<em>out</em>.</p>
+filter the in/out edges with argment <em>which</em> that can be
+<code class="docutils literal notranslate"><span class="pre">in</span></code>, <code class="docutils literal notranslate"><span class="pre">out</span></code> or <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.node_edges">
-<span class="sig-name descname"><span class="pre">node_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_outside</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_inside</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_inside</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_outside</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.node_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.node_edges" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">node_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all+all'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.node_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.node_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all the edge identifiers entering or exiting the <em>ports</em> of
 this node, as list of ID pairs.</p>
-<a class="reference internal image-reference" href="_images/zoti_graph_inout_edges.png"><img alt="_images/zoti_graph_inout_edges.png" src="_images/zoti_graph_inout_edges.png" style="width: 501.59999999999997px; height: 218.4px;" /></a>
+<img alt="_images/api-2.png" src="_images/api-2.png" />
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.connected_ports">
-<span class="sig-name descname"><span class="pre">connected_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DiGraph</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.connected_ports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.connected_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">connected_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Graph</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.connected_ports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.connected_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a path graph representing the journey between two leaf
 nodes’ ports passing through a given <em>port</em>, see drawing. The
 search can be minimized by passing a subgraph to the <em>graph</em>
 argument containing the desired path.</p>
-<img alt="_images/zoti_graph_connected_ports.png" src="_images/zoti_graph_connected_ports.png" />
+<img alt="_images/api-1.png" src="_images/api-1.png" />
 </dd></dl>
 
 <dl class="py method">
@@ -275,18 +276,6 @@ would mean <code class="docutils literal notranslate"><span class="pre">[&quot;/
 <span class="sig-name descname"><span class="pre">depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.depth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks at which depth in the hierarchy tree <em>uid</em> is found relative
 to the global root.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.connect">
-<span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srcport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dstport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Connects two ports through an edge. If <cite>recursive</cite> is set to
-<code class="docutils literal notranslate"><span class="pre">True</span></code> then it recursively creates intermediate ports and
-connections if the source and destination nodes belong to
-different parents. If an <em>edge</em> entry is provided then all the
-new edges will be associated with it, otherwise they will have
-no entry.</p>
-<img alt="_images/zoti_graph_connect.png" src="_images/zoti_graph_connect.png" />
 </dd></dl>
 
 <dl class="py method">
@@ -348,15 +337,14 @@ resulting graph is consistent.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.node_projection">
-<span class="sig-name descname"><span class="pre">node_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DiGraph</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.node_projection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.node_projection" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">node_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_parent_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MultiDiGraph</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.node_projection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.node_projection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Displays the projection of nodes upon a single level of hierarchy
-for all first children of <em>parent</em>. <em>with_parent</em> toggles
-whether the connections to/from the parent node are included
-in the projection or not.</p>
-<p>In the returned view each edge between two nodes will contain
-only a <code class="docutils literal notranslate"><span class="pre">ports</span></code> entry holding a list of tuples reflecting the
-original port connections between the source and target node.</p>
-<img alt="_images/zoti_graph_projection.png" src="_images/zoti_graph_projection.png" />
+for all first children of <em>parent</em>. The first and the last
+nodes are the parent’s ports.</p>
+<p>The projection view is a multi-digraph (i.e., directed graph
+with possibly parallel edges), where each edge contain an
+entry <em>ports*=(*srcport</em>,*dstport*).</p>
+<img alt="_images/api-3.png" src="_images/api-3.png" />
 </dd></dl>
 
 <dl class="py method">
@@ -448,25 +436,20 @@ argument is also provided, it creates a port ID.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.Relation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Relation</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#Relation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Relation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Rel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Rel</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#Rel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Rel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Flag</span></code></p>
-<p>Values = {<strong>ONLY_TREE</strong>, <strong>CHILD</strong>, <strong>PORT</strong>, <strong>ONLY_GRAPH</strong>, <strong>EVENT</strong>, <strong>STORAGE</strong>, <strong>NONE</strong>}</p>
+<p>Values = {<strong>TREE</strong>, <strong>CHILD</strong>, <strong>PORT</strong>, <strong>GRAPH</strong>, <strong>NONE</strong>}</p>
 <p>Bitwise flags denoting kinds of edges.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_graph.core.Edge">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Edge" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for edge entry.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_graph.core.Edge.edge_type">
 <span class="sig-name descname"><span class="pre">edge_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Edge.edge_type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Edge.kind">
-<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Relation" title="zoti_graph.core.Relation"><span class="pre">Relation</span></a></em><a class="headerlink" href="#zoti_graph.core.Edge.kind" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -479,13 +462,13 @@ argument is also provided, it creates a port ID.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_graph.core.Dir">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dir</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#Dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Values = {<strong>NONE</strong>, <strong>IN</strong>, <strong>OUT</strong>, <strong>INOUT</strong>}</p>
+<dd><p>Values = {<strong>NONE</strong>, <strong>IN</strong>, <strong>OUT</strong>, <strong>SIDE</strong>}</p>
 <p>Bitwise flags denoting port directions.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_graph.core.Port">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for port entry.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_graph.core.Port.name">
@@ -493,8 +476,8 @@ argument is also provided, it creates a port ID.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.dir">
-<span class="sig-name descname"><span class="pre">dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Dir" title="zoti_graph.core.Dir"><span class="pre">Dir</span></a></em><a class="headerlink" href="#zoti_graph.core.Port.dir" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Port.kind">
+<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Dir" title="zoti_graph.core.Dir"><span class="pre">Dir</span></a></em><a class="headerlink" href="#zoti_graph.core.Port.kind" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -513,46 +496,23 @@ argument is also provided, it creates a port ID.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.is_in">
-<span class="sig-name descname"><span class="pre">is_in</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.is_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.is_in" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Port.is_event">
+<span class="sig-name descname"><span class="pre">is_event</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.is_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.is_event" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.is_out">
-<span class="sig-name descname"><span class="pre">is_out</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.is_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.is_out" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.PrimitiveTy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PrimitiveTy</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#PrimitiveTy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.PrimitiveTy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Values = {<strong>NULL</strong>, <strong>SYSTEM</strong>, <strong>BYPASS</strong>}</p>
-<p>Bitwise flags denoting types of primitives.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.Primitive">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Primitive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Primitive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Primitive" title="Permalink to this definition">¶</a></dt>
-<dd><p>Container for primitive node entry</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Primitive.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.core.Primitive.name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Primitive.type">
-<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.PrimitiveTy" title="zoti_graph.core.PrimitiveTy"><span class="pre">PrimitiveTy</span></a></em><a class="headerlink" href="#zoti_graph.core.Primitive.type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Primitive.mark">
-<span class="sig-name descname"><span class="pre">mark</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Primitive.mark" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Port.is_side">
+<span class="sig-name descname"><span class="pre">is_side</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.is_side"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.is_side" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.Primitive.is_type">
-<span class="sig-name descname"><span class="pre">is_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Primitive.is_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Primitive.is_type" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Port.has_dir_in">
+<span class="sig-name descname"><span class="pre">has_dir_in</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.has_dir_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.has_dir_in" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.core.Port.has_dir_out">
+<span class="sig-name descname"><span class="pre">has_dir_out</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.has_dir_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.has_dir_out" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -643,6 +603,29 @@ argument is also provided, it creates a port ID.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_graph.core.KernelNode.extern">
 <span class="sig-name descname"><span class="pre">extern</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.core.KernelNode.extern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.core.PrimTy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PrimTy</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#PrimTy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.PrimTy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Values = {<strong>DROP</strong>, <strong>SYSTEM</strong>, <strong>BYPASS</strong>}</p>
+<p>Bitwise flags denoting types of primitives.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.core.BasicNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BasicNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#BasicNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.BasicNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for primitive node entry</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.core.BasicNode.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.PrimTy" title="zoti_graph.core.PrimTy"><span class="pre">PrimTy</span></a></em><a class="headerlink" href="#zoti_graph.core.BasicNode.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.core.BasicNode.is_type">
+<span class="sig-name descname"><span class="pre">is_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#BasicNode.is_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.BasicNode.is_type" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

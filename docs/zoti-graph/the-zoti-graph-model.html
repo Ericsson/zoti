@@ -79,19 +79,27 @@ their type, may have the following entries:</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">description</span></code>: &lt;str&gt;</dt><dd><p>free-form text.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">mark</span></code>: &lt;dict&gt;</dt><dd><p>free-form dictionary, markings passed to graph transformer
-(e.g., ZOTI-Tran).</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">parameters</span></code>: &lt;dict&gt;</dt><dd><p>directives passed downstream (TODO: redundant, marked for obsoletion)</p>
-</dd>
+</dl>
+<p><code class="docutils literal notranslate"><span class="pre">mark</span></code>: &lt;dict&gt;</p>
+<blockquote>
+<div><p>free-form dictionary, markings passed as-is to graph
+transformer. Similar to <code class="docutils literal notranslate"><span class="pre">parameters</span></code> but should become
+obsolete after the transformation phase and should not be passed
+to the code generator,</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">parameters</span></code>: &lt;dict&gt;</p>
+<blockquote>
+<div><p>free-form dictionary of parameters passed as-is to the code
+generator. Similar to <code class="docutils literal notranslate"><span class="pre">mark</span></code>, but should not be touched during
+transformation, but rather handed over to the code generator.</p>
+</div></blockquote>
+<dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">nodes</span></code>: <a class="reference internal" href="#nodes">nodes</a></dt><dd><p>list of child node entries</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">ports</span></code>: <a class="reference internal" href="#ports">ports</a></dt><dd><p>list of ports for this node</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">edges</span></code>: <a class="reference internal" href="#edges">edges</a></dt><dd><p>list of edges connecting children’s ports between them or with
 their parent (this node’s ports)</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">primitives</span></code>: <a class="reference internal" href="#primitives">primitives</a></dt><dd><p>list of primitive nodes (TODO: marked for obsoletion)</p>
 </dd>
 </dl>
 <section id="node-kinds">
@@ -178,6 +186,22 @@ text.</p>
 </dd>
 </dl>
 </section>
+<section id="basicnode">
+<h5>BasicNode<a class="headerlink" href="#basicnode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">BasicNode</span></code> is a leaf node with a specific function in the
+target platform. Unlike a <code class="docutils literal notranslate"><span class="pre">KernelNode</span></code>, it does not carry a
+native piece of code, and is only relevant during the
+transformation process where it might trigger a specific
+refinement. It needs to specify the following special field.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">type:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>the primitive type. Possible <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, marking a connection to
+the outside world; <code class="docutils literal notranslate"><span class="pre">DROP</span></code> marks that the connection is dropping
+the data.</p>
+</dd>
+</dl>
+<p><strong>OBS:</strong> Since BasicNodes are replaced during transformation,
+eveything passed to their <code class="docutils literal notranslate"><span class="pre">parameters</span></code> field will be ignored.</p>
+</section>
 </section>
 </section>
 <section id="ports">
@@ -189,7 +213,10 @@ attributes:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">name:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>A unique identifier within the scope of its parent node.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">dir:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>The port direction (in, out, inout).</p>
+<dt><code class="docutils literal notranslate"><span class="pre">kind:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>The port kind (in, out, side). In and out ports represent event
+ports triggering connected nodes within the same timeline. Side
+ports stand for side-effects, and do not trigger their nodes,
+i.e. connected nodes may be part of different timelines.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">port_type:</span></code> &lt;obj&gt;</dt><dd><p>Raw dictionary containing behavioral information relevant when
 generating access glue. If not provided, it should be filled in
@@ -208,14 +235,9 @@ port inference mechanism further down in the processing pipeline
 <p>An edge connects two node ports and represents a data communication
 medium. It can be described using the fields below:</p>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">kind:</span></code> &lt;str&gt;</dt><dd><p>the role of the edge as a transmission medium. Possible roles
-are: <code class="docutils literal notranslate"><span class="pre">event</span></code> (active, always implies functional or causal
-dependencies), and <code class="docutils literal notranslate"><span class="pre">storage</span></code> (passive, does not always imply a
-dependency between sender and receiver). Default is <code class="docutils literal notranslate"><span class="pre">event</span></code>.</p>
-</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">edge_type:</span></code> &lt;obj&gt;</dt><dd><p>raw dictionary containing information about the transmission
 medium relevant for generating glue code for it. It is passed
-as-is to the tools downstream. (TODO: marked for obsoletion)</p>
+as-is to the tools downstream.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">connect:</span></code> &lt;list&gt;</dt><dd><p>a 4-tuple containing information about the edge connection:</p>
 <ol class="arabic simple">
@@ -229,23 +251,6 @@ edge’s parent node.</p></li>
 destination is a primitive node then this place is declared
 <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p></li>
 </ol>
-</dd>
-</dl>
-</section>
-<section id="primitives">
-<h3>primitives<a class="headerlink" href="#primitives" title="Permalink to this heading">¶</a></h3>
-<p>A <code class="docutils literal notranslate"><span class="pre">Primitive</span></code> is a leaf node with a specific function in the
-target platform.</p>
-<dl class="simple">
-<dt><em>NOTE</em>: this element is marked for obsoletion (to be replaced with</dt><dd><p>ports or regular marked nodes),</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">name</span></code>: &lt;str&gt; <em>required</em></dt><dd><p>node name. Needs to be unique within the scope of its parent.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">type:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>the primitive type. Possible <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, marking a connection to
-the outside world; <code class="docutils literal notranslate"><span class="pre">NULL</span></code> marks that the connection is dropping
-the data.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">parameters</span></code>: &lt;dict&gt;</dt><dd><p>directives passed downstream (TODO: redundant, marked for obsoletion)</p>
 </dd>
 </dl>
 </section>
@@ -280,9 +285,9 @@ imported explicitly from <a class="reference internal" href="#module-zoti_graph.
 <dd><p>Edge direction should be consistent with the hierarchy of its connecting elements.</p>
 <dl>
 <dt>forall u,v in edges(G)</dt><dd><div class="line-block">
-<div class="line">u is intrinsic ⇒ v.dir ∈ {IN}</div>
-<div class="line">v is intrinsic ⇒ u.dir ∈ {OUT, INOUT}</div>
-<div class="line">node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, INOUT} &amp; v.dir ∈ {IN, INOUT}</div>
+<div class="line">u is basic and v is not basic ⇒ v.kind ∈ {IN}</div>
+<div class="line">v is basic and u is not basic ⇒ u.kind ∈ {OUT}</div>
+<div class="line">node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, SIDE} &amp; v.dir ∈ {IN, SIDE}</div>
 <div class="line">node(u) is parent for node(v) ⇒ u.dir = v.dir ∈ {IN, INOUT}</div>
 <div class="line">node(u) is child for node(v) ⇒ u.dir = v.dir ∈ {OUT, INOUT}</div>
 </div>
@@ -312,6 +317,18 @@ hierarchy of composites) are of the same kind.</p>
 <dt>forall u,v in edges(G) where node(u), node(v) are not intrinsic</dt><dd><div class="line-block">
 <div class="line">node(u) and node(v) have same parent ⇒
 flatten(node(u)) ⋃ flatten(node(v)) are all of the same kind</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.sanity.node_consistent_tree">
+<span class="sig-name descname"><span class="pre">node_consistent_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#node_consistent_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.node_consistent_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>All nodes except for the root node have only one parent.</p>
+<dl>
+<dt>forall n in nodes(G) - root(G):</dt><dd><div class="line-block">
+<div class="line">⇒ len(n.parents) = 1</div>
 </div>
 </dd>
 </dl>
@@ -363,15 +380,10 @@ actor node.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="zoti_graph.sanity.port_dangling">
 <span class="sig-name descname"><span class="pre">port_dangling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/sanity.html#port_dangling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.sanity.port_dangling" title="Permalink to this definition">¶</a></dt>
-<dd><p>There is no dangling port in the graph.</p>
-<dl>
-<dt>forall p in ports(G):</dt><dd><div class="line-block">
-<div class="line">node(p) is kernel node ⇒ exists e in edges(G) such that p = e.src or p = e.dst</div>
-<div class="line">p is inout port ⇒ exists e1, e2 in edges(G) such that p = e1 ∩ e2</div>
-<div class="line">otherwise ⇒ exists e1, e2 in edges(G) such that p = e1.src and p = e2.dst</div>
-</div>
-</dd>
-</dl>
+<dd><p>‘Dangling port’ means either an event port which is not connected
+(is triggered by nothing or triggers nothing) or a side-effect
+port which is not exposed at the actor level (that might be
+ignored).</p>
 </dd></dl>
 
 </section>

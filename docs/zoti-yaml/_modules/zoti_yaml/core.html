@@ -230,7 +230,7 @@
 <span class="sd">      none is specified it is assumed to be the current module.</span>
 
 <span class="sd">    *path*: (mutually exlusive with *name*, string)</span>
-<span class="sd">      A path to an element in the tree (see :class:`TreePath`).</span>
+<span class="sd">      A path to an element in the tree (see :class:`zoti_yaml.core.TreePath`).</span>
 
 <span class="sd">    *name*: (mutually exlusive with *path*, string)</span>
 <span class="sd">      An identifier of the element in a certain module.</span>
@@ -238,10 +238,10 @@
 <span class="sd">    The type of the reference depends on which tool in the downstream</span>
 <span class="sd">    uses it. If the tool works with, e.g. JSON trees (similar to</span>
 <span class="sd">    ZOTI-YAML) then specifying *path* is more reasonable as it is</span>
-<span class="sd">    being constructed into a :class:`TreePath` handler. However, if</span>
-<span class="sd">    the tool works with other type of element identifiers, *name*</span>
-<span class="sd">    should be used, as it preserves the string for downstream</span>
-<span class="sd">    manipulation.</span>
+<span class="sd">    being constructed into a :class:`zoti_yaml.core.TreePath`</span>
+<span class="sd">    handler. However, if the tool works with other type of element</span>
+<span class="sd">    identifiers, *name* should be used, as it preserves the string for</span>
+<span class="sd">    downstream manipulation.</span>
 
 <span class="sd">    Example:</span>
 
@@ -264,6 +264,7 @@
 <span class="sd">         root:</span>
 <span class="sd">           - ref1: {module: Foo, path: ../../ref2}</span>
 <span class="sd">           - ref2: {module: Foo.Bar, name: &quot;egg&quot;}</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
@@ -290,7 +291,7 @@
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - reference resolved: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
 
-<span class="k">class</span> <span class="nc">TreePath</span><span class="p">:</span>
+<div class="viewcode-block" id="TreePath"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.TreePath">[docs]</a><span class="k">class</span> <span class="nc">TreePath</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple structure used to reference subtrees/nodes using a</span>
 <span class="sd">    sytax similar to::</span>
 
@@ -298,9 +299,6 @@
 
 <span class="sd">    The ``{path/to/node}`` part is stored as a PurePosixPath, thus it</span>
 <span class="sd">    can also be a relative path.</span>
-
-<span class="sd">    OBS: dot separator between the module part and the path part is</span>
-<span class="sd">    mandatory even if no module is specified (i.e. current module).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -316,10 +314,12 @@
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">is_relative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">root</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+<div class="viewcode-block" id="TreePath.is_relative"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.TreePath.is_relative">[docs]</a>    <span class="k">def</span> <span class="nf">is_relative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Root paths always start with ``/``. If not, then it is relative. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">root</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span></div>
 
-    <span class="k">def</span> <span class="nf">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="s2">&quot;TreePath&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TreePath&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="TreePath.relative_to"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.TreePath.relative_to">[docs]</a>    <span class="k">def</span> <span class="nf">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="s2">&quot;TreePath&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TreePath&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the path obtained by concatenating this one to a root.&quot;&quot;&quot;</span>
         <span class="n">glob</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
         <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
@@ -330,23 +330,30 @@
                     <span class="k">break</span>
                 <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">glob</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="n">PurePosixPath</span><span class="p">(</span><span class="o">*</span><span class="n">glob</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="n">PurePosixPath</span><span class="p">(</span><span class="o">*</span><span class="n">glob</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TreePath.resolve"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.TreePath.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolves this path (see :meth:`relative-to`) and marks it as</span>
+<span class="sd">        resolved&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_resolved</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_relative</span><span class="p">():</span>
             <span class="n">ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_resolved</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_resolved</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-    <span class="k">def</span> <span class="nf">with_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+<div class="viewcode-block" id="TreePath.with_key"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.TreePath.with_key">[docs]</a>    <span class="k">def</span> <span class="nf">with_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;appends a key at the end of this path (see :class:`Module`).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">with_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="TreePath.with_name"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.core.TreePath.with_name">[docs]</a>    <span class="k">def</span> <span class="nf">with_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;appends a name or an index at te end of this path (see</span>
+<span class="sd">        :class:`Module`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">TreePath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">))</span></div></div>
 
 
 <span class="c1">#############</span>
@@ -358,8 +365,8 @@
 <span class="sd">    can have any number of keyword arguments, of which one needs to be</span>
 <span class="sd">    *ref*.</span>
 
-<span class="sd">    *ref*: (object)</span>
-<span class="sd">      Qualified :class:`TreePath` reference. The *path* is absolute</span>
+<span class="sd">    *ref*: (object) Qualified :class:`zoti_yaml.core.TreePath`-based</span>
+<span class="sd">      reference to another node (see ``!ref``). The *path* is absolute</span>
 <span class="sd">      (i.e. relative to the root of the *module*) if it starts with a</span>
 <span class="sd">      ``/`` or relative to this node otherwise.</span>
 
@@ -378,7 +385,7 @@
 <span class="sd">          original entry is stored at path ``_info/_prev_attrs``</span>
 <span class="sd">          underneath the attached node.</span>
 
-<span class="sd">    *OBS*: If both the parent and referenced nodes contain positional</span>
+<span class="sd">    *OBS1*: If both the parent and referenced nodes contain positional</span>
 <span class="sd">    information, this will be captured in the ``_info/_pos`` entry,</span>
 <span class="sd">    whose head will point to the original position of the referenced</span>
 <span class="sd">    node.</span>
@@ -386,6 +393,9 @@
 <span class="sd">    *OBS2*: ``!ref`` commands are resolved before ``!attach``, thus</span>
 <span class="sd">    they can be used to construct references.</span>
 
+<span class="sd">    *OBS3*: when exchanging arguments between the caller and callee it</span>
+<span class="sd">    is recommended to use a dedicated field (e.g., check the</span>
+<span class="sd">    *argfields* argument of :class:`zoti_yaml.project.Project`)</span>
 
 <span class="sd">    Example:</span>
 
@@ -483,12 +493,12 @@
 <span class="sd">        performs the union between *originals* and *defaults* where</span>
 <span class="sd">        *defaults* have priority if the same key is found.</span>
 
-<span class="sd">    ``intersection``</span>
+<span class="sd">    ``intersect``</span>
 <span class="sd">        ignores fields from *defaults* whose keys are not explicitly</span>
 <span class="sd">        found in *originals*. *originals* have priority when the same</span>
 <span class="sd">        key is found.</span>
 
-<span class="sd">    ``intersection+replace``</span>
+<span class="sd">    ``intersect+replace``</span>
 <span class="sd">        ignores fields from *defaults* whose keys are not explicitly</span>
 <span class="sd">        found in *originals*. *defaults* have priority when the same</span>
 <span class="sd">        key is found.</span>
@@ -508,6 +518,7 @@
         <span class="k">elif</span> <span class="n">keywd</span> <span class="o">==</span> <span class="n">POLICY_RINTER</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">union</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">assert</span> <span class="kc">False</span>
+
 
 <span class="k">class</span> <span class="nc">Default</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This keyword is followed by a list of exactly 2 YAML objects (i.e.,</span>
@@ -535,7 +546,7 @@
 <span class="sd">         - root: ...</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. code-block:: yaml</span>
 
 <span class="sd">         !default</span>
@@ -582,7 +593,8 @@
         <span class="k">def</span> <span class="nf">_merge_dict</span><span class="p">(</span><span class="n">orig</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">MergePolicy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
             <span class="k">def</span> <span class="nf">_merge_val</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">MergePolicy</span><span class="p">):</span>
-                    <span class="n">new_policy</span> <span class="o">=</span> <span class="n">MergePolicy</span><span class="p">(</span><span class="n">union</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">)</span>
+                    <span class="n">new_policy</span> <span class="o">=</span> <span class="n">MergePolicy</span><span class="p">(</span>
+                        <span class="n">union</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">)</span>
                     <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">obj</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">new_policy</span> <span class="o">=</span> <span class="n">policy</span>
@@ -606,7 +618,8 @@
                 <span class="c1"># if len(default) != 1:</span>
                 <span class="c1">#     err = f&quot;Length of default list should be 1.\n{pformat(default)}&quot;</span>
                 <span class="c1">#     raise ValueError(err)</span>
-                <span class="n">orig</span> <span class="o">=</span> <span class="p">[</span><span class="n">_merge_dict</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">default</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">policy</span><span class="p">)</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">]</span>
+                <span class="n">orig</span> <span class="o">=</span> <span class="p">[</span><span class="n">_merge_dict</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">default</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">policy</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">orig</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">policy</span><span class="o">.</span><span class="n">replace</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">orig</span><span class="p">:</span>
                 <span class="n">orig</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">orig</span>

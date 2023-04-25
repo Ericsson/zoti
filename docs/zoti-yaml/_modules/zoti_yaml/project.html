@@ -61,6 +61,10 @@
 <span class="sd">      sources. Any file with another extension that specified here</span>
 <span class="sd">      will be ignored.</span>
 
+<span class="sd">    :param argfields: list of keys for fields used as placholders for,</span>
+<span class="sd">      e.g., argument exchange. These fields will be deleted from the</span>
+<span class="sd">      output result.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">modules</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Module</span><span class="p">]</span>
@@ -72,6 +76,7 @@
             <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
             <span class="n">pathvar</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
             <span class="n">ext</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yml&quot;</span><span class="p">],</span>
+            <span class="n">argfields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;zoti-args&quot;</span><span class="p">],</span>
             <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
         <span class="n">path_var</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">pathvar</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">pathvar</span>
@@ -81,11 +86,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_tool</span> <span class="o">=</span> <span class="n">tool</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key_nodes</span> <span class="o">=</span> <span class="n">keys</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_exts</span> <span class="o">=</span> <span class="n">ext</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_argfields</span> <span class="o">=</span> <span class="n">argfields</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">modules</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="Project.resolve_path"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.project.Project.resolve_path">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a global path where the source file for module *name* is</span>
-<span class="sd">        found. If none foind returns *FileNotFoundError*.</span>
+<span class="sd">        found. If none found returns *FileNotFoundError*.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Searching for module: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
@@ -173,6 +179,10 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Default</span><span class="p">):</span>
                     <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argfields</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                            <span class="k">del</span> <span class="n">node</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                 <span class="k">return</span> <span class="n">node</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ModuleError</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>

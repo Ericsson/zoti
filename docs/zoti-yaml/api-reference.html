@@ -43,7 +43,7 @@ module below.</p>
 <h2>Modules and Projects<a class="headerlink" href="#modules-and-projects" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_yaml.project.Project">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pathvar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['.yaml',</span> <span class="pre">'.yml']</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/project.html#Project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.project.Project" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pathvar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['.yaml',</span> <span class="pre">'.yml']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argfields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['zoti-args']</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/project.html#Project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.project.Project" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handler for loading and containing a set of ZOTI-YAML modules. All
 modules are loaded relative to the roots specified by <em>pathvar</em>,
 in a similar fashion as UNIX path variables. The order of priority
@@ -60,6 +60,9 @@ bookkeeping only)</p></li>
 <li><p><strong>ext</strong> – list of file extensions for searching module
 sources. Any file with another extension that specified here
 will be ignored.</p></li>
+<li><p><strong>argfields</strong> – list of keys for fields used as placholders for,
+e.g., argument exchange. These fields will be deleted from the
+output result.</p></li>
 </ul>
 </dd>
 </dl>
@@ -73,7 +76,7 @@ will be ignored.</p></li>
 <dt class="sig sig-object py" id="zoti_yaml.project.Project.resolve_path">
 <span class="sig-name descname"><span class="pre">resolve_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="_modules/zoti_yaml/project.html#Project.resolve_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.project.Project.resolve_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a global path where the source file for module <em>name</em> is
-found. If none foind returns <em>FileNotFoundError</em>.</p>
+found. If none found returns <em>FileNotFoundError</em>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -97,7 +100,11 @@ preamblies. <em>source</em> and <em>path</em> are passed to
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_yaml.module.Module">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preamble</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/module.html#Module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.module.Module" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py attribute">
+<dd><p>A ZOTI-YAML module wraps a document with metadata and a bunch of
+utilities used for convenient data access and manipulation.</p>
+<p>The basic constructor requires the (possibly pre-stored)
+<em>preamble</em> and <em>doc</em> trees (see <a class="reference internal" href="#zoti_yaml.module.Module.to_dump" title="zoti_yaml.module.Module.to_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dump()</span></code></a>).</p>
+<dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_yaml.module.Module.name">
 <span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_yaml.module.Module.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -120,22 +127,109 @@ preamblies. <em>source</em> and <em>path</em> are passed to
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_yaml.module.Module.from_zoml">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_zoml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/module.html#Module.from_zoml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.module.Module.from_zoml" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p><a class="reference internal" href="#zoti_yaml.module.Module" title="zoti_yaml.module.Module"><code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></a> constructor which incoprorates both file loader and
+parser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> – input stream (e.g., file or stdin)</p></li>
+<li><p><strong>filepath</strong> – mandatory identifier for source of
+input. Used in debug and error handling.</p></li>
+<li><p><strong>tool</strong> – optional identifier for tool downstream. Used in
+logging.</p></li>
+<li><p><strong>key_nodes</strong> – nodes whose children will be marked with
+positional info.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_yaml.module.Module.map_doc">
 <span class="sig-name descname"><span class="pre">map_doc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/module.html#Module.map_doc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.module.Module.map_doc" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Functor on a Module document. Maps function <em>f(n)</em> on each node <em>n</em>
+in the document tree. If <em>with_path</em> is set to True, it
+expects function to be of form <em>f(n, path)</em> where <em>path</em> is
+this node’s path relative to the document root (see
+<code class="xref py py-class docutils literal notranslate"><span class="pre">TreePath</span></code>).’</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_yaml.module.Module.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">TreePath</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PurePosixPath</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/module.html#Module.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.module.Module.get" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><span class="pre">TreePath</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PurePosixPath</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/module.html#Module.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.module.Module.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an arbitrary node in the document tree vased on its path
+relative to the document root (see <code class="xref py py-class docutils literal notranslate"><span class="pre">TreePath</span></code>). The
+path is formed like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">key1</span><span class="o">/</span><span class="n">key2</span><span class="p">[</span><span class="n">index2</span><span class="p">]</span><span class="o">/</span><span class="n">key3</span><span class="p">[</span><span class="n">index3</span><span class="p">]</span><span class="o">/....</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">keyN</span></code> is the dictionary key of that node,
+respectively <code class="docutils literal notranslate"><span class="pre">indexN</span></code> can be either the index postion of the
+node in a list, or the node in a list which has a field
+<code class="docutils literal notranslate"><span class="pre">name:</span> <span class="pre">indexN</span></code>.</p>
+<p>The <em>strict</em> argument controls whether this method throws an
+exception or returns None if the path is not found.</p>
+<p><em>OBS</em>: it is the designer’s responsibility to ensure that no
+two nodes in a list share the same <code class="docutils literal notranslate"><span class="pre">name</span></code> value.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_yaml.module.Module.to_dump">
 <span class="sig-name descname"><span class="pre">to_dump</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/module.html#Module.to_dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.module.Module.to_dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <em>preamble</em> and <em>doc</em> as a list suitable for storing.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="dcument-tree-paths">
+<h2>Dcument Tree Paths<a class="headerlink" href="#dcument-tree-paths" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_yaml.core.TreePath">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TreePath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PurePosixPath</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/core.html#TreePath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.core.TreePath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple structure used to reference subtrees/nodes using a
+sytax similar to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">node</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">{path/to/node}</span></code> part is stored as a PurePosixPath, thus it
+can also be a relative path.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_yaml.core.TreePath.path">
+<span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PurePosixPath</span></em><a class="headerlink" href="#zoti_yaml.core.TreePath.path" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_yaml.core.TreePath.is_relative">
+<span class="sig-name descname"><span class="pre">is_relative</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/core.html#TreePath.is_relative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.core.TreePath.is_relative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Root paths always start with <code class="docutils literal notranslate"><span class="pre">/</span></code>. If not, then it is relative.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_yaml.core.TreePath.relative_to">
+<span class="sig-name descname"><span class="pre">relative_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><span class="pre">TreePath</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><span class="pre">TreePath</span></a></span></span><a class="reference internal" href="_modules/zoti_yaml/core.html#TreePath.relative_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.core.TreePath.relative_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the path obtained by concatenating this one to a root.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_yaml.core.TreePath.resolve">
+<span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_yaml/core.html#TreePath.resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.core.TreePath.resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves this path (see <code class="xref py py-meth docutils literal notranslate"><span class="pre">relative-to()</span></code>) and marks it as
+resolved</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_yaml.core.TreePath.with_key">
+<span class="sig-name descname"><span class="pre">with_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/core.html#TreePath.with_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.core.TreePath.with_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends a key at the end of this path (see <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_yaml.core.TreePath.with_name">
+<span class="sig-name descname"><span class="pre">with_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_yaml/core.html#TreePath.with_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_yaml.core.TreePath.with_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends a name or an index at te end of this path (see
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>).</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -290,6 +384,7 @@ reasons why a module cannot be loaded,</p>
 <li class="toctree-l1"><a class="reference internal" href="syntax-reference.html">Syntax Reference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#modules-and-projects">Modules and Projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dcument-tree-paths">Dcument Tree Paths</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#position-helpers">Position Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-zoti_yaml.exceptions">Exceptions</a></li>
 </ul>
