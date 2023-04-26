@@ -215,7 +215,11 @@ class AppGraph:
 
     def node_edges(self, node_id, which="all+all") -> List[Tuple[Uid, Uid]]:
         """Returns all the edge identifiers entering or exiting the *ports* of
-        this node, as list of ID pairs.
+        this node, as list of ID pairs. The list can be filtered by to
+        *which* a string formed as ``"<direction>+<view>"``, where
+
+        * ``<direction>`` can be ``in``, ``out`` or ``all``.
+        * ``<view>`` can be  ``inside``, ``outside`` or ``all``.
 
         .. image:: assets/api-2.png
 
@@ -264,7 +268,7 @@ class AppGraph:
         """Variant of :meth:`connected_ports` which returns a list with end
         ports insdead of the entire connected subgraph, i.e., ports
         whose connectivity degree is 1. In the previous example this
-        would mean ``["/node1/node2/^o1", "/node3/node4/^i1"]``
+        would mean ``[/n1/n2/^o1, /n3/n4/^i1]``
 
         """
         conn = self.connected_ports(port, graph)

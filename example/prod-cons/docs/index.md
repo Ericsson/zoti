@@ -429,7 +429,7 @@ You might have noticed when studying the application specification
 inputs at `apps/<example>/**/*.zog` that not all ports are fully
 specified, yet for the synthesis process all information possible
 associated with a model object is mandatory. This was, by no mistake,
-a feature assumed during the specification phase, namely assuming a
+a feature assumed during the specification phase, namely to assume a
 convenient type inference system that can "fill in" information based
 on port connections. This feature however is not implemented anywhere,
 instead is provided as a graph transformation function. In other
@@ -437,7 +437,7 @@ words, the first transformation syncs all `data_type`, `port_type` and
 `mark` entries based on interconnections. If inconsistencies or
 missing data are detected, this function throws an error.
 
-#### Stage 2: Receiver Types
+#### Stage 2: Prepare Platform Ports
 
 | Defined in                        | Requires | Affects | Byproduct | Prerequisite     |
 |:----------------------------------|:---------|---------|:----------|:-----------------|
@@ -445,9 +445,15 @@ missing data are detected, this function throws an error.
 
 Here we witness the first target-dependent transformation. As per the
 target platform, each port type is required to store data in a
-specific buffer-like data structure. This transformation simply
-updates every input port of each platform node to reflect this buffer
-by updating the `data_type` entry based on their `port_type`.
+specific buffer-like structure, as well as to have an asigned socket
+variable which will be filled in during the application
+configuration. This transformation updates every port of each
+platform node to reflect this:
+
+- input ports update their `data_type` entry based on their
+  `port_type`.
+- output ports instantiate a new socket port which will create a
+  socket global variable down the line.
 
 #### Stage 3: Expand Actors
 
@@ -481,15 +487,32 @@ that can be matched against patterns and manipulated towards the form
 we want to achieve, i.e. the code block genspecs studied in the
 previous section.
 
+#### Stage 5: Prepare SIDE Ports
+
+| Defined in                        | Requires | Affects | Byproduct | Prerequisite     |
+|:----------------------------------|:---------|---------|:----------|:-----------------|
+| `zoti-scripts/unix_c/translib.py` | *G*, *T* | *G*     | none      | `port_inference` |
+
+This transformation updates creates a global buffer port for each
+connection via SIDE actor ports (i.e., interactions between actors via
+side-effects). After this it updates all end-ports (i.e., belonging to
+kernels) to match the name of this global buffer, as well as it
+destroys all edges in-between. At the end of this transformation all
+graph edges will represent event-like interactions, where graph
+elements trigger each other within the same timeline. Actors belonging
+to separate timelines will be "physically" separated.
+
 #### Stage 5: Fuse Actors
 
 | Defined in                               | Requires | Affects | Byproduct | Prerequisite |
 |:-----------------------------------------|:---------|---------|:----------|:-------------|
 | `${ZOTI_TRAN}/src/zoti_tran/translib.py` | *G*      | *G*     | flag      | `flatten`    |
 
-This transformation identifies all actors belonging to the same
-timeline in a platform node and fuses them into one actor. After this
-transformation
+
+Once actors belonging to different timelines have been separated
+during the previous transformation, fusing actors belonging to the
+same timeline becomes trivial, thanks to the API of ZOTI-Graph. After
+this transformation
 
 - all actors remaining in a platform node represent an independent
   reaction to the input stimuli; 
@@ -501,21 +524,20 @@ transformation
 
 {% assign notetext = "At the time of writing this tutorial during
 release " | append: page.version | append: " scenario merging and
-detector FSM merging were not fully implemented yet, but only as much
-as this demonstrator required." %} {% include note.html
-content=notetext %}
+detector FSM merging were not fully implemented, only as much as this
+demonstrator required." %}
+{% include note.html content=notetext %}
 
-#### Stage 6: Clean Ports
+#### Stage 6: Prepare Intermediate Ports
 
 | Defined in                        | Requires | Affects | Byproduct | Prerequisite     |
 |:----------------------------------|:---------|---------|:----------|:-----------------|
 | `zoti-scripts/unix_c/translib.py` | *G*      | *G*     | flag      | `port_inference` |
 
-This is by far the most intensive transformation in terms of graph
-alterations and is concerning cleaning up redundant connections,
-ports, and creating (marked) auxiliary constructs for what will become
-global and/or intermediate variables. Please check the source code of
-the transformation and the output plots to understand what it does.
+The final graph-to-graph transformation in our custom synthesis flow
+identifies intermediate connections between kernels and promotes them
+to their own port which will become an intermediate buffer down the
+line.
 
 This transformation brings the application graph to a form which can
 directly be parsed and translated into code blocks specifications in
@@ -544,9 +566,9 @@ The C code is presented as a byproduct of this transformation script
 
 #### Stage 8: Generate Genspecs
 
-| Defined in                         | Requires | Affects | Byproduct        | Prerequisite                                  |
-|:-----------------------------------|:---------|---------|:-----------------|:----------------------------------------------|
-| `zoti-scripts/unix_c/artifacts.py` | *G*, *T* | none    | dict of genspecs | `clean_ports`, `expand_actors`, `fuse_actors` |
+| Defined in                         | Requires | Affects | Byproduct        | Prerequisite                                                                                                 |
+|:-----------------------------------|:---------|---------|:-----------------|:-------------------------------------------------------------------------------------------------------------|
+| `zoti-scripts/unix_c/artifacts.py` | *G*, *T* | none    | dict of genspecs | `prepare_platform_ports`, `prepare_side_ports`, `prepare_intermediate_ports`, `expand_actors`, `fuse_actors` |
 
 {% include note.html content="It is recommended to read and understand
 the source code while looking at the plot for Stage 6." %}
