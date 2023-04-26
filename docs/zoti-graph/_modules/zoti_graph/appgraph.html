@@ -250,7 +250,11 @@
 
 <div class="viewcode-block" id="AppGraph.node_edges"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.appgraph.AppGraph.node_edges">[docs]</a>    <span class="k">def</span> <span class="nf">node_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;all+all&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Uid</span><span class="p">,</span> <span class="n">Uid</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all the edge identifiers entering or exiting the *ports* of</span>
-<span class="sd">        this node, as list of ID pairs.</span>
+<span class="sd">        this node, as list of ID pairs. The list can be filtered by to</span>
+<span class="sd">        *which* a string formed as ``&quot;&lt;direction&gt;+&lt;view&gt;&quot;``, where</span>
+
+<span class="sd">        * ``&lt;direction&gt;`` can be ``in``, ``out`` or ``all``.</span>
+<span class="sd">        * ``&lt;view&gt;`` can be  ``inside``, ``outside`` or ``all``.</span>
 
 <span class="sd">        .. image:: assets/api-2.png</span>
 
@@ -299,7 +303,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Variant of :meth:`connected_ports` which returns a list with end</span>
 <span class="sd">        ports insdead of the entire connected subgraph, i.e., ports</span>
 <span class="sd">        whose connectivity degree is 1. In the previous example this</span>
-<span class="sd">        would mean ``[&quot;/node1/node2/^o1&quot;, &quot;/node3/node4/^i1&quot;]``</span>
+<span class="sd">        would mean ``[/n1/n2/^o1, /n3/n4/^i1]``</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">conn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_ports</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>

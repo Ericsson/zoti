@@ -236,7 +236,12 @@ filter the in/out edges with argment <em>which</em> that can be
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.node_edges">
 <span class="sig-name descname"><span class="pre">node_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all+all'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.node_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.node_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all the edge identifiers entering or exiting the <em>ports</em> of
-this node, as list of ID pairs.</p>
+this node, as list of ID pairs. The list can be filtered by to
+<em>which</em> a string formed as <code class="docutils literal notranslate"><span class="pre">&quot;&lt;direction&gt;+&lt;view&gt;&quot;</span></code>, where</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;direction&gt;</span></code> can be <code class="docutils literal notranslate"><span class="pre">in</span></code>, <code class="docutils literal notranslate"><span class="pre">out</span></code> or <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code> can be  <code class="docutils literal notranslate"><span class="pre">inside</span></code>, <code class="docutils literal notranslate"><span class="pre">outside</span></code> or <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p></li>
+</ul>
 <img alt="_images/api-2.png" src="_images/api-2.png" />
 </dd></dl>
 
@@ -256,7 +261,7 @@ argument containing the desired path.</p>
 <dd><p>Variant of <a class="reference internal" href="#zoti_graph.appgraph.AppGraph.connected_ports" title="zoti_graph.appgraph.AppGraph.connected_ports"><code class="xref py py-meth docutils literal notranslate"><span class="pre">connected_ports()</span></code></a> which returns a list with end
 ports insdead of the entire connected subgraph, i.e., ports
 whose connectivity degree is 1. In the previous example this
-would mean <code class="docutils literal notranslate"><span class="pre">[&quot;/node1/node2/^o1&quot;,</span> <span class="pre">&quot;/node3/node4/^i1&quot;]</span></code></p>
+would mean <code class="docutils literal notranslate"><span class="pre">[/n1/n2/^o1,</span> <span class="pre">/n3/n4/^i1]</span></code></p>
 </dd></dl>
 
 <dl class="py method">
