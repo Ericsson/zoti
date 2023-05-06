@@ -30,7 +30,7 @@ class ValidationError(Exception):
 class ParseError(Exception):
     def __init__(self, what, obj=None, **kwargs):
         self.what = what
-        self.pos = get_pos(obj).show() if pos else ""
+        self.pos = get_pos(obj).show() if get_pos(obj) else ""
 
     def __str__(self):
         return f"{self.pos}\n{self.what}"
