@@ -4,12 +4,24 @@ from importlib.metadata import distribution
 import pydot
 from yaml import Dumper, Loader, dump_all, load_all
 
+import zoti_yaml as zoml
 import zoti_graph.core as ty
 from zoti_graph.appgraph import AppGraph
 
 dist = distribution("zoti_graph")
 
 
+class ZotiGraphLoader(zoml.LoaderWithInfo):
+    """YAML loader class with information for ZOTI-Graph inputs."""
+
+    def __init__(self, stream, **kwargs):
+        super(ZotiGraphLoader, self).__init__(stream)
+        self._tool = dist.name + "-" + dist.version
+        self._key_nodes = ["nodes", "ports", "edges", "primitives"]
+
+def print_zoti_yaml_keys():
+    return ["nodes", "ports", "edges", "primitives"]
+        
 def dump_node_info(AG, stream):
     """Dumps the entry information for all nodes in the *AG* graph as
     plain text to *stream*.

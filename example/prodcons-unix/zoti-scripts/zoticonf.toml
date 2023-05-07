@@ -9,7 +9,7 @@ keys = ["type", "entries"]
 
 [zoti.yaml.gen]
 tool = "zoti-gen-0.1.0"
-keys = ["block", "port", "instance", "bind"]
+keys = ["block", "label", "instance", "bind"]
 ext = [".zoc"]
 
 [zoti.gen]

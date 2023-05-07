@@ -27,18 +27,14 @@ parser.add_argument(
     help="prints additional info statements",
 )
 parser.add_argument(
+    "--pathvar", type=str, nargs='+',
+    help="Input search paths ordered by priority from low to high,\n"
+    "in addition to the current folder."
+)
+parser.add_argument(
     "-e", "--ext", type=str, nargs='+',
     help="Looks for the following extensions in PATHVAR.\n"
     "Default is [.yaml, .yml]",
-)
-parser.add_argument(
-    "-k", "--keys", metavar="KEY", type=str, nargs='+',
-    help="Key nodes where position info will be attached.",
-)
-parser.add_argument(
-    "--argfields", metavar="KEY", type=str, nargs='+',
-    help="Keys marking nodes used only for argument exchange.\n"
-    "Default is [zoti-args]",
 )
 parser.add_argument(
     "-o", "--out", metavar="FILE",
@@ -47,17 +43,16 @@ parser.add_argument(
     default=sys.stdout,
 )
 parser.add_argument(
-    "--pathvar", type=str, nargs='+',
-    help="Input search paths ordered by priority from low to high,\n"
-    "in addition to the current folder."
-)
-parser.add_argument(
     "-s", "--spec", metavar="SPEC",
     help="Options to load from in 'zoticonf.toml' under [zoti-yaml.SPEC]",
 )
 parser.add_argument(
-    "-t", "--tool", type=str,
-    help="Name of the tool that will use this output. For logging purpose only.",
+    "-k", "--keys", metavar="KEY", type=str, nargs='+',
+    help="Key nodes where position info will be attached.",
+)
+parser.add_argument(
+    "--argfields", metavar="KEY", type=str, nargs='+',
+    help="Nodes used only for argument exchange. Default is [zoti-args]",
 )
 parser.add_argument(
     "main", nargs="?",
@@ -67,7 +62,6 @@ parser.add_argument(
 default_args = {
     "ext": [".yaml", ".yml"],
     "argfields": ["zoti-args"],
-    "keys": [],
     "main": None,
 }
 

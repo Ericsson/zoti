@@ -143,7 +143,7 @@ $(GEN_PATHS):
 $(GRAPH_IN): $(NATIVE_SRCS) $(TC_SRCS) $(GLIB_SRCS)
 ifdef DEBUG   # debug rule: dump intermediate zoti-yaml format as YAML file
 	$(ZOTI_YAML) --verbose --pathvar $(GRAPH_LIB) -s graph -o $(GYAML_IN) -- $(MAIN) 
-	$(ZOTI_GRAPH) --verbose --dump-graph --dump-tree --dump-out $(GEN_PLOT_PATH)\
+	$(ZOTI_GRAPH) --verbose --dump-graph --dump-tree --dump-path=$(GEN_PLOT_PATH)\
 		-o $@ -i $(GYAML_IN)
 else          # normal rule: pipe result of zoti-yaml to zoti-graph as JSON
 	$(ZOTI_YAML) --pathvar $(GRAPH_LIB) -s graph -- $(MAIN) | $(ZOTI_GRAPH) -o $@
@@ -171,11 +171,11 @@ endif
 $(GEN_CODE_PATH)/%.c: $(GEN_OUT_PATH)/%.zoc
 ifdef DEBUG   # debug rule: dump intermediate graphs for each transformation
 	$(ZOTI_YAML) --verbose -s gen --pathvar=$(GEN_OUT_PATH) -o $(basename $(<)).yaml -- $*
-	$(ZOTI_GEN) --verbose --dump-graph=$(GEN_PLOT_PATH) --lib=$(TEMPLATE_LIB) \
-		--deps=$(basename $<).deps.json -i $(basename $(<)).yaml -o $@ $*
+	$(ZOTI_GEN) --verbose --dump-graph --dump-path=$(GEN_PLOT_PATH) --lib=$(TEMPLATE_LIB) \
+		--deps=$(basename $<).deps.json -i $(basename $(<)).yaml -o $@
 else          # normal rule: pipe result of zoti-yaml to zoti-gen as JSON
 	$(ZOTI_YAML) --pathvar $(GEN_OUT_PATH) -s gen -- $* | \
-		$(ZOTI_GEN) --lib=$(TEMPLATE_LIB) --deps=$(basename $<).deps.json -o $@ $*
+		$(ZOTI_GEN) --lib=$(TEMPLATE_LIB) --deps=$(basename $<).deps.json -o $@
 endif
 	$(C_FORMAT) --style="{SortIncludes: false}" -i $@
 	$(PYTHON) $(SCRIPT_PATH)/unix_c/postproc.py -d $(basename $<).deps.json -f $@

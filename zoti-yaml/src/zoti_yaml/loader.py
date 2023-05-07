@@ -1,6 +1,7 @@
 import logging as log
 from pathlib import Path
 from typing import Dict, Optional
+from importlib.metadata import distribution
 
 import yaml
 from yaml.loader import SafeLoader
@@ -9,22 +10,24 @@ from yaml.nodes import MappingNode, SequenceNode, ScalarNode
 import zoti_yaml.core as ty
 
 
-class ZotiLoader(SafeLoader):
-    """YAML loader class cwith extra spices."""
-
-    def __init__(self, stream, path=".", tool="", key_nodes=[], **kwargs):
-        self._path = Path(path)
-        self._tool = tool
-        self._key_nodes = key_nodes
-        log.info(f"  - Annotating entries for {key_nodes}")
-        super(ZotiLoader, self).__init__(stream)
+class LoaderWithInfo(SafeLoader):
+    def __init__(self, stream, **kwargs):
+        path = getattr(stream, "name")
+        self._path = Path(path) if path else None
+        self._isfile = self._path and self._path.is_file()
+        self._tool = None
+        self._key_nodes = []
+        super(LoaderWithInfo, self).__init__(stream)
 
     def construct_mapping(self, node, deep=False):
         """Override SafeLoader to add positional information for mappings."""
-        mapping = super(ZotiLoader, self).construct_mapping(node, deep=deep)
+        mapping = super(LoaderWithInfo, self).construct_mapping(node, deep=deep)
+
+        if not self._isfile:
+            return mapping
 
         # below is a hack: alter the 'node' object to communicate to
-        # future calls of this method to add the _meta_ entry.
+        # future calls of this method to add the 'mark_for_meta' entry.
         for key, value in zip(mapping.keys(), node.value):
             if key in self._key_nodes:
                 if isinstance(value[1], SequenceNode):
@@ -41,10 +44,20 @@ class ZotiLoader(SafeLoader):
             for key, value in zip(mapping.keys(), node.value):
                 if key == ty.INFO:
                     mapping[ty.INFO] = super(
-                        ZotiLoader, self).construct_mapping(value[1], deep=True)
+                        LoaderWithInfo, self).construct_mapping(value[1], deep=True)
             ty.attach_pos(mapping, ty.Pos.from_mark(
                 node.start_mark, node.end_mark, self._path.as_posix(), self._tool))
         return mapping
+
+
+class ZotiYamlLoader(LoaderWithInfo):
+    """YAML loader class cwith extra spices."""
+
+    def __init__(self, stream, key_nodes=[], **kwargs):
+        super(ZotiYamlLoader, self).__init__(stream)
+        self._tool = distribution("zoti_yaml").name + "-" + distribution("zoti_yaml").version
+        self._key_nodes = key_nodes
+
 
     def include(self, node):
         """One can import raw (chunks of) files using the the ``!include``
@@ -176,14 +189,18 @@ class ZotiLoader(SafeLoader):
                 note=str(e), problem_mark=node.start_mark)
 
 
-ZotiLoader.add_constructor("!include", ZotiLoader.include)
-ZotiLoader.add_constructor("!default", ZotiLoader.construct_default)
-ZotiLoader.add_constructor("!attach", ZotiLoader.construct_attach)
-ZotiLoader.add_constructor("!ref", ZotiLoader.construct_ref)
-ZotiLoader.add_constructor(f"!policy:{ty.POLICY_UNION}", ZotiLoader.construct_policy_union)
-ZotiLoader.add_constructor(f"!policy:{ty.POLICY_RUNION}", ZotiLoader.construct_policy_runion)
-ZotiLoader.add_constructor(f"!policy:{ty.POLICY_INTER}", ZotiLoader.construct_policy_inter)
-ZotiLoader.add_constructor(f"!policy:{ty.POLICY_RINTER}", ZotiLoader.construct_policy_rinter)
+ZotiYamlLoader.add_constructor("!include", ZotiYamlLoader.include)
+ZotiYamlLoader.add_constructor("!default", ZotiYamlLoader.construct_default)
+ZotiYamlLoader.add_constructor("!attach", ZotiYamlLoader.construct_attach)
+ZotiYamlLoader.add_constructor("!ref", ZotiYamlLoader.construct_ref)
+ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_UNION}",
+                               ZotiYamlLoader.construct_policy_union)
+ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_RUNION}",
+                               ZotiYamlLoader.construct_policy_runion)
+ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_INTER}",
+                               ZotiYamlLoader.construct_policy_inter)
+ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_RINTER}",
+                               ZotiYamlLoader.construct_policy_rinter)
 
 
 def load(stream, Loader, **kwargs):
@@ -195,11 +212,3 @@ def load(stream, Loader, **kwargs):
         raise e
     finally:
         loader.dispose()
-
-
-if __name__ == "__main__":
-    with open("test.yaml") as f:
-        x = yaml.load(f, Loader=ZotiLoader)
-
-    print(yaml.dump(x, default_flow_style=None))
-    print(yaml.dump(x.resolve(), default_flow_style=None))

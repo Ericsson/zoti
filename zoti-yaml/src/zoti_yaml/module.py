@@ -7,7 +7,7 @@ import marshmallow as mm
 
 import zoti_yaml.core as ty
 from zoti_yaml.exceptions import MarkedError, SearchError
-from zoti_yaml.loader import ZotiLoader, load
+from zoti_yaml.loader import ZotiYamlLoader, load
 
 
 class PreambleSchema(mm.Schema):
@@ -46,7 +46,7 @@ class Module:
         self.doc = doc
 
     @classmethod
-    def from_zoml(cls, stream, filepath: str, tool="", key_nodes: List = []):
+    def from_zoml(cls, stream, filepath: str, key_nodes: List = []):
         """:class:`Module` constructor which incoprorates both file loader and
         parser.
 
@@ -63,8 +63,7 @@ class Module:
 
         """
         # print(key_nodes)
-        docs = list(load(stream, path=filepath, tool=tool,
-                         Loader=ZotiLoader, key_nodes=key_nodes))
+        docs = list(load(stream, path=filepath, Loader=ZotiYamlLoader, key_nodes=key_nodes))
         # print(docs)
         if len(docs) != 2:
             msg = f"File '{filepath}' is not a ZOTI-YAML module."
@@ -77,9 +76,9 @@ class Module:
             raise ImportError(msg)
 
         preamble[ty.ATTR_PATH] = filepath
-        if "tool-log" not in preamble:
-            preamble["tool-log"] = []
-        preamble["tool-log"].append([str(datetime.now()), tool])
+        # if "tool-log" not in preamble:
+        #     preamble["tool-log"] = []
+        # preamble["tool-log"].append([str(datetime.now()), tool])
         return cls(preamble, content)
 
     def map_doc(self, f, with_path=False, **kwargs):

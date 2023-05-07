@@ -6,8 +6,6 @@ from typing import Dict, List, Set
 import logging as log
 
 import marshmallow as mm
-import pydot
-import yaml
 from zoti_yaml import Module, get_pos
 
 import zoti_gen.core as ty
@@ -17,7 +15,7 @@ from zoti_gen.core import Block, Label, Requirement
 from zoti_gen.exceptions import ModelError, ParseError, ValidationError
 
 
-class ProjHandler:
+class Builder:
     """This handler takes care of loading input specifications, templates,
     building and dumping target code artifacts.
 
@@ -329,66 +327,3 @@ class ProjHandler:
             raise ModelError(e, "main", obj=main)
         self.decls.append(self.main)
 
-    def dump_yaml(self, path):
-        """Dumps all parsed blocks up to this point as a YAML file."""
-        with open(path, "w") as f:
-            doc = {k: Block.Schema().dump(v) for k, v in self._blks.items()}
-            f.write(yaml.dump(doc,
-                              Dumper=yaml.Dumper,
-                              default_flow_style=None))
-            log.info(f"  * Dumped yaml spec at '{f.name}'")
-
-    def dump_graph(self, dot_file, rankdir="LR") -> None:
-        """Dumps a DOT graph representation of the current block structure
-        starting from the top block inwards."""
-        def _mangle(module, name):
-            return f"{module}.{name}"
-
-        def _recursive(parent, name, comp, fill=False):
-            style = {
-                "style": "filled",
-                "shape": "record",
-                "label": f"{comp.name} : {util.qualname(comp)}",
-            }
-            if fill:
-                style["fillcolor"] = "lightgrey"
-            else:
-                style["fillcolor"] = "white"
-                style["color"] = "black"
-
-            p = pydot.Cluster(f"cluster_{name}", **style)
-
-            # assumes labels/params are still lists
-            for key, label in comp.label.items():
-                style = {"label": label.name, "shape": "oval"}
-                p.add_node(pydot.Node(f"{name}-{key}", **style))
-            for key in comp.param.keys():
-                style = {"label": key, "shape": "parallelogram"}
-                p.add_node(pydot.Node(f"{name}-{key}", **style))
-
-            for inst in comp.instance:
-                ccomp = self.get(inst.block)
-                cname = f"{name}.{ccomp.name}"
-                _recursive(p, cname, ccomp, not fill)
-                for bind in inst.bind:
-                    bname = f"{cname}-{bind.args['child']}"
-                    if bind.func == "value_to_param":
-                        p.add_node(pydot.Node(
-                            bind.args["value"], shape="plain"))
-                        p.add_edge(pydot.Edge(bind.args["value"], bname))
-                    elif bind.func == "usage_to_label":
-                        p.add_node(pydot.Node(
-                            bind.args["usage"].template, shape="plain"))
-                        p.add_edge(pydot.Edge(
-                            bind.args["usage"].template, bname))
-                    else:
-                        pname = f"{name}-{bind.args['parent']}"
-                        p.add_edge(pydot.Edge(bname, pname))
-            parent.add_subgraph(p)
-
-        dot = pydot.Dot(graph_type="digraph",
-                        fontname="Verdana", rankdir=rankdir)
-        top = self.get(self.main)
-        _recursive(dot, repr(self.main), top)
-        dot.write_dot(dot_file)
-        log.info(f"  * Dumped codeblocks graph at '{dot_file}'")

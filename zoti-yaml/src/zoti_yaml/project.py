@@ -13,9 +13,6 @@ class Project:
     in a similar fashion as UNIX path variables. The order of priority
     for resolving paths to module names is right-to-left.
 
-    :param tool: a string naming the next downstream tool (for history
-      bookkeeping only)
-
     :param keys: list of keys to mark for storing positional metadata
       (see :doc:`syntax-reference`)
 
@@ -37,7 +34,6 @@ class Project:
 
     def __init__(
             self,
-            tool: str = "",
             keys: List[str] = [],
             pathvar: List[str] = [],
             ext: List[str] = [".yaml", ".yml"],
@@ -48,7 +44,6 @@ class Project:
         self._load_paths = [Path(".")] + [
             Path(p) for p in reversed(path_var)
         ]
-        self._tool = tool
         self._key_nodes = keys
         self._exts = ext
         self._argfields = argfields
@@ -89,8 +84,7 @@ class Project:
                 node.module = aliases[node.module]
             return node
         try:
-            module = Module.from_zoml(
-                source, path, self._tool, self._key_nodes)
+            module = Module.from_zoml(source, path, self._key_nodes)
             assert path == module.path
             if name != module.name:
                 msg = f"Wrong module name in preamble of {path}: "

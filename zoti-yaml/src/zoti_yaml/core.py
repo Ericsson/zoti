@@ -64,7 +64,7 @@ class Pos:
     who: Optional[str]
     """string for bookkeeping the processing pipeline for this node"""
 
-    def __init__(self, line, column, ibegin=0, iend=-1, path="<stdio>", who=None):
+    def __init__(self, line, column, ibegin=0, iend=-1, path=None, who=None):
         self.line = line
         self.column = column
         self.ibegin = ibegin
@@ -101,14 +101,17 @@ class Pos:
         if log.root.level > log.WARN:  # silent
             return rep
         if Path(self.path).is_file():
-            with open(self.path) as f:
-                if log.root.level < log.WARN:  # verbose
-                    rep += f" {self.who}:\n"
-                    rep += f.read()[self.ibegin: self.iend]
-                else:
-                    rep += f" {self.who}:\n  "
-                    rep += list(f.readlines())[self.line][:-1]
-                    rep += f'\n  {" " * self.column}^'
+            try:
+                with open(self.path) as f:
+                    if log.root.level < log.WARN:  # verbose
+                        rep += f" {self.who}:\n"
+                        rep += f.read()[self.ibegin: self.iend]
+                    else:
+                        rep += f" {self.who}:\n  "
+                        rep += list(f.readlines())[self.line][:-1]
+                        rep += f'\n  {" " * self.column}^'
+            except IOError:
+                pass
         return rep
 
 
