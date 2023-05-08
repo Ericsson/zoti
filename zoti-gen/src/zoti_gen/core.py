@@ -563,3 +563,19 @@ class Block:
     blocks"""
 
     _info: Dict = field(default_factory=lambda: {})
+    
+    @property
+    def getLabelKeys(self):
+        return list(self.label.keys())
+    @property
+    def getLabelNames(self):
+        return [l.name for l in self.label.values()]
+    @property
+    def getInstancePlaceholders(self):
+        return [i.placeholder for i in self.instance]
+    @property
+    def getInstanceBlocks(self):
+        return [repr(i.block) for i in self.instance]
+    @property
+    def getType(self):
+        return type(self)
