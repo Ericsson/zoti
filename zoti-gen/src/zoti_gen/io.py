@@ -33,9 +33,6 @@ def dump_yaml(B, path):
 def dump_graph(B, dot_file, rankdir="LR") -> None:
     """Dumps a DOT graph representation of the current block structure
     starting from the top block inwards."""
-    def _mangle(module, name):
-        return f"{module}.{name}"
-
     def _recursive(parent, name, comp, fill=False):
         style = {
             "style": "filled",
@@ -48,7 +45,7 @@ def dump_graph(B, dot_file, rankdir="LR") -> None:
             style["fillcolor"] = "white"
             style["color"] = "black"
 
-        p = pydot.Cluster(f"cluster_{name}", **style)
+        p = pydot.Cluster(name, **style)
 
         # assumes labels/params are still lists
         for key, label in comp.label.items():
@@ -76,7 +73,8 @@ def dump_graph(B, dot_file, rankdir="LR") -> None:
                 else:
                     pname = f"{name}-{bind.args['parent']}"
                     p.add_edge(pydot.Edge(bname, pname))
-                    parent.add_subgraph(p)
+        parent.add_subgraph(p)
+        
 
     dot = pydot.Dot(graph_type="digraph",
                     fontname="Verdana", rankdir=rankdir)
