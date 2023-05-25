@@ -143,8 +143,8 @@ try:
 
     if conf["dump_graph"]:
         io.dump_graph(gen, Path(conf["dump_path"]).joinpath(main).with_suffix(".resolved.dot"))
-    if conf["dump_graph"]:
-        io.dump_graph(gen, Path(conf["dump_path"]).joinpath(main).with_suffix(".resolved.yaml"))
+    if conf["dump_yaml"]:
+        io.dump_yaml(gen, Path(conf["dump_path"]).joinpath(main).with_suffix(".resolved.yaml"))
 except Exception as e:
     Path(args.out.name).unlink(missing_ok=True)
     raise e
