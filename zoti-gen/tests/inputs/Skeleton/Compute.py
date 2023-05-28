@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from zoti_gen import read_template, with_schema, Block, Requirement
+from zoti_gen import read_template, with_schema, Block, Requirement, Template
 
 
 @with_schema(Block.Schema)
@@ -13,7 +13,7 @@ class ShiftFarm(Block):
         default=Requirement({"include": ["cutils.h"]}))
 
     code: str = field(
-        default=read_template(__name__, "templates.c", "ShiftFarm.C")
+        default=Template(read_template(__name__, "templates.c", "ShiftFarm.C"))
     )
 
     def check(self):
@@ -39,7 +39,8 @@ class FarmRed_Acc(Block):
         default=Requirement({"include": ["cutils.h"]}))
 
     code: str = field(
-        default=read_template(__name__, "templates.c", "FarmRed_Acc.C")
+        default=Template(read_template(
+            __name__, "templates.c", "FarmRed_Acc.C"))
     )
 
     def check(self):

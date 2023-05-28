@@ -1,3 +1,6 @@
+import zoti_gen.io as io
+from zoti_gen.builder import Builder
+from zoti_yaml import Module
 import os
 import sys
 import yaml
@@ -7,9 +10,6 @@ from pathlib import PurePosixPath
 sys.path.insert(0, "src")
 sys.path.insert(0, "tests/inputs")
 
-from zoti_yaml import Module
-from zoti_gen.builder import Builder
-import zoti_gen.io as io
 
 def test_scenario1() -> None:
     mods = []
@@ -24,7 +24,7 @@ def test_scenario1() -> None:
 
     assert len(gen.decls) == 1
     assert gen.get(
-        gen.decls[0]).code == "void main(in1, in2, acc, &out) {\n \nout = acc + in1 * in2;\n \n};"
+        gen.decls[0]).code == "void mulacc(in1, in2, acc, &out) {\n \nout = acc + in1 * in2;\n \n};"
 
     gen2 = Builder("main", mods)
     gen2.parse()

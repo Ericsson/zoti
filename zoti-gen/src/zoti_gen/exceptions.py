@@ -1,7 +1,10 @@
+import logging as log
 from collections import defaultdict
+from typing import Dict
 
 from yaml import Dumper, dump
 from zoti_yaml import get_pos
+from pprint import pformat
 
 
 class PrettyDumper(Dumper):
@@ -35,7 +38,7 @@ class ParseError(Exception):
     def __str__(self):
         return f"{self.pos}\n{self.what}"
 
-    
+
 class ModelError(Exception):
     def __init__(self, what, name=None, obj=None, **kwargs):
         self.what = what
@@ -51,18 +54,21 @@ class TemplateError(Exception):
     """ Wraps a Jinja template error into a friendlier message. """
 
     def __init__(
-        self,
-        template: str,
-        err_line: int,
-        err_string: str,
-        msg: str = "Jinja raised error when processing template",
-        info=None,
+            self,
+            template: str,
+            context: Dict,
+            err_line: int,
+            err_string: str,
+            msg: str = "Jinja raised error when processing template",
+            info=None,
+            parent=None,
     ):
         self.template = str(template)
         self.err_line = err_line
         self.err = err_string
-        self.message = msg
+        self.message = msg + f" in node '{parent}'" if parent else ""
         self.pos = f"\n  {info.show()}" if info else ""
+        self.context = pformat(context)
 
     def __str__(self):
         temp_lines = self.template.splitlines()
@@ -82,5 +88,6 @@ class TemplateError(Exception):
                 f"{str(n):>3}{pre}# {temp_lines[n]}\n"
                 for pre, n in err_lines
             ])
-        msg = f"{self.message}{self.pos}\n{err_str}\n{self.err}"
+        ctx = f"\n Passed context:\n{self.context}" if log.root.level < log.WARN else ""
+        msg = f"{self.message}{self.pos}\n{err_str}\n{self.err}{ctx}"
         return msg

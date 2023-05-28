@@ -6,18 +6,16 @@ top: main
 block:
 - name: main
   type: {module: Generic, name: Infinite}
-  prototype:
-    - "name"
-    - |
-      int $name(void) {
+  prototype: |
+      int {{ name }}(void) {
         int input[10];
         int output[10];
         int COEF[4] = {1, 2, 2, 1};
         {{placeholder['code']}}
       } 
   label:
-  - {name: input, usage: ["p", "{{ label.$p.name }}"]}
-  - {name: output, usage: ["p", "{{ label.$p.name }}"]}
+  - {name: input, usage: "{{ label[p].name }}"}
+  - {name: output, usage: "{{ label[p].name }}"}
   param:
     schedule: ["readio", "exec", "writeio"]
     myformat: "\"%d\"" # TEST
@@ -28,30 +26,30 @@ block:
     bind:
     - value_to_param: {value: "\"%d\"", child: format}
     - value_to_param: {value: "10", child: size}
-    - label_to_label: {parent: input, child: arg, usage: ["p", "{{ label.$p.name }}"]}
+    - label_to_label: {parent: input, child: arg, usage: "{{ label[p].name }}"}
   - placeholder: writeio
     block: {module: Generic.IO, name: PrintArray}
     directive: ["expand"]
     bind:
     - value_to_param: {value: "10", child: size}
     - param_to_param: {child: format, parent: myformat}
-    - label_to_label: {child: arg, parent: output, usage: ["p", "{{ label.$p.name }}"]}
+    - label_to_label: {child: arg, parent: output, usage: "{{ label[p].name }}"}
   - placeholder: exec
     block: {module: main, name: mav_1}
     directive: ["expand"]
     bind: 
-    - label_to_label: {child: in1, parent: input, usage: ["p", "{{ label.$p.name }}"]}
-    - label_to_label: {child: out1, parent: output, usage: ["p", "{{ label.$p.name }}"]}
-    usage: ["int _it;\nint _range;\n{{placeholder['code']}}"]
+    - label_to_label: {child: in1, parent: input, usage: "{{ label[p].name }}"}
+    - label_to_label: {child: out1, parent: output, usage: "{{ label[p].name }}"}
+    usage: "int _it;\nint _range;\n{{placeholder['code']}}"
 
 - name: mav_1
   type: {module: Skeleton.Compute, name: ShiftFarm}
   label:
-  - {name: in1,    usage: ["p", "{{ label.$p.name }}"]}
-  - {name: out1,   usage: ["p", "{{ label.$p.name }}"]}
-  - {name: COEF,   usage: ["p", "{{ label.$p.name }}"]}
-  - {name: _it,    usage: ["p", "{{ label.$p.name }}"]} 
-  - {name: _range, usage: ["p", "{{ label.$p.name }}"]}
+  - {name: in1,    usage: "{{ label[p].name }}"}
+  - {name: out1,   usage: "{{ label[p].name }}"}
+  - {name: COEF,   usage: "{{ label[p].name }}"}
+  - {name: _it,    usage: "{{ label[p].name }}"} 
+  - {name: _range, usage: "{{ label[p].name }}"}
   param:
     iterate_over: [in1]
   instance:
@@ -60,22 +58,22 @@ block:
     directive: ["expand"]
     bind:
     - label_to_label:
-        {parent: in1, child: in1, usage: ["p", "{{ label.$p.name }}+{{label._it.name}}"]}
-    - label_to_label: {child: in2, parent: COEF, usage: ["p", "{{ label.$p.name }}"]}
-    - label_to_label: {child: size1, parent: _range, usage: ["p", "{{ label.$p.name }}"]}
+        {parent: in1, child: in1, usage: "{{ label[p].name }}+{{label._it.name}}"}
+    - label_to_label: {child: in2, parent: COEF, usage: "{{ label[p].name }}"}
+    - label_to_label: {child: size1, parent: _range, usage: "{{ label[p].name }}"}
     - label_to_label:
-        {parent: out1, child: out1, usage: ["p", "{{ label.$p.name }}[{{label._it.name}}]"]}
-    usage: ["int _it0;\nint _acc;\n{{placeholder['code']}}"]
+        {parent: out1, child: out1, usage: "{{ label[p].name }}[{{label._it.name}}]"}
+    usage: "int _it0;\nint _acc;\n{{placeholder['code']}}"
 
 - name: fred_1
   type: {module: Skeleton.Compute, name: FarmRed_Acc}
   label:
-  - {name: in1,   usage: ["p", "{{ label.$p.name }}"]}
-  - {name: in2,   usage: ["p", "{{ label.$p.name }}"]}
-  - {name: size1, usage: ["p", "{{ label.$p.name }}"]}
-  - {name: out1,  usage: ["p", "{{ label.$p.name }}"]}
-  - {name: _acc,  usage: ["p", "{{ label.$p.name }}"]}
-  - {name: _it,   usage: ["p", "{{ label.$p.name }}"]}
+  - {name: in1,   usage: "{{ label[p].name }}"}
+  - {name: in2,   usage: "{{ label[p].name }}"}
+  - {name: size1, usage: "{{ label[p].name }}"}
+  - {name: out1,  usage: "{{ label[p].name }}"}
+  - {name: _acc,  usage: "{{ label[p].name }}"}
+  - {name: _it,   usage: "{{ label[p].name }}"}
   param:
     iterate_over:
       size1: { range: "name"}
@@ -84,15 +82,15 @@ block:
   - placeholder: f
     block: {module: genspec_leafs, name: mulacc}
     # directive: ["expand"]
-    usage: [name, i1, i2, acc, o, "$name({{label.$i1.name}}, {{label.$i2.name}}, {{label.$acc.name}}, {{label.$o.name}})"]
+    usage: "{{name}}({{label.in1.name}}, {{label.in2.name}}, {{label.acc.name}}, {{label.out.name}})"
     bind:
     - label_to_label:
         parent: in1
         child: in1
-        usage: ["p", "({{ label.$p.name }})[{{label._it.name}}]"]
+        usage: "({{ label[p].name }})[{{label._it.name}}]"
     - label_to_label:
         parent: in2
         child: in2
-        usage: ["p", "{{ label.$p.name }}[{{label._it.name}}]"]
-    - label_to_label: {child: acc, parent: _acc, usage: ["p", "{{ label.$p.name }}"]}
-    - label_to_label: {child: out, parent: _acc, usage: ["p", "{{ label.$p.name }}"]}
+        usage: "{{ label[p].name }}[{{label._it.name}}]"
+    - label_to_label: {child: acc, parent: _acc, usage: "{{ label[p].name }}"}
+    - label_to_label: {child: out, parent: _acc, usage: "{{ label[p].name }}"}

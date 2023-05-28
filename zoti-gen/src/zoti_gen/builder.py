@@ -9,9 +9,8 @@ import marshmallow as mm
 from zoti_yaml import Module, get_pos
 
 import zoti_gen.core as ty
-import zoti_gen.render as render
 import zoti_gen.util as util
-from zoti_gen.core import Block, Label, Requirement
+from zoti_gen.core import Block, Label, Requirement, Template
 from zoti_gen.exceptions import ModelError, ParseError, ValidationError
 
 
@@ -51,6 +50,8 @@ class Builder:
     def __init__(self, main: str, srcs: List[Module], annotation=(None, None)):
         # self.main = main
         self._annot_begin, self._annot_end = annotation
+        self._annot_begin = f"\n{self._annot_begin}\n" if self._annot_begin else "\n"
+        self._annot_end = f"\n{self._annot_end}\n" if self._annot_end else "\n"
         if not srcs:
             raise ImportError("No input sources provided.")
         modules = {mod.name: mod for mod in srcs}
@@ -74,7 +75,7 @@ class Builder:
         previously-constructed block, otherwise it follows the
         decision flow:
 
-             | it searches the specifications 
+             | it searches the specifications
              | if it refers to a library template
              |   | it imports the base constructor using `importlib <https://docs.python.org/3/library/importlib.html>`_
              | else
@@ -182,19 +183,23 @@ class Builder:
 
             def label_to_label(parent, child, usage, info=None):
                 b_label = deepcopy(labels[parent])
-                b_label.name = render.code(
-                    usage.render(parent), labels, params, {}, info
+                b_label.name = usage.render(
+                    # CONTEXT-BEGIN: bind/label_to_label
+                    p=parent,      # ID of parent
+                    label=labels,  # entire namespace of resolved labels
+                    param=params,  # entire namespace of parameters
+                    # CONTEXT-END: bind/label_to_label
+                    info=info
                 )
                 newlabelb[child] = b_label
 
             def usage_to_label(child, usage, info=None):
-                b_label = Label(
-                    name=usage.template,
-                    usage=usage,
-                    glue={})
-                #    render.code(
-                #     usage.render(), labels, params, {}, info
-                # )
+                b_label = Label(name=usage.render(
+                    # CONTEXT-BEGIN: bind/usage_to_label
+                    label=labels,  # entire namespace of resolved labels
+                    param=params,  # entire namespace of parameters
+                    # CONTEXT-END: bind/usage_to_label
+                ), usage=usage, glue={})
                 newlabelb[child] = b_label
 
             def param_to_param(parent, child, **kwargs):
@@ -219,11 +224,15 @@ class Builder:
                 _check_attr(comp, ty.ATTR_CODE)
                 if inst.usage:
                     log.info(f"  - Creating call code for {inst.placeholder}")
-                    comp.code = render.code(
-                        inst.usage.render(comp.name, *list(comp.label.keys())),
-                        labels=comp.label,
-                        params=comp.param,
-                        blocks={ty.ATTR_CODE: comp.code},
+                    comp.code = inst.usage.render(
+                        # CONTEXT-BEGIN: instance/usage-expand
+                        name=comp.name,    # component's name
+                        label=comp.label,  # resolved labels
+                        param=comp.param,  # parameters
+                        placeholder={      # only one placeholder
+                            "code": comp.code
+                        },
+                        # CONTEXT-END: instance/usage-expand
                         info=get_pos(comp),
                     )
                 return comp.code
@@ -238,31 +247,38 @@ class Builder:
                 _recursive_blks(comp, labels, b_params, set(self.decls))
                 self.decls.append(inst.block)
                 _check_attr(comp, ty.ATTR_CODE, ty.ATTR_PROTO)
-                comp.code = render.code(
-                    comp.prototype.render(comp.name, *list(comp.label.keys())),
-                    labels=comp.label,
-                    params=comp.param,
-                    blocks={ty.ATTR_CODE: comp.code},
+                comp.code = comp.prototype.render(
+                    # CONTEXT-BEGIN: prototype
+                    name=comp.name,    # component's name
+                    label=comp.label,  # resolved labels
+                    param=comp.param,  # parameters
+                    placeholder={      # only one placeholder
+                        "code": comp.code
+                    },
+                    # CONTEXT-END: prototype
                     info=get_pos(comp),
                 )
+
                 if inst.placeholder:
                     log.info(f"  - Created call code for {inst.placeholder}")
                     _check_attr(inst, ty.ATTR_USAGE)
-                    return render.code(
-                        inst.usage.render(comp.name, *list(comp.label.keys())),
-                        labels=b_labels,
-                        params=comp.param,
+                    return inst.usage.render(
+                        # CONTEXT-BEGIN: instance/usage-noexpand
+                        name=comp.name,    # component's name
+                        param=comp.param,  # parameters
+                        label=b_labels,    # bounded (parent) labels
+                        # CONTEXT-END: instance/usage-noexpand
                         info=get_pos(comp),
                     )
                 else:
                     return None
             else:
                 log.info(f"  - Creating call code for {inst.placeholder}")
-                return render.code(
-                    inst.usage.render(comp.name, *list(comp.label.keys())),
-                    labels=b_labels,
-                    params=comp.param,
-                    info=get_pos(inst),
+                return inst.usage.render(
+                    name=comp.name,    # component's name
+                    label=b_labels,    # bounded (parent) labels
+                    param=comp.param,  # parameters
+                    info=get_pos(comp),
                 )
 
         def _recursive_blks(comp, b_labels, b_params, namespace: Set[str]):
@@ -277,13 +293,15 @@ class Builder:
             log.info(f"  - Updated params {list(params.keys())}")
 
             labels = OrderedDict({**comp.label, **b_labels})
-            for k, label in labels.items():
-                if k not in b_labels:
+            for key, label in labels.items():
+                if key not in b_labels:
                     _check_attr(label, ty.ATTR_USAGE)
-                    label.name = render.code(
-                        label.usage.render(k),
-                        labels=labels,
-                        params=params,
+                    label.name = label.usage.render(
+                        # CONTEXT-BEGIN: label/usage
+                        p=key,         # ID of the current label
+                        label=labels,  # complete namespace of resolved labels
+                        param=params,  # complete namespace of parameters
+                        # CONTEXT-END: label/usage
                         info=get_pos(label),
                     )
             log.info(
@@ -307,23 +325,34 @@ class Builder:
                 self.requs.update(comp.requirement)
                 log.info(f"  - Updated global requirements")
 
-            code = (self._annot_begin.format(comp=comp)
-                    if self._annot_begin else "\n")
-            code += render.code(comp.code, comp.label, comp.param,
-                                rinst, get_pos(comp))
-            code += (self._annot_end.format(comp=comp)
-                     if self._annot_end else "\n")
-            comp.code = code
-            log.info(f"  - rendered code")
+            if isinstance(comp.code, Template):
+                code = self._annot_begin.format(comp=comp)
+                code += comp.code.render(
+                    # CONTEXT-BEGIN: code
+                    label=comp.label,   # resolved labels
+                    param=comp.param,   # parameters
+                    placeholder=rinst,  # recursivly-expanded block instances
+                    # CONTEXT-END: code
+                    info=get_pos(comp),
+                )
+                code += self._annot_end.format(comp=comp)
+                comp.code = code
+                log.info(f"  - rendered code")
 
         main = self.get(self.main)
         _recursive_blks(main, {}, {}, set())
         try:
-            main.code = render.code(
-                main.prototype.render("main", *list(main.label.keys())),
-                blocks={ty.ATTR_CODE: main.code},
+            main.code = main.prototype.render(
+                # CONTEXT-BEGIN: code
+                name=main.name,
+                label=main.label,   # resolved labels
+                param=main.param,   # parameters
+                placeholder={
+                    "code": main.code
+                },
+                # CONTEXT-END: code
+                info=get_pos(main),
             )
         except Exception as e:
             raise ModelError(e, "main", obj=main)
         self.decls.append(self.main)
-

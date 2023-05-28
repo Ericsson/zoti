@@ -1,13 +1,8 @@
-import logging
 import operator
-import sys
 from functools import reduce
 from typing import Any, Dict
 
-from jinja2 import Environment, Template, pass_context
-
-from zoti_gen.core import LabelSchema
-from zoti_gen.exceptions import TemplateError
+from jinja2 import Environment, pass_context
 
 
 class JinjaExtensions:
@@ -78,7 +73,7 @@ class JinjaExtensions:
     def eval(context: Dict, string: str) -> str:
         """Renders a Jinja2 string within a *context*. Useful if both *string*
         and *context* are passed to the current template context."""
-        return Template(value).render(context)
+        return Template(string).render(context)
 
     @staticmethod
     def error(msg: str, *args) -> None:
@@ -150,30 +145,12 @@ class JinjaExtensions:
             raise Exception
 
 
-def code(template, labels={}, params={}, blocks={}, info=None) -> str:
-    """Renders the **template** in the context of **label**, **param**, and the
-    (previously) rendered **blocks** that will fit inside the `placeholder`.
-
-    Side-effect: prints **template** to the debug logger before trying to render it.
-    """
-    try:
-        env = Environment(extensions=["jinja2.ext.do"])
+class ZotiEnvironment(Environment):
+    def __init__(self):
+        super(ZotiEnvironment, self).__init__(extensions=["jinja2.ext.do"])
         for f in [a for a in dir(JinjaExtensions) if a[0] != "_"]:
-            env.filters[f] = vars(JinjaExtensions)[f].__func__
-            env.globals[f] = vars(JinjaExtensions)[f].__func__
-        tm = env.from_string(template)
-        ctx_labels = {k: LabelSchema().dump(p) for k, p in labels.items()}
-        logging.debug(f" * label = {ctx_labels}")
-        logging.debug(f" * param = {params}")
-        logging.debug(f" * label = {blocks}")
-        logging.debug("----------------------------------------------------")
-        logging.debug(template)
-        logging.debug("----------------------------------------------------")
-        return tm.render(label=ctx_labels, param=params, placeholder=blocks)
-    except Exception:
-        ty, msg, exc_tb = sys.exc_info()
-        while exc_tb and "template code" not in exc_tb.tb_frame.f_code.co_name:
-            exc_tb = exc_tb.tb_next
-        lineno = exc_tb.tb_lineno if exc_tb else -2
-        raise TemplateError(template, err_line=lineno,
-                            err_string=repr(msg), info=info)
+            self.filters[f] = vars(JinjaExtensions)[f].__func__
+            self.globals[f] = vars(JinjaExtensions)[f].__func__
+
+
+__zoti_gen_env__ = ZotiEnvironment()
