@@ -214,12 +214,12 @@ nodes:
         _pos: [232, 1, 0, 0, inputs/graph1.yaml]
       name: null1
       kind: BasicNode
-      type: 'NULL'
+      type: 'DROP'
     - _info:
         _pos: [237, 1, 0, 0, inputs/graph1.yaml]
       name: null2
       kind: BasicNode
-      type: 'NULL'
+      type: 'DROP'
     ports:
     - _info:
         _pos: [243, 1, 0, 0, inputs/graph1.yaml]
