@@ -72,7 +72,8 @@ class Template:
         }
         context.update(kwargs)
         try:
-            return __zoti_gen_env__.from_string(self.string).render(**context)
+            tm = __zoti_gen_env__.from_string(self.string)
+            return tm.render(**context)
         except Exception:
             ty, msg, exc_tb = sys.exc_info()
             while exc_tb and "template code" not in exc_tb.tb_frame.f_code.co_name:
