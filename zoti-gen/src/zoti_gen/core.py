@@ -154,21 +154,30 @@ class Requirement:
         return {key: self.dep_list(key) for key in self.requirement.keys()}
 
 
-class RequirementSchema(mm.Schema):
-    """Illustrates prerequisites for the parent element. Internally it is
-    represented using a :class:`zoti_gen.core.Requirement` class. It may
-    contain the following entries:
+# class RequirementSchema(mm.Schema):
+#     """Illustrates prerequisites for the parent element. Internally it is
+#     represented using a :class:`zoti_gen.core.Requirement` class. It may
+#     contain the following entries:
 
-    :include: (list) files or modules to be included in the preamble
-              of the generated target artifact
+#     :include: (list) files or modules to be included in the preamble
+#               of the generated target artifact
 
-    """
+#     """
 
-    include = mm.fields.List(mm.fields.Str())
+#     include = mm.fields.List(mm.fields.Str())
 
-    @mm.post_load
-    def make(self, data, **kwargs):
-        return Requirement(requirement=data)
+#     @mm.post_load
+#     def make(self, data, **kwargs):
+#         return Requirement(requirement=data)
+
+class RequirementField(mm.fields.Field):
+    def _deserialize(self, node, attr, data, **kwargs):
+        if not isinstance(node, dict):
+            raise mm.ValidationError("Expected dict requirement.")
+        return Requirement(requirement=node)
+
+    def _serialize(self, obj, attr, data, **kwargs):
+        return obj.requirement
 
 
 ############
@@ -552,7 +561,7 @@ class Block:
         """
 
         name = mm.fields.String(required=True)
-        requirement = mm.fields.Nested(RequirementSchema)
+        requirement = RequirementField()
         label = LabelListField()
         param = mm.fields.Mapping(required=False)
         code = TemplateField(allow_none=True)
