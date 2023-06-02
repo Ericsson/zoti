@@ -196,6 +196,19 @@ class CompositeNode(NodeABC):
         pass
 
 
+class SkeletonNode(NodeABC):
+    """Container for a skeleton node entry"""
+    type: str
+
+    @default_init
+    def __init__(self, name, type, parameters={}, mark={}, _info={}, **kwargs):
+        pass
+
+    @default_repr
+    def __repr__(self):
+        pass
+
+
 class PlatformNode(NodeABC):
     """Container for platform node entry"""
     target: Dict

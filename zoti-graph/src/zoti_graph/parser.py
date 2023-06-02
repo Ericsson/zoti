@@ -150,6 +150,8 @@ class NodeChoiceField(mm.fields.Field):
                 ret = CompositeNodeParser().load(node)
             elif node[ty.ATTR_KIND] == "CompositeNode":
                 ret = CompositeNodeParser().load(node)
+            elif node[ty.ATTR_KIND] == "SkeletonNode":
+                ret = SkeletonNodeParser().load(node)
             elif node[ty.ATTR_KIND] == "PlatformNode":
                 ret = PlatformNodeParser().load(node)
             elif node[ty.ATTR_KIND] == "ActorNode":
@@ -353,6 +355,19 @@ class CompositeNodeParser(NodeParser):
     def pmake(self, data, **kwargs):
         return super(CompositeNodeParser, self).pmake(
             data, constructor=ty.CompositeNode
+        )
+
+
+class SkeletonNodeParser(NodeParser):
+    """TODO: documentation
+
+    """
+    type = mm.fields.String(required=True)
+
+    @mm.post_load
+    def pmake(self, data, **kwargs):
+        return super(SkeletonNodeParser, self).pmake(
+            data, constructor=ty.SkeletonNode
         )
 
 
