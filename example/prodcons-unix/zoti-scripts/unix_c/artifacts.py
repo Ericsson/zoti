@@ -15,23 +15,25 @@ from dumputils import Ref, Default, PolInter, PolUnion
 
 def _gen_arg(var, typ, T, casting=False, out=False, **kwargs):
     tt = T.get(typ)
-    need_malloc = (isinstance(tt, Array) or isinstance(tt, Structure)) and tt.need_malloc()
-    if (not casting)   and (not out) and (not need_malloc):
+    need_malloc = (isinstance(tt, Array) or isinstance(
+        tt, Structure)) and tt.need_malloc()
+    if (not casting) and (not out) and (not need_malloc):
         return f"&{var}"
     elif (not casting) and (not out) and need_malloc:
         return f"{var}"
-    elif (not casting) and out       and (not need_malloc):
+    elif (not casting) and out and (not need_malloc):
         return f"&{var}"
-    elif (not casting) and out       and need_malloc:
+    elif (not casting) and out and need_malloc:
         return f"{var}"
-    elif casting       and (not out) and (not need_malloc):
+    elif casting and (not out) and (not need_malloc):
         return f"({T.c_name(typ)} *) &{var}"
-    elif casting       and (not out) and need_malloc:
+    elif casting and (not out) and need_malloc:
         return f"({T.c_name(typ)} *) &{var}"
-    elif casting       and out       and (not need_malloc):
+    elif casting and out and (not need_malloc):
         return f"({T.c_name(typ)} *) &{var}"
-    elif casting       and  out      and need_malloc:
+    elif casting and out and need_malloc:
         return f"({T.c_name(typ)} *) {var}"
+
 
 def _mangle_c_name(fullname):
     return str(fullname).replace("/", "_").replace("-", "_").replace(".", "_")
@@ -45,7 +47,7 @@ def _make_global_inits(name, atoms, ports, G, T):
         "directive": ["pass"],
     }
     code = "".join([
-        f"{prefix}{p['usage'][0]}{suffix};\n"
+        f"{prefix}{p['usage']}{suffix};\n"
         for p, prefix, suffix in atoms
     ]) + "\n".join([
         T.gen_decl(p.name, **p.data_type, static="probe_buffer" in p.mark)
@@ -53,7 +55,7 @@ def _make_global_inits(name, atoms, ports, G, T):
     ])
     comp = {
         "name": "InitGlobalVariables",
-        "prototype": ["{{ placeholder['code'] }}"],
+        "prototype": "{{ placeholder['code'] }}",
         "code": code,
     }
     return inst, comp
@@ -63,12 +65,12 @@ def _make_init_stage1(name, ports, T):
     inst = {
         "placeholder": "INIT_stage1",
         "block": Ref(f"DFLF_{name}_INIT_stage1"),
-        "usage": ["name", "$name();"],
+        "usage": "{{name}}();"
     }
     code = ""  # TODO: make timer initialization code
     comp = {
         "name": f"DFLF_{name}_INIT_stage1",
-        "prototype": ["name", 'void $name() { {{ placeholder.code }} }'],
+        "prototype": 'void {{name}}() { {{ placeholder.code }} }',
         "code": code,
     }
     return inst, comp
@@ -78,7 +80,7 @@ def _make_init_stage2(name, probes, timers, G, T):
     inst = {
         "placeholder": "INIT_stage2",
         "block": Ref(f"DFLF_{name}_INIT_stage2"),
-        "usage": ["name", "$name();"],
+        "usage": "{{name}}();",
     }
     # TODO: make proper assignment based on FTN macros
     code = "\n".join(
@@ -90,7 +92,7 @@ def _make_init_stage2(name, probes, timers, G, T):
 
     comp = {
         "name": f"DFLF_{name}_INIT_stage2",
-        "prototype": ["name", 'void $name() { {{ placeholder.code }} }'],
+        "prototype": 'void {{name}}() { {{ placeholder.code }} }',
         "code": code,
     }
     if timers:
@@ -173,7 +175,7 @@ def _make_kernel_component(node, parent, G, T):
         "prefix": "*",
         "prtarg": f"const {T.c_name(G.entry(p).data_type['type'])}* {G.entry(p).name}",
         "usearg": _gen_arg(
-            f"{{{{ label.${p.name()}.name }}}}", G.entry(
+            f"{{{{ label.{p.name()}.name }}}}", G.entry(
                 p).data_type['type'], T,
             casting=(any([G.entry(i).kind == ty.Dir.IN
                           for i in G.connected_ports(p)
@@ -185,7 +187,7 @@ def _make_kernel_component(node, parent, G, T):
         "prefix": "*",
         "prtarg": f"{T.c_name(G.entry(p).data_type['type'])}* {G.entry(p).name}",
         # "prtarg": f"{T.c_name(G.entry(p).data_type['type'])}{'*' if T.get(G.entry(p).data_type['type']).need_malloc() else ''} {G.entry(p).name}",
-        "usearg": _gen_arg(f"{{{{ label.${p.name()}.name }}}}",
+        "usearg": _gen_arg(f"{{{{ label.{p.name()}.name }}}}",
                            G.entry(p).data_type['type'], T, out=True)
     } for p in oports]
 
@@ -198,30 +200,29 @@ def _make_kernel_component(node, parent, G, T):
                 "parent": [
                     o.name() for o in G.connected_ports(p) if G.parent(o) == parent][0], }
               } for p in iports + oports] +
-            [{"usage_to_label": {"child": p.name(), "usage": [G.entry(p).name]}}
+            [{"usage_to_label": {"child": p.name(), "usage": G.entry(p).name}}
              for p in globs]
         ),
     }
     if "inline" in entry.mark:
         inst["directive"] = ["expand"]
     else:
-        inst["usage"] = (["name"] + [p.name() for p in iports + oports] +
-                         [f'$name({", ".join([p["usearg"] for p in portinfo])});'])
+        inst["usage"] = (
+            '{{name}}' + f'({", ".join([p["usearg"] for p in portinfo])});')
     comp = {
         "name": _mangle_c_name(node),
         "param": entry.parameters,
         "label": ([{"name": p["locid"],
                     "glue": p["access"] | {"prefix": p["prefix"]}}
                    for p in portinfo] +
-                  [{"name": p.name(), "usage": [G.entry(p).name],
+                  [{"name": p.name(),
+                    "usage": G.entry(p).name,
                     "glue": T.gen_access_dict(
                         G.entry(p).data_type["type"], read_only=False)}
                    for p in globs]
                   ),
-        "prototype": [
-            "name",
-            (f'inline static void $name ({", ".join([p["prtarg"] for p in portinfo])}) '
-             '{ {{ placeholder.code }} }')],
+        "prototype": (f'inline static void {{{{name}}}} ({", ".join([p["prtarg"] for p in portinfo])}) '
+                      '{ {{ placeholder.code }} }'),
         "code": entry.extern,
         "_info": entry._info
     }
@@ -239,12 +240,12 @@ def _make_actor_scenario(node, G, T):
     ]
     inter_ports = G.ports(node, select=lambda n: "inter_var" in n.mark)
     inter_usage = [{
-        "type": T.make_type(from_spec={ "type": "ref", "ref": G.entry(p).data_type['type'].to_json()})["type"],
-        "declargs":{"var": f"*{{{{label.{G.entry(p).name}.name}}}}",
-                    **G.entry(p).data_type},
+        "type": T.make_type(from_spec={"type": "ref", "ref": G.entry(p).data_type['type'].to_json()})["type"],
+        "declargs": {"var": f"*{{{{label.{G.entry(p).name}.name}}}}",
+                     **G.entry(p).data_type},
         "consargs": ["{{label." + G.entry(p).name + ".name}}",
                      "(*{{ label." + G.entry(p).name + ".name}})"],
-                     # T.c_name(G.entry(p).data_type["type"])],
+        # T.c_name(G.entry(p).data_type["type"])],
         "descargs": ["{{label." + G.entry(p).name + ".name}}",
                      G.entry(p).data_type.get("value")]
     } for p in inter_ports]
@@ -254,7 +255,7 @@ def _make_actor_scenario(node, G, T):
             p, G.entry(p), G.entry(G.entry(p).mark["socket_port"]),
             # [G.entry(o).name for o in G.connected_ports(p)
             #  if "udp_socket" in G.entry(o).name
-            #  and G.depth(G.commonAncestor(p, o)) >= 1][0], 
+            #  and G.depth(G.commonAncestor(p, o)) >= 1][0],
             T)
         for p in G.ports(node, select=lambda n: n.kind == ty.Dir.OUT)
     ]
@@ -276,7 +277,7 @@ def _make_actor_scenario(node, G, T):
         "block": Ref(_mangle_c_name(str(node))),
         "directive": ["expand"],  # TODO
         "bind": [{"label_to_label": bind} for bind in binds],
-        "usage": ["\n".join(usage)],
+        "usage": "\n".join(usage),
         "_info": entry._info,
     }
 
@@ -325,17 +326,21 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
     # TODO: ports between scenarios
     ports = (rcv_ports +
              [{"name": p.name} for p in oports] +
-             [{"name": G.entry(p).name, "usage": [G.get_mark("buff_name", p)]}
+             [{"name": G.entry(p).name, "usage": G.get_mark("buff_name", p)}
               for p in G.ports(actor_id, select=lambda p: p.kind == ty.Dir.IN)
               if p != port_id])
 
-    proto = rcv_proto[:-1] + [
-        rcv_proto[-1]
+    def mkODeclName(p):
+        prefix = '*' if T.get(p.data_type['type']).need_malloc() else ''
+        return f"{prefix} {{{{label.{p.name}.name}}}}"
+
+    proto = (
+        rcv_proto
         + T.gen_decl(f"{{{{label.{iport.name}.name}}}}", **iport.data_type)
-        + "\n" + "\n ".join([
-            T.gen_decl(f"{'*' if T.get(p.data_type['type']).need_malloc() else ''} {{{{label.{p.name}.name}}}}", **p.data_type)
-            for p in oports
-        ]) + '\n {{ placeholder.code }}\n}']
+        + "\n"
+        + "\n ".join([T.gen_decl(mkODeclName(p), **p.data_type)
+                     for p in oports])
+        + '\n {{ placeholder.code }}\n}')
 
     # TODO:
     preproc = None
@@ -379,11 +384,11 @@ def genspec(G, T, prepare_platform_ports, expand_actors, fuse_actors,
             G.entry(p)
             for p in G.ports(pltf, select=lambda p: isinstance(p.port_type, Timer))]
         atomports = [
-            ({"name": "atom_table_len", "usage": ["DFL_dyn_atom_table_len"]},
+            ({"name": "atom_table_len", "usage": "DFL_dyn_atom_table_len"},
              "static size_t ", " = 0"),
-            ({"name": "atom_table_inited", "usage": ["DFL_atom_table_inited"]},
+            ({"name": "atom_table_inited", "usage": "DFL_atom_table_inited"},
              "static bool ", " = false"),
-            ({"name": "atom_table", "usage": ["DFL_atom_table"]},
+            ({"name": "atom_table", "usage": "DFL_atom_table"},
              "static DFL_atom_entry_t ", "[] = {\n" +
              "".join([
                  f"{{\"{p.mark['probe_buffer']}\", DFL_ATOM_INVALID_BIT}}\n"
@@ -391,9 +396,9 @@ def genspec(G, T, prepare_platform_ports, expand_actors, fuse_actors,
              ]) + "}")]
         if "init_atom_table" in G.entry(pltf).mark:
             atomports += [
-                ({"name": "dyn_table", "usage": ["DFL_dyn_atom_table"]},
+                ({"name": "dyn_table", "usage": "DFL_dyn_atom_table"},
                  "DFL_atom_entry_t *", " = 0"),
-                ({"name": "dyn_table_inited", "usage": ["DFL_dyn_atom_table_inited"]},
+                ({"name": "dyn_table_inited", "usage": "DFL_dyn_atom_table_inited"},
                  "static bool ", " = false"),
             ]
 
@@ -439,8 +444,7 @@ def genspec(G, T, prepare_platform_ports, expand_actors, fuse_actors,
             },
             "label": [a for a, _, _ in atomports] + [{"name": p} for _, p in oport],
             "param": {"CFG": cfg_names},
-            "prototype": [
-                'int main(int argc, char * argv[]) { {{placeholder.code}} }'],
+            "prototype": 'int main(int argc, char * argv[]) { {{placeholder.code}} }',
             "instance": [
                 glbs_inst,
                 stg1_inst,
@@ -465,11 +469,11 @@ def genspec(G, T, prepare_platform_ports, expand_actors, fuse_actors,
         }
 
         defaults = PolInter([{
-            "label": [{"usage":  PolUnion(["p", "{{label.$p.name}}"])}],
+            "label": [{"usage":  PolUnion("{{label[p].name}}")}],
             "instance": [{
                 "bind": [{
                     "label_to_label": {
-                        "usage": PolUnion(["p", "{{label.$p.name}}"])}}]
+                        "usage": PolUnion("{{label[p].name}}")}}]
             },]
         },])
 
@@ -518,6 +522,7 @@ def typedefs(G, T, port_inference, **kwargs):
 
 _port_name_LUT = {}
 
+
 def _port_spec(G, uid):
     entry = G.entry(uid)
     if entry.kind == ty.Dir.IN:
@@ -553,6 +558,7 @@ def _port_spec(G, uid):
         port_intrinsic
     ]
 
+
 def _atom_spec(G, uid):
     entry = G.entry(uid)
     port_intrinsic = {
@@ -575,6 +581,7 @@ def _atom_spec(G, uid):
         },
         port_intrinsic
     ]
+
 
 def gendepl(G, **kwargs):
     depl = {}
@@ -605,15 +612,15 @@ def gendepl(G, **kwargs):
                 # "name": f"proc-{idx}-{entry.name}",
                 "nodes": [
                     _port_spec(G, p)
-                    for p in G.ports(pltf, select=lambda x: x.kind != ty.Dir.SIDE) 
+                    for p in G.ports(pltf, select=lambda x: x.kind != ty.Dir.SIDE)
                 ] + [
                     _atom_spec(G, p)
-                    for p in G.ports(pltf, select=lambda x: "probe_buffer" in x.mark) 
+                    for p in G.ports(pltf, select=lambda x: "probe_buffer" in x.mark)
                 ]
             }
-            
+
         ]
-        
+
         depl["nodes"].append(node)
 
     # idx = 0

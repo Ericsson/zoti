@@ -23,7 +23,7 @@ class Socket(PortTypeABC):
 
     def __init__(self, external_name: str = None):
         self.ext_name = external_name
-        
+
     def buffer_type(self):
         return {"name": "DflSys.UdpPacket"}
 
@@ -38,19 +38,17 @@ class Socket(PortTypeABC):
         exp_base_size = T.get(exp_type)._gen_base_size_expr(T.c_name(exp_type))
         exp_size = T.get(exp_type).gen_size_expr(T.c_name(exp_type))
         var = f"(({T.c_name(exp_type)} *)&{{{{label.{iport_name}.name}}}})"
-        
-        
+
         labels = [
-            {"name": "socket", "usage": ["DFL_socket"]},
+            {"name": "socket", "usage": "DFL_socket"},
             {"name": "size"},
-            {"name": iport_name, "usage": [f"udp2ram_{iport_name}"]},
+            {"name": iport_name, "usage": f"udp2ram_{iport_name}"},
         ]
         # prototype expects to be closed by caller
-        proto = ["name",
-                 " void $name(int {{label.socket.name}}) {\n"
+        proto = (" void {{name}}(int {{label.socket.name}}) {\n"
                  " uint16_t {{label.size.name}};\n"  # +
                  # T.gen_decl(f"{{{{label.{iport_name}.name}}}}", "DflSys.UdpPacket") + "\n"
-                 ]
+                 )
         instances = [{
             "placeholder": "receive",
             "block": Ref(f"recv_{prefix}_{iport_name}"),
@@ -59,7 +57,8 @@ class Socket(PortTypeABC):
                 {"label_to_label": {"parent": iport_name, "child": "ram"}},
                 {"label_to_label": {"parent": "socket", "child": "socket"}},
                 {"label_to_label": {"parent": "size", "child": "size"}},
-                {"value_to_param": {"child": "expected_type", "value": str(exp_type)}},
+                {"value_to_param": {
+                    "child": "expected_type", "value": str(exp_type)}},
                 {"value_to_param": {"child": "expected_base_size",  "value": exp_base_size}},
                 {"value_to_param": {"child": "expected_size", "value": exp_size}}
             ]
@@ -79,7 +78,7 @@ class Socket(PortTypeABC):
         }, {
             "name": f"marshal_{prefix}_{iport_name}",
             "code": T.get(exp_type).gen_unmarshal(var, f"(*{var})"),
-            "prototype": ['{{ placeholder["code"] }}']
+            "prototype": '{{ placeholder["code"] }}'
         }]
         return labels, proto, instances, blocks
 
@@ -89,7 +88,7 @@ class Socket(PortTypeABC):
         oport_tyspec = T.get(oport_ty["type"])
         oport_name = oport_entry.name
         exp_size = oport_tyspec.gen_size_expr(T.c_name(oport_ty["type"]))
-        
+
         labels = []
 
         # print(oport_ty)
@@ -101,12 +100,12 @@ class Socket(PortTypeABC):
             oport_tyspec.gen_marshal(var, f"(*{var})"),
             oport_tyspec.gen_desctor(var, oport_ty.get("value"))
         ]
-        
+
         instances = [{                                       # marshalling first
             "placeholder": f"marshal_{oport_id}",
             "block": None,
             "directive": ["expand"],
-            "usage": [oport_tyspec.gen_marshal(var, f"(*{var})")],
+            "usage": oport_tyspec.gen_marshal(var, f"(*{var})"),
             "bind": [{"label_to_label": {"child": oport_name, "parent": oport_name}}]
         }, {                                                 # send after marshalling
             "placeholder": f"send_{oport_id}",
@@ -116,11 +115,11 @@ class Socket(PortTypeABC):
                 {"value_to_param": {"child": "expected_size", "value": exp_size}},
                 {"label_to_label": {
                     "child": "data", "parent": oport_name,
-                    "usage": ['p', ("" if oport_tyspec.need_malloc() else "&") + '{{label.$p.name}}']}}, 
+                    "usage": ("" if oport_tyspec.need_malloc() else "&") + '{{label[p].name}}'}},
                 {"usage_to_label": {"child": "socket",
-                                    "usage": [connected.name]}},
+                                    "usage": connected.name}},
                 {"usage_to_label": {"child": "size",
-                                    "usage": [f"{oport_name}_size"]}},
+                                    "usage": f"{oport_name}_size"}},
 
             ]
         }]
@@ -155,16 +154,14 @@ class Timer(PortTypeABC):
 
     def receiver_genspec(self, iport_name: str, exp_type: str, prefix: str,  T):
         labels = [
-            {"name": "timestamp", "usage": ["DFL_timestamp"]},
-            {"name": iport_name, "usage": [f"timerrecv_{iport_name}",],
+            {"name": "timestamp", "usage": "DFL_timestamp"},
+            {"name": iport_name, "usage": f"timerrecv_{iport_name}",
              "glue": T.gen_access_dict("Common.Timespec", read_only=False)},
         ]
         # prototype expects to be closed by caller
-        proto = ["name",
-                 " void $name(int64_t {{label.timestamp.name}}) {\n"  # +
-                 # T.gen_decl(f"{{{{label.{iport_name}.name}}}}",
-                 #            "Common.Timespec") + "\n"
-                 ]
+        proto = (" void {{name}}(int64_t {{label.timestamp.name}}) {\n"
+                 # T.gen_decl(f"{{{{label.{iport_name}.name}}}}", "Common.Timespec") + "\n"
+                 )
         instances = [{
             "placeholder": "read_timer",
             "block": Ref(f"read_timer_{prefix}_{iport_name}"),
@@ -189,7 +186,7 @@ class Timer(PortTypeABC):
             "trigger-type": "timer",
             "period": self.period
         }
-    
+
 ######## SYNC PROCEDURES ########
 
 
@@ -263,4 +260,3 @@ def make_markings(plist, pids=None):
         return
     ref = _merge_dicts(plist, "mark", "Data type argument mismatch: ")
     return ref.mark
-

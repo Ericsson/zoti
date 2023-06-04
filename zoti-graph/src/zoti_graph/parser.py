@@ -359,7 +359,16 @@ class CompositeNodeParser(NodeParser):
 
 
 class SkeletonNodeParser(NodeParser):
-    """TODO: documentation
+    """*OBS: experimental!*
+
+    Node (cluster) that describe an implicit pattern formed using its
+    child nodes. The pattern is denoted by its *type* entry. Unlike
+    ``ActorNode``, this node does not imply a (trigger) behavior,
+    rather a specific interconnection pattern. Obviously, this name
+    needs to resolved to a certain code template by the translator.
+
+    ``type:`` <str>
+      name of pattern
 
     """
     type = mm.fields.String(required=True)

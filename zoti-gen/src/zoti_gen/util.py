@@ -1,6 +1,6 @@
 import pkgutil
 import re
-from typing import Set
+from typing import Set, Tuple
 
 from marshmallow import post_load
 
@@ -45,9 +45,12 @@ def with_schema(schema_base_class):
 #     f.seek(pos)
 #     return line
 
+C_DELIMITERS = ("\\ *Template: *{name}", "\\ *End: *{name}")
+VHDL_DELIMITERS = ("-- *Template: *{name}", "-- *End: *{name}")
 
-def read_template(module: str, filename: str, name: str,
-                  delimiters=("\\ *Template: *{name}", "\\ *End: *{name}")) -> str:
+
+def read_at(module: str, filename: str, name: str,
+            delimiters: Tuple[str, str] = C_DELIMITERS) -> str:
     """Returns a template string from a (possibly formatted) external
     source file. A source file may contain multiple templates, hence
     this method returns only the one between ``delimiter`` for
@@ -65,14 +68,6 @@ def read_template(module: str, filename: str, name: str,
     :arg delimiters: tuple containing the begin and end marker for the
         issued template, formatted as regular expressions where
         ``{name}`` is replaced with **name**.
-
-    Example usage:
-
-    .. code-block:: python
-
-        code: str = field(
-            default=read_template(__name__, "templates.c", "ReadArray.C")
-        )
 
     """
     begin = delimiters[0].format(name=name)
