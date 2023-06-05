@@ -192,6 +192,11 @@ class Builder:
                     info=info
                 )
                 newlabelb[child] = b_label
+                
+            def param_to_label(parent, child, info=None):
+                b_label = Label(name=params[parent], usage=params[parent], glue={})
+                b_label.name = params[parent]
+                newlabelb[child] = b_label
 
             def usage_to_label(child, usage, info=None):
                 b_label = Label(name=usage.render(

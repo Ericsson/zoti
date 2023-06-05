@@ -27,9 +27,10 @@ FUN_LTOL = "label_to_label"  # member of ProjHandler.resolve._map_bindings
 FUN_UTOL = "usage_to_label"  # member of ProjHandler.resolve._map_bindings
 FUN_PTOP = "param_to_param"  # member of ProjHandler.resolve._map_bindings
 FUN_VTOP = "value_to_param"  # member of ProjHandler.resolve._map_bindings
+FUN_PTOL = "param_to_label"  # member of ProjHandler.resolve._map_bindings
 
 KEYS_PRAGMA = [PRAGMA_PASS, PRAGMA_NEW, PRAGMA_EXP]
-KEYS_BIND = [FUN_LTOL, FUN_UTOL, FUN_PTOP, FUN_VTOP]
+KEYS_BIND = [FUN_LTOL, FUN_UTOL, FUN_PTOP, FUN_VTOP, FUN_PTOL]
 
 
 class Nested(mm.fields.Nested):
@@ -37,7 +38,7 @@ class Nested(mm.fields.Nested):
         super(Nested, self).__init__(nested, **kwargs)
 
     def _deserialize(self, node, attr, data, **kwargs):
-        try:
+        try: 
             return super(Nested, self)._deserialize(node, attr, data, **kwargs)
         except mm.ValidationError as error:
             if zoml.get_pos(node):
@@ -312,6 +313,14 @@ class BindSchema(mm.Schema):
             {
                 "child": mm.fields.String(required=True),
                 "value": mm.fields.String(required=True),
+            }
+        )
+    )
+    param_to_label = mm.fields.Nested(
+        mm.Schema.from_dict(
+            {
+                "parent": mm.fields.String(required=True),
+                "child": mm.fields.String(required=True),
             }
         )
     )
