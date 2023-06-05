@@ -45,7 +45,7 @@ def with_schema(schema_base_class):
 #     f.seek(pos)
 #     return line
 
-C_DELIMITERS = ("\\ *Template: *{name}", "\\ *End: *{name}")
+C_DELIMITERS = ("// *Template: *{name}", "// *End: *{name}")
 VHDL_DELIMITERS = ("-- *Template: *{name}", "-- *End: *{name}")
 
 
