@@ -262,6 +262,7 @@ class PrimTy(Flag, metaclass=SearchableEnum):
     DROP = 0
     SYSTEM = 1
     BYPASS = 2
+    CONST = 3
 
 
 class BasicNode(NodeABC):
