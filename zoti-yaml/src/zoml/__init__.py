@@ -1,7 +1,6 @@
 from .core import INFO, POS, Pos, PosStack, Ref, attach_pos, get_pos
 from .exceptions import MarkedError, ModuleError, SearchError
 from .handlers import Module, Project
-from .loader import LoaderWithInfo
 
 from importlib.metadata import distribution
 __distribution__ = distribution("zoti_yaml")
