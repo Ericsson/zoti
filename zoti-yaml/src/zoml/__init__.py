@@ -1,7 +1,6 @@
 from .core import INFO, POS, Pos, PosStack, Ref, attach_pos, get_pos
 from .exceptions import MarkedError, ModuleError, SearchError
-from .module import Module
-from .project import Project
+from .handlers import Module, Project
 from .loader import LoaderWithInfo
 
 from importlib.metadata import distribution

@@ -1,5 +1,5 @@
-from zoti_yaml.dumper import ZotiDumper
-from zoti_yaml import Project, Module, Pos, PosStack, get_pos
+from zoml import Project, Module, Pos, PosStack, get_pos
+from zoml.dumper import ZotiDumper
 import os
 import sys
 import yaml
@@ -56,5 +56,5 @@ def test_scenario1() -> None:
     except Exception as e:
         raise e
     finally:
-        # os.remove("tmp.yaml")
+        os.remove("tmp.yaml")
         pass

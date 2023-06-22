@@ -2,7 +2,7 @@ from json import JSONEncoder
 
 from yaml import Dumper
 
-from zoti_yaml.core import Pos, Ref, TreePath
+from zoml.core import Pos, Ref, TreePath
 
 
 class ZotiDumper(Dumper):

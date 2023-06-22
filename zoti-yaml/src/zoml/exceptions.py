@@ -1,4 +1,4 @@
-from zoti_yaml.core import Pos
+from zoml.core import Pos
 
 
 class ModuleError(Exception):
@@ -20,18 +20,26 @@ class ModuleError(Exception):
 
 
 class SearchError(Exception):
+    """Raised when a search based on a :class:`zoml.core.TreePath`
+    fails.
+
+    """
+
     def __init__(self, what, path=None, obj=None):
         self.what = what
         self.path = path
         self.obj = obj
 
     def __str__(self):
-        keys = f" among {list(self.obj.keys())}" if isinstance(self.obj, dict) else ""
+        keys = f" among {list(self.obj.keys())}" if isinstance(
+            self.obj, dict) else ""
         path = f" (in path '{self.path}')"
         return f"{self.what}{path}{keys}"
 
 
 class MarkedError(Exception):
+    """Generic error enhanced with positional information."""
+
     def __init__(self, what, pos=None):
         self.what = what
         self.pos = pos.show() if isinstance(pos, Pos) else pos
@@ -39,4 +47,3 @@ class MarkedError(Exception):
     def __str__(self):
         pos = self.pos if self.pos else ""
         return f"{pos}\n{self.what}"
-    

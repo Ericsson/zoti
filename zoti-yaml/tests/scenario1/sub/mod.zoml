@@ -13,6 +13,6 @@ root:
       content4: !include {file: test.txt, begin: ":(!)", end: "(!):"}
       # Recommended way to pass caller arguments
       passed-arg: !attach {ref: !ref {path: "../zoti-args/i-need-this"}}
-      # OBS: should never be used unless you know the structure of the caller
+      # OBS: direct access to caller members is possible but NOT RECOMMENDED
       floating-ref: !ref {path: "../../root[n1]"} 
       

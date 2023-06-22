@@ -2,19 +2,30 @@
 
 This tutorial goes through the main features of ZOTI-YAML, and is
 supposed to complement the [Syntax
-Reference](syntax-reference). ZOTI-YAML is an extension of the [YAML
-1.1 language](https://yaml.org/spec/1.1/) which supports workflows
-based on modules and library imports. To showcase such a workflow, we
-set up a toy example in an arbitrary folder where the ZOTI-YAML CLI
-tool is accessible. In this example we run the CLI tool as executable
-Python module:
+Reference](syntax-reference). ZOTI-YAML *extends* the [YAML 1.1
+language](https://yaml.org/spec/1.1/) with support for modules and
+library-like component imports.
+
+First, follow the README instructions in the ZOTI-YAML project folder
+on how to build lhe package. Optionally (if not in a Pipenv shell) you
+might want to make the package visible by adding it to `PYTHONPATH`,
+e.g.
 
 ```
-export ZOTI_YAML=python3 -m zoti_yaml
+export PYTHONPATH=$PYTHONPATH:/path/to/zoti-yaml/src
+```
+
+To showcase a workflow based on ZOTI-YAML modules, we set up a toy
+example in an arbitrary folder where the ZOTI-YAML CLI tool is
+accessible. In this example we run the CLI tool as executable Python
+module:
+
+```
+export ZOML=python3 -m zoml
 ```
 
 Let a "top" module (i.e., a module which imports and uses nodes from
-other modules) called `main.zoml` be defined in the root folder as
+other modules) called `main.zoml` be defined in this folder as
 follows:
 
 ```{literalinclude} ../../tests/scenario1/main.zoml
@@ -29,9 +40,9 @@ This module imports two other modules: `mod1`, used with its qualified
 name throughout the document (see line `24`), and `sub.mod` called
 with an alias `mod2` throughout this document (see line `26`).
 
-To keep this example simple we do not extend `pathvar` (see [Syntax
-Reference](syntax-reference)), hence `mod1` needs to be defined in the
-same root as the top module:
+To keep this example simple we do not extend `pathvar` (see how
+configuration works in the [Syntax Reference](syntax-reference)),
+hence `mod1` needs to be defined in the same root as the top module:
 
 
 ```{literalinclude} ../../tests/scenario1/mod1.zoml
@@ -76,14 +87,16 @@ caption: zoticonf.toml
 To process the source files above, we run the command the command:
 
 ```
-$ZOTI_YAML --verbose --spec=toy --out=toy.yaml main
+$ZOML --verbose --spec=toy --out=toy.yaml main
 ```
 
 The argument `--verbose` can be used to print out extensive debug
 information to `stderr` and can be used to trace every step in the
 processing of the source file. It can be ignored for silent
-output. Since we declared `main` to be the top module then the output
-file `toy.yaml` will contain the following info:
+output. 
+
+Since we declared `main` to be the top module then the output file
+`toy.yaml` will contain the following info:
 
 ```{literalinclude} ../../tests/scenario1/toy.yaml
 ---
@@ -127,17 +140,14 @@ accordingly. `!attach` is used in three places, from last to first:
   `n1_n1_n1` in the same module. This is seen in `toy.yaml` at line
   `25`.
 
-By now, you should have a rough idea of the capabilities of
-ZOTI-YAML. While the new commands and their usage might seem like a
-mouthful at first, their purpose is simple: to define a generic way of
-working with specification trees distributed across multiple files and
-libraries (possibly associated with different licenses), and construct
-the information into one cohesive JSON tree. In turn, this should
-enable any tool downstream to focus on parsing the right information
-and construct its core objects irrespective to where information
-originated, while also bookkeeping metadata for debugging purposes. As
-further shown in the [ZOTI Toy
-Example](https://ericsson.github.io/zoti/example), these capabilities
-can be used to (minimally) emulate a component framework where
-parameters and interfaces can be specified after loading core
-components from designated libraries.
+This tutorial showcases a typical scenario for ZOTI-YAML where
+document trees are built from information spread across multiple
+files. In turn, this should enable any tool downstream to focus on
+parsing the right information and construct its core objects
+irrespective to where information originated, while also bookkeeping
+metadata for debugging purposes. As further shown in the [Genny
+Producer-Consumer Example](https://ericsson.github.io/zoti/example),
+these capabilities can be used to (minimally) emulate a component
+framework where parameters and interfaces can be specified after
+loading core components from designated libraries.
+

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zoti-yaml"
-version = "0.1.1"
+version = "0.2.0"
 authors = [
   { name="George Ungureanu", email="george.ungureanu@ericsson.com" },
 ]
@@ -21,8 +21,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "http://TBA.io"
-"Bug Tracker" = "http://TBA.io"
+"Homepage" = "https://ericsson.github.io/zoti/zoti-yaml/"
+"Bug Tracker" = "https://github.com/Ericsson/zoti/issues"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

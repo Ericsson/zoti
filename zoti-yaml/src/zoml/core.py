@@ -198,7 +198,7 @@ class Ref(Generic[T]):
       none is specified it is assumed to be the current module.
 
     *path*: (mutually exlusive with *name*, string)
-      A path to an element in the tree (see :class:`zoti_yaml.core.TreePath`).
+      A path to an element in the tree (see :class:`zoml.core.TreePath`).
 
     *name*: (mutually exlusive with *path*, string)
       An identifier of the element in a certain module.
@@ -206,7 +206,7 @@ class Ref(Generic[T]):
     The type of the reference depends on which tool in the downstream
     uses it. If the tool works with, e.g. JSON trees (similar to
     ZOTI-YAML) then specifying *path* is more reasonable as it is
-    being constructed into a :class:`zoti_yaml.core.TreePath`
+    being constructed into a :class:`zoml.core.TreePath`
     handler. However, if the tool works with other type of element
     identifiers, *name* should be used, as it preserves the string for
     downstream manipulation.
@@ -333,10 +333,14 @@ class Attach:
     can have any number of keyword arguments, of which one needs to be
     *ref*.
 
-    *ref*: (object) Qualified :class:`zoti_yaml.core.TreePath`-based
-      reference to another node (see ``!ref``). The *path* is absolute
-      (i.e. relative to the root of the *module*) if it starts with a
-      ``/`` or relative to this node otherwise.
+    *ref*: (object) Qualified :class:`zoml.core.TreePath`-based
+      reference to another node (see ``!ref``). If the *path*
+
+        - begins with character ``/`` , it is absolute (i.e. relative
+          to the root of the module)
+
+        - begins with a character other than ``/``, it is relative to this
+          node.
 
     *...*: (keyword pairs)
       Arbitrary entries passed to the attached node in the following
@@ -363,7 +367,7 @@ class Attach:
 
     *OBS3*: when exchanging arguments between the caller and callee it
     is recommended to use a dedicated field (e.g., check the
-    *argfields* argument of :class:`zoti_yaml.project.Project`)
+    *argfields* argument of :class:`zoml.handlers.Project`)
 
     Example:
 
@@ -504,13 +508,13 @@ class Default:
 
          !default
          - !policy:A
-           root:          # policy A
-           - foo: bar     # policy A
+           root:          # policy A holds
+           - foo: bar     # policy A holds
            - !policy:B
-             biz:         # policy B
-             - baz        # policy B
-             - buzz       # policy B
-           - bam: blep    # policy A
+             biz:         # policy B holds
+             - baz        # policy B holds
+             - buzz       # policy B holds
+           - bam: blep    # policy A holds
          - root: ...
 
     Example:

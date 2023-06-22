@@ -7,10 +7,10 @@ from typing import Any, Optional
 from sphinx.ext import autodoc
 from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
-from sphinx_toolbox.sidebar_links import SidebarLinksDirective
+# from sphinx_toolbox.sidebar_links import SidebarLinksDirective
 
 sys.path.insert(0, os.path.abspath("../../src/"))
-from zoti_yaml import __version__
+from zoml import __version__
 
 project = "zoti-yaml"
 copyright = "2023, Ericsson S&T"

@@ -7,7 +7,7 @@ import yaml
 from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode, ScalarNode
 
-import zoti_yaml.core as ty
+import zoml.core as ty
 
 
 class LoaderWithInfo(SafeLoader):
@@ -50,11 +50,11 @@ class LoaderWithInfo(SafeLoader):
         return mapping
 
 
-class ZotiYamlLoader(LoaderWithInfo):
-    """YAML loader class cwith extra spices."""
+class ZomlLoader(LoaderWithInfo):
+    """YAML loader class with extra spices."""
 
     def __init__(self, stream, key_nodes=[], **kwargs):
-        super(ZotiYamlLoader, self).__init__(stream)
+        super(ZomlLoader, self).__init__(stream)
         self._tool = distribution("zoti_yaml").name + "-" + distribution("zoti_yaml").version
         self._key_nodes = key_nodes
 
@@ -189,18 +189,14 @@ class ZotiYamlLoader(LoaderWithInfo):
                 note=str(e), problem_mark=node.start_mark)
 
 
-ZotiYamlLoader.add_constructor("!include", ZotiYamlLoader.include)
-ZotiYamlLoader.add_constructor("!default", ZotiYamlLoader.construct_default)
-ZotiYamlLoader.add_constructor("!attach", ZotiYamlLoader.construct_attach)
-ZotiYamlLoader.add_constructor("!ref", ZotiYamlLoader.construct_ref)
-ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_UNION}",
-                               ZotiYamlLoader.construct_policy_union)
-ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_RUNION}",
-                               ZotiYamlLoader.construct_policy_runion)
-ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_INTER}",
-                               ZotiYamlLoader.construct_policy_inter)
-ZotiYamlLoader.add_constructor(f"!policy:{ty.POLICY_RINTER}",
-                               ZotiYamlLoader.construct_policy_rinter)
+ZomlLoader.add_constructor("!include", ZomlLoader.include)
+ZomlLoader.add_constructor("!default", ZomlLoader.construct_default)
+ZomlLoader.add_constructor("!attach", ZomlLoader.construct_attach)
+ZomlLoader.add_constructor("!ref", ZomlLoader.construct_ref)
+ZomlLoader.add_constructor(f"!policy:{ty.POLICY_UNION}", ZomlLoader.construct_policy_union)
+ZomlLoader.add_constructor(f"!policy:{ty.POLICY_RUNION}", ZomlLoader.construct_policy_runion)
+ZomlLoader.add_constructor(f"!policy:{ty.POLICY_INTER}", ZomlLoader.construct_policy_inter)
+ZomlLoader.add_constructor(f"!policy:{ty.POLICY_RINTER}", ZomlLoader.construct_policy_rinter)
 
 
 def load(stream, Loader, **kwargs):
