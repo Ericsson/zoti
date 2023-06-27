@@ -39,16 +39,16 @@ nodes:
     edges:
     - _info:
         _pos: [56, 1, 0, 0, inputs/graph1.yaml]
-      connect: [., trig, Src/src_native, trig]
+      connect: [., trig, Src/farm_1/src_native, trig]
     - _info:
         _pos: [59, 1, 0, 0, inputs/graph1.yaml]
-      connect: [Src/src_native, inited, null1, null]
+      connect: [Src/farm_1/src_native, inited, null1, null]
     - _info:
         _pos: [63, 1, 0, 0, inputs/graph1.yaml]
-      connect: [Src/src_native, predef_data, null2, null]
+      connect: [Src/farm_1/src_native, predef_data, null2, null]
     - _info:
         _pos: [67, 1, 0, 0, inputs/graph1.yaml]
-      connect: [Src/src_native, data, counter, monitored_input]
+      connect: [Src/farm_1/src_native, data, counter, monitored_input]
     - _info:
         _pos: [70, 1, 0, 0, inputs/graph1.yaml]
       connect: [., flush, counter, flush_cnt]
@@ -69,31 +69,36 @@ nodes:
       nodes:
       - _info:
           _pos: [88, 1, 0, 0, inputs/graph1.yaml]
-        extern: Src.dfc
-        kind: KernelNode
-        name: src_native
-        ports:
-        - _info:
-            _pos: [94, 1, 0, 0, inputs/graph1.yaml]
-          kind: in
-          name: trig
-        - _info:
-            _pos: [98, 1, 0, 0, inputs/graph1.yaml]
-          data_type: {name: Tst.LinkData}
-          kind: out
-          name: data
-        - _info:
-            _pos: [103, 1, 0, 0, inputs/graph1.yaml]
-          data_type: {name: Common.Boolean, value: 'false'}
-          kind: side
-          name: inited
-          port_type: {name: assign}
-        - _info:
-            _pos: [109, 1, 0, 0, inputs/graph1.yaml]
-          data_type: {name: Tst.PredefLinkData}
-          kind: side
-          name: predef_data
-          port_type: {name: assign}
+        kind: SkeletonNode
+        name: farm_1
+        type: farm
+        nodes:         
+        - 
+          kind: KernelNode
+          extern: Src.dfc
+          name: src_native
+          ports:
+            - _info:
+                _pos: [94, 1, 0, 0, inputs/graph1.yaml]
+              kind: in
+              name: trig
+            - _info:
+                _pos: [98, 1, 0, 0, inputs/graph1.yaml]
+              data_type: {name: Tst.LinkData}
+              kind: out
+              name: data
+            - _info:
+                _pos: [103, 1, 0, 0, inputs/graph1.yaml]
+              data_type: {name: Common.Boolean, value: 'false'}
+              kind: side
+              name: inited
+              port_type: {name: assign}
+            - _info:
+                _pos: [109, 1, 0, 0, inputs/graph1.yaml]
+              data_type: {name: Tst.PredefLinkData}
+              kind: side
+              name: predef_data
+              port_type: {name: assign}
     - _info:
         _pos: [115, 1, 0, 0, inputs/graph1.yaml]
         __prev_attrs__: {name: CounterProbe}
@@ -214,12 +219,12 @@ nodes:
         _pos: [232, 1, 0, 0, inputs/graph1.yaml]
       name: null1
       kind: BasicNode
-      type: 'NULL'
+      type: 'DROP'
     - _info:
         _pos: [237, 1, 0, 0, inputs/graph1.yaml]
       name: null2
       kind: BasicNode
-      type: 'NULL'
+      type: 'DROP'
     ports:
     - _info:
         _pos: [243, 1, 0, 0, inputs/graph1.yaml]

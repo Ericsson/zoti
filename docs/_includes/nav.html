@@ -1,0 +1,6 @@
+{% if include.item.path and include.item.title %}
+{% if include.item.noweb %}{% assign path = include.item.path | relative_url %}{% else %}{% assign path = site.url | append: site.baseurl | append: "/" | append: include.item.path %}{% endif %}
+<li><a href="{{ path }}">{{ include.item.title }}</a></li>
+{% else %}
+<li>{{ include.item.title }}</li>
+{% endif %}

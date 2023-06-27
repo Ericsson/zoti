@@ -1,0 +1,17 @@
+[zoti.yaml.graph]
+tool = "zoti-graph-0.1.0"
+keys = ["nodes", "ports", "edges", "primitives"]
+ext = [".zog"]
+
+[zoti.yaml.ftn]
+tool = "zoti-yaml-0.1.0"
+keys = ["type", "entries"]
+
+[zoti.yaml.gen]
+tool = "zoti-gen-0.1.0"
+keys = ["block", "label", "instance", "bind"]
+ext = [".zoc"]
+
+[zoti.gen]
+begin_block = "\n// vvv {comp.name} begin\n"
+end_block = "\n// ^^^ {comp.name} end\n"

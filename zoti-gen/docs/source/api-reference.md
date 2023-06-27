@@ -9,16 +9,16 @@ respective page.
 ## The Project Handler
 
 ```{eval-rst}
-.. automodule:: zoti_gen.handler
+.. automodule:: zoti_gen.builder
 	:members:
 	:undoc-members:
 ```
 
-## The Code Renderer
+<!-- ## The Code Renderer -->
 
-```{eval-rst}
-.. autofunction:: zoti_gen.render.code
-```
+<!-- ```{eval-rst} -->
+<!-- .. autofunction:: zoti_gen.render.code -->
+<!-- ``` -->
 
 ## The Core Representation
 
@@ -45,7 +45,7 @@ when defining template components.
 .. autoclass:: zoti_gen.core.Ref
 	:members:	
 
-.. autoclass:: zoti_gen.core.TemplateFun
+.. autoclass:: zoti_gen.core.Template
 	:members:
 	
 ```

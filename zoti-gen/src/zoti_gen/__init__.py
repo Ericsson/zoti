@@ -1,4 +1,4 @@
 from marshmallow import post_load, pre_load
 
-from .core import Bind, Block, Instance, Label, Requirement, TemplateFun
-from .util import read_template, with_schema
+from .core import Bind, Block, Instance, Label, Requirement, Template
+from .util import read_at, with_schema, C_DELIMITERS, VHDL_DELIMITERS

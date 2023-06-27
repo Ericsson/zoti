@@ -79,13 +79,13 @@ To run the CLI tool either call it from inside the Pipenv shell:
 
 ```shell
 pipenv shell
-python -m zoti_yaml --help
+python -m zoml --help
 ```
 
 or from outside it, in the folder where the `Pipfile` resides:
 
 ```shell
-pipenv run python3 -m zoti_yaml --help
+pipenv run python3 -m zoml --help
 ```
 
 CLI arguments documented with the `--help` command can be also passed
@@ -131,6 +131,12 @@ pipenv install -e </path/to/>zoti-yaml
 ```
 
 or even in the global scope using `pip` (not recommended yet).
+
+Inside your project, ZOTI-YAML is loaded by importing the `zoml` module, i.e.
+
+```python
+import zoml
+```
 
 Documentation
 -------------

@@ -1,7 +1,7 @@
 title: ZOTI
 email: your-email@example.com
 description: >- 
-  A generic tool suite for describing code synthesis flows
+  Zero Overhead Topology Infrastructure
 repository: "Ericsson/zoti"
 baseurl: "/zoti"
 url: "https://ericsson.github.io" 

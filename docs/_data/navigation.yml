@@ -1,24 +1,30 @@
-- title: "Overview"
-  path: overview
-  
-- title: "ZOTI-YAML"
-  path: zoti-yaml
-  
-- title: "ZOTI-Graph"
-  path: zoti-graph
-  
-- title: "ZOTI-FTN"
-  path: "https://github.com/Ericsson/zoti/tree/main/zoti-ftn"
-  noweb: true
-  
-- title: "ZOTI-Tran"
-  path: zoti-tran
+- title: "Flows"
+  path: flows
+  subpages:
+  - title: "Genny"
+    path: flows/genny
 
-- title: "ZOTI-Gen"
-  path: zoti-gen
+- title: "Tools"
+  path: tools
+  subpages:
+  - title: "ZOTI-YAML"
+    path: zoti-yaml
+  
+  - title: "ZOTI-Graph"
+    path: zoti-graph
+  
+  - title: "ZOTI-FTN"
+    path: "https://github.com/Ericsson/zoti/tree/main/zoti-ftn"
+    noweb: true
+    
+  - title: "ZOTI-Gen"
+    path: zoti-gen
 
 - title: "Examples"
   path: example
+  subpages:
+  - title: "Producer-Consumer (Genny)"
+    path: example/prod-cons
   
 - title: "Acknowledgements"
   path: acknowledgements

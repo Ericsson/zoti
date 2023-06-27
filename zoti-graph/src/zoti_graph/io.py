@@ -4,10 +4,24 @@ from importlib.metadata import distribution
 import pydot
 from yaml import Dumper, Loader, dump_all, load_all
 
+import zoti_yaml as zoml
 import zoti_graph.core as ty
 from zoti_graph.appgraph import AppGraph
 
 dist = distribution("zoti_graph")
+
+
+class ZotiGraphLoader(zoml.LoaderWithInfo):
+    """YAML loader class with information for ZOTI-Graph inputs."""
+
+    def __init__(self, stream, **kwargs):
+        super(ZotiGraphLoader, self).__init__(stream)
+        self._tool = dist.name + "-" + dist.version
+        self._key_nodes = ["nodes", "ports", "edges", "primitives"]
+
+
+def print_zoti_yaml_keys():
+    return ["nodes", "ports", "edges", "primitives"]
 
 
 def dump_node_info(AG, stream):
@@ -193,6 +207,10 @@ def draw_graph(
                 else:
                     def info(x): return platform_info(x)
                 style = {"label": _label(node, info, mark)}
+            elif isinstance(entry, ty.SkeletonNode):
+                def info(x): return x.type
+                style = {"style": "bold",
+                         "label": _label(node, info, mark)}
 
             cluster = pydot.Cluster(pydot_id, **style)
             for child in children:
@@ -288,6 +306,9 @@ class AppGraphLoader(Loader):
     def cons_actorn(self, node):
         return ty.ActorNode(**self.construct_mapping(node, deep=True))
 
+    def cons_skeleton(self, node):
+        return ty.SkeletonNode(**self.construct_mapping(node, deep=True))
+
     def cons_kerneln(self, node):
         return ty.KernelNode(**self.construct_mapping(node, deep=True))
 
@@ -303,6 +324,7 @@ AppGraphLoader.add_constructor("!CompositeNode", AppGraphLoader.cons_compositen)
 AppGraphLoader.add_constructor("!BasicNode", AppGraphLoader.cons_primitiven)
 AppGraphLoader.add_constructor("!PlatformNode", AppGraphLoader.cons_platformn)
 AppGraphLoader.add_constructor("!ActorNode", AppGraphLoader.cons_actorn)
+AppGraphLoader.add_constructor("!SkeletonNode", AppGraphLoader.cons_skeleton)
 AppGraphLoader.add_constructor("!FSM", AppGraphLoader.cons_fsm)
 AppGraphLoader.add_constructor("!KernelNode", AppGraphLoader.cons_kerneln)
 

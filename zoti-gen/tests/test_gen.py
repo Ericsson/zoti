@@ -1,5 +1,6 @@
+import zoti_gen.io as io
+from zoti_gen.builder import Builder
 from zoti_yaml import Module
-from zoti_gen.handler import ProjHandler
 import os
 import sys
 import yaml
@@ -17,15 +18,15 @@ def test_scenario1() -> None:
     with open("tests/inputs/genspec_leafs.yaml") as f:
         mods.append(Module(*yaml.load_all(f, Loader=yaml.Loader)))
 
-    gen = ProjHandler("genspec_leafs", mods)
+    gen = Builder("genspec_leafs", mods)
     gen.parse()
     gen.resolve()
 
     assert len(gen.decls) == 1
     assert gen.get(
-        gen.decls[0]).code == "main(in1, in2, acc, &out) {\n \nout = acc + in1 * in2;\n \n};"
+        gen.decls[0]).code == "void mulacc(in1, in2, acc, &out) {\n \nout = acc + in1 * in2;\n \n};"
 
-    gen2 = ProjHandler("main", mods)
+    gen2 = Builder("main", mods)
     gen2.parse()
     gen2.resolve()
     assert len(gen2.requs.dep_list("include")) == 2
@@ -33,10 +34,10 @@ def test_scenario1() -> None:
         assert gen2.get(cp).code
 
     try:
-        gen2.dump_yaml("tmp.yaml")
-        gen2.dump_graph("tmp.dot")
+        io.dump_yaml(gen2, "tmp.yaml")
+        io.dump_graph(gen2, "tmp.dot")
     except Exception as e:
         raise e
     finally:
-        os.remove("tmp.dot")
+        os.remove("tmp.dot", )
         os.remove("tmp.yaml")

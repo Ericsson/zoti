@@ -9,7 +9,7 @@ from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
 
 sys.path.insert(0, os.path.abspath("../../src/"))
-from zoti_yaml import __version__
+from zoml import __version__
 
 project = "zoti-yaml"
 copyright = "2023, Ericsson S&T"
@@ -64,6 +64,7 @@ class SimpleClassDocumenter(autodoc.ClassDocumenter):
     # do not add a header to the docstring
     def add_directive_header(self, sig):
         pass
+
 
 def setup(app):
     app.add_autodocumenter(SimpleClassDocumenter)

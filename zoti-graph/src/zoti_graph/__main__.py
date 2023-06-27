@@ -63,24 +63,33 @@ action.add_argument(
     """pairs. Only specified via 'zoticonf.toml'""",
 )
 action.add_argument(
-    "--dump-out", type=str, metavar="PATH",
+    "--dump-path", type=str, metavar="PATH",
     help="""Path where debug byproducts are dumped. Default is '.' """,
+)
+action.add_argument(
+    "--info-keys", action="store_true",
+    help="""Print info keys for piping from ZOTI-YAML and exit""",
 )
 default_args = {
     "out": None,
-    "args": {}
+    "dump_path": ".",
+    "dump_args": {}
 }
 
 # Parsing and forming arguments
 args = parser.parse_args()
+if args.info_keys:
+    print(io.print_zoti_yaml_keys())
+    exit(0)
+
 try:
     log.basicConfig(level=args.loglevel,
                     format='%(levelname)s: %(message)s', stream=sys.stderr)
     conf = _mu.load_config("zoti.graph", args, default_args)
     log.info(f"{conf}")
-    dpath = Path(conf["dump_out"]) if conf["dump_out"] else Path()
+    dpath = Path(conf["dump_path"])
     # dumpargs = yaml.load(conf['args'], Loader=yaml.SafeLoader)
-    dumpargs = conf['args']
+    dumpargs = conf['dump_args']
     assert isinstance(dumpargs, dict)
     # if dumpargs:
     #     log.info("Drawing arguments found:", dumpargs)
@@ -92,7 +101,7 @@ try:
             if not "stdin" in args.input.name else None)
     if i_ext in [".yaml", ".yml"]:
         log.info(f"Parsing graph from YAML: {args.input.name}")
-        G = parse(*yaml.load_all(args.input, Loader=yaml.Loader))
+        G = parse(*yaml.load_all(args.input, Loader=io.ZotiGraphLoader))
     elif i_ext in [".json"]:
         log.info(f"Parsing graph from JSON: {args.input.name}")
         G = parse(*json.load(args.input))

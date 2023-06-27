@@ -9,7 +9,8 @@ from importlib.metadata import distribution
 from pathlib import Path
 
 from zoti_yaml import Module
-from zoti_gen.handler import ProjHandler
+from zoti_gen.builder import Builder
+import zoti_gen.io as io
 import zoti_gen._main_utils as _mu
 
 dist = distribution("zoti_gen")
@@ -17,7 +18,7 @@ parser = argparse.ArgumentParser(
     prog="zoti-gen",
     description="ZOTI template-based code generator.\n\n"
     "If input is received to the stdin it assumes it is the main module in jSON "
-    "format and\nignores 'main'. Files passed to --input are loaded as auxiliary "
+    "format and\nignores --main. Files passed to --input are loaded as auxiliary "
     "modules.",
     formatter_class=argparse.RawTextHelpFormatter,
 )
@@ -30,7 +31,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "-i", "--input", metavar="FILE", type=str, nargs='+',
-    help="Input file(s).",
+    help="Input file(s). Accepts only '.yml', '.yaml' and '.json' files.\n"
+    "Other file types are ignored.",
+)
+parser.add_argument(
+    "-m", "--main", metavar="MODULE", type=str,
+    help="Name of the main module. If not specified it is assumes to be:\n"
+    "1) the JSON stream passed to stdin (if it is the case); or\n"
+    "2) the first file in the input list."
 )
 parser.add_argument(
     "-o", "--out", metavar="FILE",
@@ -47,35 +55,47 @@ parser.add_argument(
     help="Dump the resolved dependencies as a JSON file. If provided without\n"
     "argument creates a new file in the current folder.",
 )
-parser.add_argument(
-    "-g", "--dump-graph", metavar="PATH", type=str,
-    help="Dump a graph representing the code blocks structure.",
-)
-parser.add_argument(
+action = parser.add_argument_group('debugging')
+action.add_argument(
     "--begin-block", metavar="STR", type=str,
     help="Formatted markup string to extract data at the beginning of a\n"
     "block. Main variable is {comp}.",
 )
-parser.add_argument(
+action.add_argument(
     "--end-block", metavar="STR", type=str,
-    help="Formatted markup string to extract data at the beginning of a\n"
+    help="Formatted markup string to extract data at the end of a\n"
     "block. Main variable is {comp}.",
 )
-parser.add_argument(
-    "main",
-    help="Name of the main module. If set to 'stdin' it assumes the main\n"
-    "module is a JSON passed to the input stream.",
+action.add_argument(
+    "--dump-graph", action="store_true",
+    help="Dump a graph representing the code blocks structure.",
+)
+action.add_argument(
+    "--dump-yaml", action="store_true",
+    help="Dump the resolved blocks structure in a yaml file.",
+)
+action.add_argument(
+    "--dump-path", metavar="PATH", type=str, default=".",
+    help="""Path where debug byproducts are dumped. Default is '.' """,
+)
+action.add_argument(
+    "--info-keys", action="store_true",
+    help="""Print info keys for piping from ZOTI-YAML and exit""",
 )
 default_args = {
     "input": None,
     "deps": "none",
-    "graph": None,
+    "dump_path": ".",
     "begin_block": None,
     "end_block": None,
 }
 
 # load configuration
 args = parser.parse_args()
+if args.info_keys:
+    print(io.print_zoti_yaml_keys())
+    exit(0)
+
 try:
     log.basicConfig(level=args.loglevel,
                     format='%(levelname)s: %(message)s', stream=sys.stderr)
@@ -84,29 +104,26 @@ try:
 
     modules = []
     try:
-        preamble, doc = _mu.read_json_from_stdin()
-        conf["main"] = preamble["module"]
-        modules.append(Module(preamble, doc))
+        modules.append(Module(*_mu.read_json_from_stdin()))
     except Exception:
         pass
-
     paths = [Path(p) for p in args.input] if args.input else []
     for path in paths:
         if path.suffix in [".yaml", ".yml"]:
             with open(path) as f:
-                modules.append(Module(*yaml.load_all(f, Loader=yaml.Loader)))
+                modules.append(Module(*yaml.load_all(f, Loader=io.ZotiGenLoader)))
         elif path.suffix in [".json"]:
             with open(path) as f:
                 modules.append(Module(*json.load(f)))
         else:
             log.info(f"Ignoring file '{path}'")
-    main = conf["main"]
+    main = conf["main"] if conf["main"] else modules[0].preamble["module"]
 
     if conf["lib"]:
         sys.path += conf["lib"]
 
-    gen = ProjHandler(main, modules,
-                      annotation=(conf["begin_block"], conf["end_block"]))
+    gen = Builder(main, modules,
+                  annotation=(conf["begin_block"], conf["end_block"]))
     gen.parse()
     gen.resolve()
 
@@ -125,8 +142,9 @@ try:
             log.info(f"  * Dumped dependency spec '{f.name}'")
 
     if conf["dump_graph"]:
-        gen.dump_graph(Path(conf["dump_graph"]).joinpath(
-            main).with_suffix(".genspec.dot"))
+        io.dump_graph(gen, Path(conf["dump_path"]).joinpath(main).with_suffix(".resolved.dot"))
+    if conf["dump_yaml"]:
+        io.dump_yaml(gen, Path(conf["dump_path"]).joinpath(main).with_suffix(".resolved.yaml"))
 except Exception as e:
     Path(args.out.name).unlink(missing_ok=True)
     raise e

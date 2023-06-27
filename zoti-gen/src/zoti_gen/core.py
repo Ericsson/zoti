@@ -1,12 +1,14 @@
+import sys
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pprint import pformat
-from string import Template
 from typing import Dict, List, Optional
 
 import marshmallow as mm
 import networkx as nx
 import zoti_yaml as zoml
+from zoti_gen.jinja_extensions import __zoti_gen_env__
+from zoti_gen.exceptions import TemplateError
 
 ATTR_NAME = "name"
 ATTR_BLOCK = "block"
@@ -25,9 +27,10 @@ FUN_LTOL = "label_to_label"  # member of ProjHandler.resolve._map_bindings
 FUN_UTOL = "usage_to_label"  # member of ProjHandler.resolve._map_bindings
 FUN_PTOP = "param_to_param"  # member of ProjHandler.resolve._map_bindings
 FUN_VTOP = "value_to_param"  # member of ProjHandler.resolve._map_bindings
+FUN_PTOL = "param_to_label"  # member of ProjHandler.resolve._map_bindings
 
 KEYS_PRAGMA = [PRAGMA_PASS, PRAGMA_NEW, PRAGMA_EXP]
-KEYS_BIND = [FUN_LTOL, FUN_UTOL, FUN_PTOP, FUN_VTOP]
+KEYS_BIND = [FUN_LTOL, FUN_UTOL, FUN_PTOP, FUN_VTOP, FUN_PTOL]
 
 
 class Nested(mm.fields.Nested):
@@ -35,7 +38,7 @@ class Nested(mm.fields.Nested):
         super(Nested, self).__init__(nested, **kwargs)
 
     def _deserialize(self, node, attr, data, **kwargs):
-        try:
+        try: 
             return super(Nested, self)._deserialize(node, attr, data, **kwargs)
         except mm.ValidationError as error:
             if zoml.get_pos(node):
@@ -43,65 +46,50 @@ class Nested(mm.fields.Nested):
             raise error
 
 
-class TemplateFun:
-    """Container for a template function."""
+class Template:
+    """Container for a Jinja template."""
 
-    template: Optional[str]
+    string: str
     """formatted string template"""
 
-    args: List[str]
-    """template arguments"""
-
-    attr: str
+    _parent: str
     """name of the parent node  of this template function (for debugging)"""
 
-    def __init__(self, attr, *args):
-        self.attr = attr
-        if len(args) == 0 or None in args:
-            self.args, self.template = [], None
-        elif len(args) == 1:
-            self.args, self.template = [], args[0]
-        else:
-            self.args = list(args[:-1])
-            self.template = args[-1]
+    def __init__(self, string, parent=None):
+        self._parent = parent
+        self.string = string
 
     def __repr__(self):
-        args = ", ".join(self.args)
-        return f"({args}) -> {self.template}"
+        return self.string
 
     def __bool__(self):
-        return self.template is not None
+        return bool(self.string)
 
-    def render(self, *args, **kwargs):
-        if self.template is None:
-            msg = f"Cannot render empty template for field '{self.attr}'"
-            raise AttributeError(msg)
-        if not self.args:
-            return self.template
-        context = {**dict(zip(self.args, args)), **kwargs}
-        return Template(self.template).substitute(context)
+    def render(self, label={}, param={}, placeholder={}, info=None, **kwargs) -> str:
+        context = {
+            "label": {k: LabelSchema().dump(p) for k, p in label.items()},
+            "param": param,
+            "placeholder": placeholder,
+        }
+        context.update(kwargs)
+        try:
+            tm = __zoti_gen_env__.from_string(self.string)
+            return tm.render(**context)
+        except Exception:
+            ty, msg, exc_tb = sys.exc_info()
+            while exc_tb and "template code" not in exc_tb.tb_frame.f_code.co_name:
+                exc_tb = exc_tb.tb_next
+            lineno = exc_tb.tb_lineno if exc_tb else -2
+            raise TemplateError(self.string, context, err_line=lineno,
+                                err_string=repr(msg),
+                                info=info, parent=self._parent)
 
 
-class TemplateFunField(mm.fields.Field):
+class TemplateField(mm.fields.Field):
     """A template function is a Shell-like formatted string where all the
     variables are exposed as arguments. This function is meant to be
     called by the `Rendering <rendering>`_ engine which would fill in
     the arguments.
-
-    As entry to an input specification node, a template function is
-    provided as a list of strings, where the first elements are the
-    arguments and the last argument is the formatted string. For
-    example the YAML entry:
-
-    ..  code-block:: yaml
-
-        [a, b, c, "text with $a, then $b and also $c!"]
-
-    is parsed internally to a lambda function as follows:
-
-    ..  code-block:: python
-
-        lambda a, b, c: "text with $a, then $b and also $c!"
 
     The formatted string syntax is documented `here
     <https://docs.python.org/3/library/string.html#template-strings>`_.
@@ -109,16 +97,15 @@ class TemplateFunField(mm.fields.Field):
     """
 
     def _deserialize(self, node, attr, data, **kwargs):
-        if not isinstance(node, list):
-            raise mm.ValidationError(
-                "Expected TemplateFun arguments as a list.")
-        if not len(node):
-            raise mm.ValidationError(
-                "Expected at least one argument to TemplateFun")
-        return TemplateFun(attr, *node)
+        if not isinstance(node, str):
+            raise mm.ValidationError("Expected string template.")
+        return Template(node, parent=attr)
 
     def _serialize(self, obj, attr, data, **kwargs):
-        return obj.args + [obj.template]
+        if isinstance(obj, str):
+            return obj
+        else:
+            return obj.string
 
 
 ###############
@@ -168,21 +155,30 @@ class Requirement:
         return {key: self.dep_list(key) for key in self.requirement.keys()}
 
 
-class RequirementSchema(mm.Schema):
-    """Illustrates prerequisites for the parent element. Internally it is
-    represented using a :class:`zoti_gen.core.Requirement` class. It may
-    contain the following entries:
+# class RequirementSchema(mm.Schema):
+#     """Illustrates prerequisites for the parent element. Internally it is
+#     represented using a :class:`zoti_gen.core.Requirement` class. It may
+#     contain the following entries:
 
-    :include: (list) files or modules to be included in the preamble
-              of the generated target artifact
+#     :include: (list) files or modules to be included in the preamble
+#               of the generated target artifact
 
-    """
+#     """
 
-    include = mm.fields.List(mm.fields.Str())
+#     include = mm.fields.List(mm.fields.Str())
 
-    @mm.post_load
-    def make(self, data, **kwargs):
-        return Requirement(requirement=data)
+#     @mm.post_load
+#     def make(self, data, **kwargs):
+#         return Requirement(requirement=data)
+
+class RequirementField(mm.fields.Field):
+    def _deserialize(self, node, attr, data, **kwargs):
+        if not isinstance(node, dict):
+            raise mm.ValidationError("Expected dict requirement.")
+        return Requirement(requirement=node)
+
+    def _serialize(self, obj, attr, data, **kwargs):
+        return obj.requirement
 
 
 ############
@@ -251,30 +247,39 @@ class BindSchema(mm.Schema):
     """A binding between one of the labels or parameters of the parent
     block and a label or parameter of the referenced block.
     Internally it is represented using a :class:`zoti_gen.core.Bind`
-    class. It may contain one of the following entries:
+    class. It needs to contain *only one* of the following entries:
 
     :label_to_label: (dict)
 
-        :parent: (str)
-        :child: (str)
-        :usage: (`Template Function <#template-function>`_)
+        :parent: (str) ID of parent
+        :child: (str) ID of child
+        :usage: (`Template <#code-template>`_) rendered with context:
+
+    .. literalinclude:: ../../src/zoti_gen/builder.py
+       :language: python
+       :start-after: # CONTEXT-BEGIN: bind/label_to_label
+       :end-before: # CONTEXT-END: bind/label_to_label
 
     :usage_to_label: (dict)
 
-        :child: (str)
-        :usage: (`Template Function <#template-function>`_)
+        :child: (str) ID of child
+        :usage: (`Template <#code-template>`_) rendered with context:
 
+    .. literalinclude:: ../../src/zoti_gen/builder.py
+       :language: python
+       :start-after: # CONTEXT-BEGIN: bind/usage_to_label
+       :end-before: # CONTEXT-END: bind/usage_to_label
 
     :param_to_param: (dict)
 
-        :parent: (str)
-        :child: (str)
+        :parent: (str) Parent parameter
+        :child: (str)  Child parameter
 
 
     :value_to_param: (dict)
 
-        :value: (str)
-        :child: (str) 
+        :value: (str) Value as simple string
+        :child: (str) Child parameter
 
     """
 
@@ -283,7 +288,7 @@ class BindSchema(mm.Schema):
             {
                 "parent": mm.fields.String(required=True),
                 "child": mm.fields.String(required=True),
-                "usage": TemplateFunField(required=False),
+                "usage": TemplateField(required=False),
             }
         )
     )
@@ -291,7 +296,7 @@ class BindSchema(mm.Schema):
         mm.Schema.from_dict(
             {
                 "child": mm.fields.String(required=True),
-                "usage": TemplateFunField(required=False),
+                "usage": TemplateField(required=False),
             }
         )
     )
@@ -308,6 +313,14 @@ class BindSchema(mm.Schema):
             {
                 "child": mm.fields.String(required=True),
                 "value": mm.fields.String(required=True),
+            }
+        )
+    )
+    param_to_label = mm.fields.Nested(
+        mm.Schema.from_dict(
+            {
+                "parent": mm.fields.String(required=True),
+                "child": mm.fields.String(required=True),
             }
         )
     )
@@ -348,7 +361,7 @@ class Instance:
     bind: List[Bind]
     """ list of bindings between the parent block and referenced block """
 
-    usage: TemplateFun
+    usage: Template
     """ Target-dependent template passed by type system """
 
     _info: Dict = field(default_factory=lambda: {})
@@ -381,10 +394,25 @@ class InstanceSchema(mm.Schema):
         parameters of the parent block and those of the referenced
         block.
 
-    :usage: (`Template Function <#template-function>`_) defines how
-        this block is being instantiated in case it is not expanded
-        inline (e.g., as function call). The template string is
-        defined by the type system.
+    :usage: (`Template <#code-template>`_) defines how this block is being
+        instantiated in case it is not expanded inline (e.g., as
+        function call). The template string is defined by the type
+        system. It is rendered with the following contexts, depending
+        on which directive is passed:
+
+    - ``expand`` is in directives
+
+    .. literalinclude:: ../../src/zoti_gen/builder.py
+       :language: python
+       :start-after: # CONTEXT-BEGIN: instance/usage-expand
+       :end-before: # CONTEXT-END: instance/usage-expand
+
+    - ``expand`` is not in directives
+
+    .. literalinclude:: ../../src/zoti_gen/builder.py
+       :language: python
+       :start-after: # CONTEXT-BEGIN: instance/usage-noexpand
+       :end-before: # CONTEXT-END: instance/usage-noexpand
 
     """
     placeholder = mm.fields.String(required=True, allow_none=True)
@@ -395,8 +423,8 @@ class InstanceSchema(mm.Schema):
     )
     bind = mm.fields.List(Nested(BindSchema), required=False, load_default=[])
     # usage = mm.fields.String(required=False)
-    usage = TemplateFunField(required=False, allow_none=True,
-                             load_default=TemplateFun("instance/usage"))
+    usage = TemplateField(required=False, allow_none=True,
+                          load_default=Template("", parent="instance/usage"))
     _info = mm.fields.Raw(data_key="_info", load_default={})
 
     @mm.post_load
@@ -416,7 +444,7 @@ class Label:
     name: str
     """ Unique name in the scope of a block"""
 
-    usage: TemplateFun
+    usage: Template
     """ Default usage template. Called on top-level (non-binding) instances."""
 
     glue: Dict
@@ -433,22 +461,27 @@ class LabelSchema(mm.Schema):
 
     :name: (string) unique ID in the scope of the parent block
 
-    :usage: (`Template Function <#template-function>`_) defines how
-        this label is to be expanded in the code. Provided by the type
-        system.
-
     :glue: (dict) entries with glue code tailored for various
         circumstances, provided by the type system and accessible from
         within the code template using the `label.<port_id>.glue` key.
 
+    :usage: (`Template <#code-template>`_) defines how this label is to be
+        expanded in the code. Provided by the type system. Rendered
+        with the following context:
+
+    .. literalinclude:: ../../src/zoti_gen/builder.py
+       :language: python
+       :start-after: # CONTEXT-BEGIN: label/usage
+       :end-before: # CONTEXT-END: label/usage
+
     """
     name = mm.fields.Str(required=True)
-    usage = TemplateFunField(required=True)
+    usage = TemplateField(required=True)
     glue = mm.fields.Mapping(
         keys=mm.fields.String(
             required=True,  # , validate=mm.validate.NoneOf(["name"])
         ),
-        # values=TemplateFunField(),  # TODO
+        # values=TemplateField(),  # TODO
         values=mm.fields.Raw(),
         required=False, allow_none=True, load_default={})
     _info = mm.fields.Raw(data_key="_info", load_default={})
@@ -517,21 +550,31 @@ class Block:
         :`instance <#instance>`_: (list) other blocks instantiated
             from this one.
 
-        :code: (string) containing this block's `Code Template
-            <#code-template>`_
+        :code: (`Template <#code-template>`_) containing this block's `Code
+            Template <#code-template>`_. Rendered witn the context: 
 
-        :prototype: (`Template Function <#template-function>`_) defines
-            this block's type signature, as provided from a type
-            system.
+        .. literalinclude:: ../../src/zoti_gen/builder.py
+           :language: python
+           :start-after: # CONTEXT-BEGIN: prototype
+           :end-before: # CONTEXT-END: prototype
+
+        :prototype: (`Template <#code-template>`_) defines this block's type
+            signature, as provided from a type system. Rendered with
+            the following context:
+
+        .. literalinclude:: ../../src/zoti_gen/builder.py
+           :language: python
+           :start-after: # CONTEXT-BEGIN: code
+           :end-before: # CONTEXT-END: code
 
         """
 
         name = mm.fields.String(required=True)
-        requirement = mm.fields.Nested(RequirementSchema)
+        requirement = RequirementField()
         label = LabelListField()
         param = mm.fields.Mapping(required=False)
-        code = mm.fields.String(allow_none=True)
-        prototype = TemplateFunField(allow_none=True)
+        code = TemplateField(allow_none=True)
+        prototype = TemplateField(allow_none=True)
         instance = mm.fields.List(Nested(InstanceSchema), required=False)
         _info = mm.fields.Raw(data_key="_info", load_default={})
 
@@ -542,7 +585,7 @@ class Block:
     name: str
     """ Unique ID of block. """
 
-    prototype: TemplateFun = field(default=TemplateFun("prototype"))
+    prototype: Template = field(default=Template("", parent="prototype"))
     """ Target dependent function signature provided by the type system """
 
     requirement: Optional[Requirement] = None
@@ -563,3 +606,23 @@ class Block:
     blocks"""
 
     _info: Dict = field(default_factory=lambda: {})
+
+    @property
+    def getLabelKeys(self):
+        return list(self.label.keys())
+
+    @property
+    def getLabelNames(self):
+        return [l.name for l in self.label.values()]
+
+    @property
+    def getInstancePlaceholders(self):
+        return [i.placeholder for i in self.instance]
+
+    @property
+    def getInstanceBlocks(self):
+        return [repr(i.block) for i in self.instance]
+
+    @property
+    def getType(self):
+        return type(self)

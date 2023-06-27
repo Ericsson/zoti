@@ -26,13 +26,15 @@
 
         {% if site.data.navigation %}
 	<p class="view">
-	{% for item in site.data.navigation %}
-          {% if item.path and item.title %}
-	  {% if item.noweb %}{% assign path = item.path | relative_url %}{% else %}{% assign path = site.url | append: site.baseurl | append: "/" | append: item.path %}{% endif %}
-            <li><a href="{{ path }}">{{ item.title }}</a></li>
-	  {% else %}
-	    <li>{{ item.title }}</li>
-          {% endif %}
+	{% for litem in site.data.navigation %}
+          {% include nav.html item=litem %}
+	  {% if litem.subpages %}
+	  <ul>
+	  {% for slitem in litem.subpages %}
+	    {% include nav.html item=slitem %}
+	  {% endfor %}
+	  </ul>
+	  {% endif %}
         {% endfor %}
 	</p>
         {% endif %}
