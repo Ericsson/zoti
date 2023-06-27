@@ -7,7 +7,7 @@ import yaml
 from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode, ScalarNode
 
-import zoml.core as ty
+import zoti_yaml.core as ty
 
 
 class LoaderWithInfo(SafeLoader):

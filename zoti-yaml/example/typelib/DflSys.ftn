@@ -1,5 +1,0 @@
-# System types
-
-DflSys: module {
-  UdpPacket: array(1500) integer(0..0xFF);
-};

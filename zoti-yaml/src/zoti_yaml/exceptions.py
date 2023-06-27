@@ -1,4 +1,4 @@
-from zoml.core import Pos
+from zoti_yaml.core import Pos
 
 
 class ModuleError(Exception):
@@ -20,7 +20,7 @@ class ModuleError(Exception):
 
 
 class SearchError(Exception):
-    """Raised when a search based on a :class:`zoml.core.TreePath`
+    """Raised when a search based on a :class:`zoti_yaml.core.TreePath`
     fails.
 
     """

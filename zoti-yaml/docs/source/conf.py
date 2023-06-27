@@ -7,7 +7,6 @@ from typing import Any, Optional
 from sphinx.ext import autodoc
 from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
-# from sphinx_toolbox.sidebar_links import SidebarLinksDirective
 
 sys.path.insert(0, os.path.abspath("../../src/"))
 from zoml import __version__
@@ -65,6 +64,7 @@ class SimpleClassDocumenter(autodoc.ClassDocumenter):
     # do not add a header to the docstring
     def add_directive_header(self, sig):
         pass
+
 
 def setup(app):
     app.add_autodocumenter(SimpleClassDocumenter)

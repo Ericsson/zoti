@@ -1,5 +1,3 @@
-from zoml import Project, Module, Pos, PosStack, get_pos
-from zoml.dumper import ZotiDumper
 import os
 import sys
 import yaml
@@ -7,6 +5,8 @@ from pprint import pprint
 from pathlib import PurePosixPath
 
 sys.path.insert(0, "src")
+from zoti_yaml import Project, Module, Pos, PosStack, get_pos
+from zoti_yaml.dumper import ZotiDumper
 
 
 def test_scenario1() -> None:
