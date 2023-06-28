@@ -1,7 +1,7 @@
 from copy import deepcopy
 import networkx as nx
 import logging as log
-import zoti_graph as ty
+import zoti_graph.genny as ty
 import zoti_graph.util as util
 
 import ports
@@ -36,7 +36,6 @@ def port_inference(G, T, **kwargs):
     return True  # Byproduct is a flag
 
 
-
 def prepare_platform_ports(G, T, port_inference, **kwargs):
     """Updates all input ports of platform nodes to reflect the buffer
     type required by the port receiver, respectively the socket port
@@ -48,7 +47,7 @@ def prepare_platform_ports(G, T, port_inference, **kwargs):
             entry = G.entry(iport)
             entry.data_type = T.make_type(**entry.port_type.buffer_type())
             log.info(f"  - Changed type for in port: {iport}")
-            
+
         # alter exit ports to reflect socket variables
         for oport in G.ports(pltf, select=lambda p: p.kind == ty.Dir.OUT):
             entry = G.entry(oport)
@@ -93,14 +92,15 @@ def prepare_side_ports(G, port_inference, **kwargs):
                 entry = G.entry(port)
 
                 # sync names of interconneted storage ports and make globals for them
-                if (G.entry(port).kind == ty.Dir.SIDE # and not G.entry(port).mark.get("global_var")
-                    ):
+                if (G.entry(port).kind == ty.Dir.SIDE  # and not G.entry(port).mark.get("global_var")
+                        ):
                     glb_name = _make_global(pltf, entry.name, entry)
                     for p in [e for e in ends if isinstance(G.entry(e), ty.Port)]:
                         G.entry(p).name = glb_name
                         G.entry(p).mark["global_var"] = True
-                    log.info(f"  - Promoted to global '{glb_name}': {conn.nodes}")
-                    
+                    log.info(
+                        f"  - Promoted to global '{glb_name}': {conn.nodes}")
+
                     # remove all intermediate "side" connections
                     def _to_remove(p):
                         return not isinstance(G.entry(G.parent(p)), ty.KernelNode)
@@ -108,6 +108,7 @@ def prepare_side_ports(G, port_inference, **kwargs):
                     log.info(f"  - Removed intermediate storage ports {rmd}")
 
     return True
+
 
 def prepare_intermediate_ports(G, port_inference, **kwargs):
     def _new_intermediate_connection(parent, src, dst):
@@ -137,12 +138,12 @@ def prepare_intermediate_ports(G, port_inference, **kwargs):
                 proj = G.node_projection(scen, no_parent_ports=True)
                 for src_kern, dst_kern, ports in proj.edges(data="ports"):
                     inter = _new_intermediate_connection(scen, *ports)
-                    log.info(f"  - Using {inter} as intemediate between {ports}")
+                    log.info(
+                        f"  - Using {inter} as intemediate between {ports}")
 
     return True
 
 
-    
 def expand_actors(G, T, **kwargs):
     """Expands actor descriptions to their explicit basic
     components. Assumes actors have been checked for consistency.
@@ -214,7 +215,8 @@ def expand_actors(G, T, **kwargs):
 
         # select all untagged nodes under a "default scenario"
         tags = ["preproc", "scenario", "detector"]
-        kerns = G.children(actor, select=lambda n: all([t not in n.mark for t in tags]))
+        kerns = G.children(actor, select=lambda n: all(
+            [t not in n.mark for t in tags]))
         if len(kerns) > 0:
             clus = _cluster_underneath("default", actor, kerns, entry._info,)
             G.entry(clus).mark["scenario"] = True

@@ -144,8 +144,8 @@ class BasicNode(ty.Node):
 BASE_GRAPHVIZ_STYLE = {
     "edges": {
         "all": (lambda edge, src, dst, info_f: {
-            "arrowhead": "diamond" if isinstance(src, Port) and src.is_side() else "none",
-            "arrowtail": "diamond" if isinstance(dst, Port) and dst.is_side() else "normal",
+            "arrowtail": "diamond" if isinstance(src, Port) and src.is_side() else "none",
+            "arrowhead": "diamond" if isinstance(dst, Port) and dst.is_side() else "normal",
             "dir": "both",
             "label": info_f(edge) if info_f else ""
         })
@@ -181,16 +181,16 @@ BASE_GRAPHVIZ_STYLE = {
             "shape": "record",
             "style": "rounded",
             "label": "{"
-            + ' | '.join([f"<{idp}> {p.name}: {pinfo_f(p) if info_f is not None else ''}"
-                          for idp, p in ports if p.kind == Dir.OUT])
+            + ' | '.join([f"<{idp}> {p.name}: {pinfo_f(p) if pinfo_f is not None else ''}"
+                          for idp, p in ports if p.kind == Dir.IN])
             + "} | {" + node.name
             + (f"({node._info['old-name']})" if node._info.get("old-name") else "")
             + (f": {info_f(node)}" if info_f is not None else "")
             + " | {"
-            + ' | '.join([f"<{idp}> {p.name}: {pinfo_f(p) if info_f is not None else ''}"
+            + ' | '.join([f"<{idp}> {p.name}: {pinfo_f(p) if pinfo_f is not None else ''}"
                           for idp, p in ports if p.kind == Dir.SIDE])
             + "} } | {"
-            + ' | '.join([f"<{idp}> {p.name}: {pinfo_f(p) if info_f is not None else ''}"
+            + ' | '.join([f"<{idp}> {p.name}: {pinfo_f(p) if pinfo_f is not None else ''}"
                           for idp, p in ports if p.kind == Dir.OUT])
             + "}"
         })

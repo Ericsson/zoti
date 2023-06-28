@@ -141,7 +141,9 @@ class PortParser(mm.Schema):
 
     @mm.pre_dump
     def pdump(self, obj, **kwargs):
-        return vars(obj)
+        ret = vars(obj)
+        ret["kind"] = ret["kind"].name
+        return ret
 
 
 ###########
@@ -167,8 +169,6 @@ class NodeChoiceField(mm.fields.Field):
                 ret = KernelNodeParser().load(node)
             elif node[ATTR_KIND] == "BasicNode":
                 ret = BasicNodeParser().load(node)
-            elif node[ATTR_KIND] == "Port":
-                ret = PortParser().load(node)
             else:
                 raise ValueError(f"Node kind not recognized '{node['kind']}'")
             return ret
@@ -197,9 +197,6 @@ class NodeChoiceField(mm.fields.Field):
         elif isinstance(value, ty.BasicNode):
             ret = BasicNodeParser().dump(value)
             ret[ATTR_KIND] = "BasicNode"
-        elif isinstance(value, ty.Port):
-            ret = PortParser().dump(value)
-            ret[ATTR_KIND] = "Port"
         else:
             raise ValueError(f"Wrong serialization type {type(value)}")
         return ret

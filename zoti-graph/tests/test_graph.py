@@ -125,17 +125,18 @@ def test_scenario1() -> None:
         with open("tmp.dot", "w") as f:
             io.draw_graphviz(G, f)
             io.draw_tree(G, f)
+        with open("tmp.json", "w") as f:
+            io.dump_raw(G, f)
+        with open("tmp.json", "r") as f:
+            G.reset(G.root)
+            G = io.from_raw(f)
+            assert G._instance == "genny"
+            assert G.depth(
+                Uid("Tst/Src/counter/buffer-flush/_kern/^flush_cnt")
+            ) == 5
     except Exception as e:
         raise e
     finally:
         os.remove("tmp.dot")
-        # os.remove("tmp.raw")
+        os.remove("tmp.json")
         pass
-
-    raw = io.dump_raw(G)
-    G.reset(G.root)
-    G = io.from_raw(raw)
-    assert G._instance == "genny"
-    assert G.depth(
-        Uid("Tst/Src/counter/buffer-flush/_kern/^flush_cnt")
-    ) == 5

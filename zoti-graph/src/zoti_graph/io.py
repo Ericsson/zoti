@@ -2,23 +2,19 @@ from enum import Flag
 from importlib.metadata import distribution
 
 import pydot
-import pickle
+import json
 
 import zoti_yaml as zoml
 import zoti_graph.core as ty
 import zoti_graph.genny.core as genny_core
 import zoti_graph.genny.parser as genny_parse
+from zoti_graph.util import GenericJSONDecoderHook, GenericJSONEncoder
 from zoti_graph.appgraph import AppGraph
+
 
 DIST = distribution("zoti_graph")
 GRAPHVIZ_STYLE = {
     "genny": genny_core.BASE_GRAPHVIZ_STYLE
-}
-NODE_FIELD = {
-    "genny": genny_parse.NodeChoiceField()
-}
-EDGE_SCHEMA = {
-    "genny": genny_parse.EdgeParser()
 }
 
 
@@ -139,7 +135,7 @@ def draw_graphviz(
             dot_node = pydot.Node(
                 _dot_id(node),
                 **_make_style("leafs", AG.entry(node),
-                              [(p, AG.entry(p)) for p in AG.ports(node)],
+                              [(p.name(), AG.entry(p)) for p in AG.ports(node)],
                               node_info, port_info)
             )
             parent.add_node(dot_node)
@@ -155,7 +151,7 @@ def draw_graphviz(
     graph.write_dot(stream.name)
 
 
-def dump_raw(G):
+def dump_raw(G, stream):
     """Serializes graph *G* to raw pickle and dumps it to *stream*. The
     stream will contain a 4-tuple:
 
@@ -166,22 +162,16 @@ def dump_raw(G):
     - a list of all edge entries in the graph.
 
     """
-    assert NODE_FIELD[G._instance]
-    assert EDGE_SCHEMA[G._instance]
-
-    return [
+    return json.dump([
         DIST.version,
         G._instance,
         repr(G.root),
-        [(repr(uid), NODE_FIELD[G._instance]._serialize(G.entry(uid), "node", {}))
-         for uid in G.ir.nodes],
-        [(repr(src), repr(dst), data[ty.ATTR_REL].name,
-          EDGE_SCHEMA[G._instance].dump(data[ty.ATTR_ENT]) if ty.ATTR_ENT in data else {})
-         for src, dst, data in G.ir.edges(data=True)]
-    ]
+        list(G.ir.nodes(data=True)),
+        list(G.ir.edges(data=True))
+    ], stream, cls=GenericJSONEncoder)
 
 
-def from_raw(doc, version=None) -> AppGraph:
+def from_raw(stream, version=None) -> AppGraph:
     """Deserializes a graph from a *stream* containing the raw pickled
     data as dumped by :meth:`dump_raw`. If *version* is passed, it
     will compare it against the loaded version and raise an error if
@@ -189,15 +179,13 @@ def from_raw(doc, version=None) -> AppGraph:
 
     """
 
-    ver, inst, root, nodes, edges = tuple(doc)
+    ver, inst, root, nodes, edges = tuple(
+        json.load(stream, object_hook=GenericJSONDecoderHook))
     G = AppGraph(inst, root)
     if version and version != ver:
-        msg = f"Cannot load document. Document format version "
+        msg = f"Cannot load {stream.name}. Document format version "
         msg += f"{ver} does not match with tool version {version}"
         raise Exception(msg)
-    for uid, entry in nodes:
-        G.ir.add_node(ty.Uid(uid), **{ty.ATTR_ENT: entry})
-    for src, dst, rel, entry in edges:
-        G.ir.add_edge(ty.Uid(src), ty.Uid(dst),
-                      **{ty.ATTR_REL: ty.Rel[rel], ty.ATTR_ENT: entry})
+    G.ir.add_nodes_from(nodes)
+    G.ir.add_edges_from(edges)
     return G

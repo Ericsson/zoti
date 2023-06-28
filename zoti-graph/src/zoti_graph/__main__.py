@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(
     description="ZOTI application graph representation, implemented in Python.\n\n"
     "The following formats are available as inputs/outputs:\n"
     " - *.yaml|*.json: _only inputs_, parsed and schema-validated;\n"
-    " - *.raw.yaml: raw format, compatible with any ZOTI graph representer"
+    " - *.raw.json: raw format, compatible with any ZOTI graph representer"
     f" version ^{dist.version};\n"
     " - *.raw.p: raw binary data, compatible with only this representer.",
     formatter_class=argparse.RawTextHelpFormatter,
@@ -45,7 +45,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "-o", "--out", metavar="FILE",
-    help="""If not specified writes output to stdout as '.raw.yaml'.""",
+    help="""If not specified writes output to stdout as '.raw.json'.""",
     type=argparse.FileType('w'),
     default=sys.stdout,
 )
@@ -119,10 +119,9 @@ try:
     elif i_ext in [".json"]:
         log.info(f"Parsing graph from JSON: {args.input.name}")
         G = parse(*json.load(args.input))
-    elif i_ext in [".raw.yaml", ".raw.yml"]:
+    elif i_ext in [".raw.json"]:
         log.info(f"Loading graph from raw YAML: {args.input.name}")
-        G = io.from_raw(
-            yaml.load_all(args.input, Loader=io.ZotiGraphLoader), dist.version)
+        G = io.from_raw(args.input, dist.version)
     elif i_ext in [".raw.p", ".raw.pickle"]:
         log.info(f"Loading graph from raw pickle: {args.input.name}")
         G = pickle.load(args.input)
@@ -146,11 +145,8 @@ try:
     o_ext = ("".join(Path(args.out.name).suffixes)
              if not "stdin" in args.out.name else ".raw.yaml")
 
-    if o_ext in [".raw.yaml", ".raw.yml"]:
-        yaml.dump_all(io.dump_raw(G), args.out,
-                      Dumper=yaml.SafeDumper, default_flow_style=None,)
-    elif o_ext in [".raw.json"]:
-        json.dump(io.dump_raw(G), args.out)
+    if o_ext in [".raw.json"]:
+        io.dump_raw(G, args.out)
     elif o_ext in [".raw.pickle", ".raw.p"]:
         pickle.dump(G, args.out,)
     else:
