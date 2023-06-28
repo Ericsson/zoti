@@ -123,3 +123,12 @@ imported explicitly from {mod}`zoti_graph.sanity`.
 	:members:
 
 ```
+## Target-Agnostic Transformations
+
+These functions need to be explicitly imported from `zoti_tran.translib`.
+
+
+```{eval-rst}
+.. automodule:: zoti_graph.genny.translib
+	:members:
+```
