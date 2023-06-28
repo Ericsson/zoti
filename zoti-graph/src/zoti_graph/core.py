@@ -1,7 +1,6 @@
-from dataclasses import dataclass
 from enum import Flag
 from pathlib import PurePosixPath
-from typing import Any, Dict, List, Optional
+from typing import Dict
 
 from zoti_graph.util import SearchableEnum, default_init, default_repr
 
@@ -115,60 +114,20 @@ class Rel(Flag, metaclass=SearchableEnum):
 
 class Edge:
     """Container for edge entry."""
-    edge_type: Dict
     mark: Dict
     _info: Dict
-
-    @default_init
-    def __init__(self, edge_type, mark, _info, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
 
 
 ##########
 ## PORT ##
 ##########
 
-class Dir(Flag, metaclass=SearchableEnum):
-    """ Bitwise flags denoting port directions. """
-
-    NONE = 0  # : 00 (for init)
-    IN = 1  # :   01
-    OUT = 2  # :  10
-    SIDE = 3  # : 11
-
 
 class Port:
     """Container for port entry."""
     name: str
-    kind: Dir
-    port_type: Dict
-    data_type: Dict
     mark: Dict
     _info: Dict
-
-    @default_init
-    def __init__(self, name, kind, port_type={}, data_type={}, mark={}, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-    def is_event(self):
-        return self.kind and self.kind != Dir.SIDE
-
-    def is_side(self):
-        return self.kind == Dir.SIDE
-
-    def has_dir_in(self):
-        return self.kind & Dir.IN != Dir.NONE
-
-    def has_dir_out(self):
-        return self.kind & Dir.OUT != Dir.NONE
 
 
 ###########
@@ -176,110 +135,9 @@ class Port:
 ###########
 
 
-class NodeABC:
-    """Base class for a node"""
+class Node:
+    """Base class for a leaf node"""
     name: str
     parameters: Dict
     mark: Dict
     _info: Dict
-
-
-class CompositeNode(NodeABC):
-    """Container for composite node entry"""
-
-    @default_init
-    def __init__(self, name, parameters={}, mark={}, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-
-class SkeletonNode(NodeABC):
-    """Container for a skeleton node entry"""
-    type: str
-
-    @default_init
-    def __init__(self, name, type, parameters={}, mark={}, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-
-class PlatformNode(NodeABC):
-    """Container for platform node entry"""
-    target: Dict
-
-    @default_init
-    def __init__(self, name, target, parameters={}, mark={}, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-
-class ActorNode(NodeABC):
-    """Container for actor node entry"""
-    @dataclass(eq=False)
-    class FSM:
-        inputs: List[str]
-        expr: Dict[str, Dict]
-        preproc: Optional[str] = None
-        states: Optional[List[str]] = None
-        scenarios: Optional[Dict[str, str]] = None
-
-    detector: Optional[FSM]
-
-    @default_init
-    def __init__(self, name, parameters={}, mark={}, detector=None, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-
-class KernelNode(NodeABC):
-    """Container for kernel node entry"""
-    extern: str
-
-    @default_init
-    def __init__(self, name, extern="", parameters={}, mark={}, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-
-class PrimTy(Flag, metaclass=SearchableEnum):
-    """ Bitwise flags denoting types of primitives. """
-
-    DROP = 0
-    SYSTEM = 1
-    BYPASS = 2
-    CONST = 3
-
-
-class BasicNode(NodeABC):
-    """Container for primitive node entry"""
-    type: PrimTy
-
-    @default_init
-    def __init__(self, name, type, parameters={}, mark={}, _info={}, **kwargs):
-        pass
-
-    @default_repr
-    def __repr__(self):
-        pass
-
-    def is_type(self, type):
-        if isinstance(type, PrimTy):
-            return self.type == type
-        if isinstance(type, str):
-            return self.type == PrimTy[type]
-        raise TypeError(type)

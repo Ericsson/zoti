@@ -1,6 +1,7 @@
 from itertools import chain
 
-import zoti_graph.core as ty
+from zoti_graph.core import Rel, ATTR_REL
+import zoti_graph.genny as ty
 
 
 def _flatten(n, G):
@@ -111,7 +112,7 @@ def node_consistent_tree(G, n):
         return
     parents = [
         u for u, v in G.ir.in_edges(n)
-        if G.ir[u][v][ty.ATTR_REL] & ty.Rel.TREE
+        if G.ir[u][v][ATTR_REL] & Rel.TREE
     ]
     assert len(parents) == 1
 
@@ -240,6 +241,6 @@ def port_dangling(G, p):
     else:
         assert all([
             isinstance(G.entry(G.parent(q)), ty.KernelNode) or
-            isinstance(G.entry(q), ty.BasicNode) 
+            isinstance(G.entry(q), ty.BasicNode)
             for q in G.end_ports(p)
         ])

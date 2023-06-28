@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, List, Tuple, Optional
+from typing import Any, List, Tuple, Optional, Dict
 
 import networkx as nx
 
@@ -23,9 +23,12 @@ class AppGraph:
     ir: nx.DiGraph
     """Internal representation of a ZOTI model as simple annotated digraph. """
 
-    def __init__(self, root=Uid()):
+    _instance: str
+
+    def __init__(self, format_name, root=Uid()):
         self.ir = nx.DiGraph()
         self.root = root if isinstance(root, Uid) else Uid(root)
+        self._instance = format_name
 
     def reset(self, root):
         """Resets the current application graph and sets the *root* node ID."""
@@ -470,7 +473,7 @@ class AppGraph:
             dst = v if self.parent(v) == parent else self.parent(v)
             srcport = None if self.parent(u) == parent else u
             dstport = None if self.parent(v) == parent else v
-            view.add_edge(src, dst, ports=(srcport,dstport))
+            view.add_edge(src, dst, ports=(srcport, dstport))
         return view
 
     def _fast_filter_nodes(self, root, with_ports):

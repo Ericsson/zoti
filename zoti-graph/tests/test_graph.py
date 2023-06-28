@@ -1,7 +1,3 @@
-import zoti_graph.io as io
-from zoti_graph.parser import parse
-from zoti_graph.core import Uid, Dir, BasicNode, CompositeNode
-import zoti_graph.sanity as rules
 import os
 import sys
 import yaml
@@ -11,7 +7,16 @@ from pathlib import PurePosixPath
 import networkx as nx
 
 sys.path.insert(0, "src")
-
+import zoti_graph.io as io
+from zoti_graph.core import Uid
+from zoti_graph.genny import parse, Dir, BasicNode, CompositeNode
+from zoti_graph.genny.sanity import (
+    node_consistent_tree,
+    node_platform_hierarchy,
+    node_actor_consistency,
+    edge_direction,
+    edge_hierarchy
+)
 
 def test_scenario1() -> None:
 
@@ -22,16 +27,15 @@ def test_scenario1() -> None:
     log.info("Checking sanity rules...")
 
     for n in G.ir.nodes():
-        G.sanity(rules.node_consistent_tree, n)
-        G.sanity(rules.node_platform_hierarchy, n)
-        G.sanity(rules.node_platform_hierarchy, n)
+        G.sanity(node_consistent_tree, n)
+        G.sanity(node_platform_hierarchy, n)
         # G.sanity(rules.node_actor_hierarchy, n)
         # G.sanity(rules.node_kernel_hierarchy, n)
-        G.sanity(rules.node_actor_consistency, n)
+        G.sanity(node_actor_consistency, n)
 
     for u, v in G.only_graph().edges():
-        G.sanity(rules.edge_direction, u, v)
-        G.sanity(rules.edge_hierarchy, u, v)
+        G.sanity(edge_direction, u, v)
+        G.sanity(edge_hierarchy, u, v)
 
     assert G.depth(
         Uid("Tst/Src/counter/buffer-flush/_kern/^flush_cnt")
@@ -119,22 +123,19 @@ def test_scenario1() -> None:
 
     try:
         with open("tmp.dot", "w") as f:
-            io.draw_graph(G, f)
+            io.draw_graphviz(G, f)
             io.draw_tree(G, f)
-        with open("tmp.yaml", "w") as f:
-            yaml.dump_all(
-                [list(G.ir.nodes(data=True)), list(G.ir.edges(data=True))], f, Dumper=io.AppGraphDumper, default_flow_style=None,)
-        with open("tmp.yaml") as f:
-            G.reset(G.root)
-            raw = list(yaml.load_all(f, Loader=io.AppGraphLoader))
-            G.ir.add_nodes_from(raw[0])
-            G.ir.add_edges_from(raw[1])
-            assert G.depth(
-                Uid("Tst/Src/counter/buffer-flush/_kern/^flush_cnt")
-            ) == 5
     except Exception as e:
         raise e
     finally:
         os.remove("tmp.dot")
-        os.remove("tmp.yaml")
+        # os.remove("tmp.raw")
         pass
+
+    raw = io.dump_raw(G)
+    G.reset(G.root)
+    G = io.from_raw(raw)
+    assert G._instance == "genny"
+    assert G.depth(
+        Uid("Tst/Src/counter/buffer-flush/_kern/^flush_cnt")
+    ) == 5

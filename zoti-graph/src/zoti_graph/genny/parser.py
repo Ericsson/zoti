@@ -1,15 +1,14 @@
 import logging as log
-from typing import Dict
-
 import marshmallow as mm
 import zoti_yaml as zoml
 
-import zoti_graph.core as ty
+from zoti_graph.core import ATTR_KIND, ATTR_NAME, META_UID, KEY_NODE, KEY_PORT, KEY_PRIM
+import zoti_graph.genny.core as ty
 from zoti_graph.appgraph import AppGraph
 from zoti_graph.core import Uid
 from zoti_graph.exceptions import ParseError, ValidationError
 
-__zoti__ = AppGraph()
+__zoti__ = AppGraph("genny")
 
 
 class Nested(mm.fields.Nested):
@@ -83,6 +82,10 @@ class EdgeParser(mm.Schema):
         except Exception as e:
             raise ParseError(e, zoml.get_pos(data))
 
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
+
 
 ##########
 ## PORT ##
@@ -119,7 +122,7 @@ class PortParser(mm.Schema):
     """
 
     _info = mm.fields.Mapping(data_key=zoml.INFO, load_default={})
-    uid = mm.fields.Raw(required=True, data_key=ty.META_UID)
+    uid = mm.fields.Raw(required=True, data_key=META_UID)
     mark = mm.fields.Mapping(load_default={})
     name = mm.fields.String(required=True)
     kind = mm.fields.String(required=True)
@@ -136,6 +139,10 @@ class PortParser(mm.Schema):
         except Exception as e:
             raise ParseError(e, zoml.get_pos(data))
 
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
+
 
 ###########
 ## NODES ##
@@ -146,20 +153,22 @@ class NodeChoiceField(mm.fields.Field):
         try:
             if node is None:
                 return None
-            if ty.ATTR_KIND not in node:
+            if ATTR_KIND not in node:
                 ret = CompositeNodeParser().load(node)
-            elif node[ty.ATTR_KIND] == "CompositeNode":
+            elif node[ATTR_KIND] == "CompositeNode":
                 ret = CompositeNodeParser().load(node)
-            elif node[ty.ATTR_KIND] == "SkeletonNode":
+            elif node[ATTR_KIND] == "SkeletonNode":
                 ret = SkeletonNodeParser().load(node)
-            elif node[ty.ATTR_KIND] == "PlatformNode":
+            elif node[ATTR_KIND] == "PlatformNode":
                 ret = PlatformNodeParser().load(node)
-            elif node[ty.ATTR_KIND] == "ActorNode":
+            elif node[ATTR_KIND] == "ActorNode":
                 ret = ActorNodeParser().load(node)
-            elif node[ty.ATTR_KIND] == "KernelNode":
+            elif node[ATTR_KIND] == "KernelNode":
                 ret = KernelNodeParser().load(node)
-            elif node[ty.ATTR_KIND] == "BasicNode":
+            elif node[ATTR_KIND] == "BasicNode":
                 ret = BasicNodeParser().load(node)
+            elif node[ATTR_KIND] == "Port":
+                ret = PortParser().load(node)
             else:
                 raise ValueError(f"Node kind not recognized '{node['kind']}'")
             return ret
@@ -167,6 +176,33 @@ class NodeChoiceField(mm.fields.Field):
             if zoml.get_pos(node):
                 error.messages = [str(zoml.get_pos(node)), error.messages]
             raise error
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        # print("!!!!!!", type(value), value.name)
+        if isinstance(value, ty.CompositeNode):
+            ret = CompositeNodeParser().dump(value)
+            ret[ATTR_KIND] = "CompositeNode"
+        elif isinstance(value, ty.SkeletonNode):
+            ret = SkeletonNodeParser().dump(value)
+            ret[ATTR_KIND] = "SkeletonNode"
+        elif isinstance(value, ty.PlatformNode):
+            ret = PlatformNodeParser().dump(value)
+            ret[ATTR_KIND] = "PlatformNode"
+        elif isinstance(value, ty.ActorNode):
+            ret = ActorNodeParser().dump(value)
+            ret[ATTR_KIND] = "ActorNode"
+        elif isinstance(value, ty.KernelNode):
+            ret = KernelNodeParser().dump(value)
+            ret[ATTR_KIND] = "KernelNode"
+        elif isinstance(value, ty.BasicNode):
+            ret = BasicNodeParser().dump(value)
+            ret[ATTR_KIND] = "BasicNode"
+        elif isinstance(value, ty.Port):
+            ret = PortParser().dump(value)
+            ret[ATTR_KIND] = "Port"
+        else:
+            raise ValueError(f"Wrong serialization type {type(value)}")
+        return ret
 
 
 class NodeParser(mm.Schema):
@@ -209,13 +245,13 @@ class NodeParser(mm.Schema):
     """
 
     # internal (unexposed) key
-    uid = mm.fields.Raw(required=True, data_key=ty.META_UID)
+    uid = mm.fields.Raw(required=True, data_key=META_UID)
     _info = mm.fields.Mapping(data_key=zoml.INFO, load_default={})
 
     # keys that have already been used but are here for validation only
     description = mm.fields.String()
     node_type = mm.fields.String(
-        data_key=ty.ATTR_KIND,
+        data_key=ATTR_KIND,
         load_default="CompositeNode",
         validate=mm.validate.OneOf(
             ["CompositeNode", "PlatformNode", "ActorNode",
@@ -260,6 +296,14 @@ class NodeParser(mm.Schema):
             return uid
         except Exception as e:
             raise ParseError(e, zoml.get_pos(curr_scope))
+
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return {
+            "mark": obj.mark,
+            "name": obj.mark,
+            "parameters": obj.mark,
+        }
 
 
 class ActorNodeParser(NodeParser):
@@ -337,11 +381,19 @@ class ActorNodeParser(NodeParser):
         def pmake(self, data, **kwargs):
             return ty.ActorNode.FSM(**data)
 
+        @mm.pre_dump
+        def pdump(self, obj, **kwargs):
+            return vars(obj)
+
     detector = mm.fields.Nested(FSMParser)
 
     @mm.post_load
     def pmake(self, data, **kwargs):
         return super(ActorNodeParser, self).pmake(data, constructor=ty.ActorNode)
+
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
 
 
 class CompositeNodeParser(NodeParser):
@@ -356,6 +408,10 @@ class CompositeNodeParser(NodeParser):
         return super(CompositeNodeParser, self).pmake(
             data, constructor=ty.CompositeNode
         )
+
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
 
 
 class SkeletonNodeParser(NodeParser):
@@ -379,6 +435,10 @@ class SkeletonNodeParser(NodeParser):
             data, constructor=ty.SkeletonNode
         )
 
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
+
 
 class PlatformNodeParser(NodeParser):
     """A ``PlatformNode`` denotes a computation platform and is essential
@@ -400,6 +460,10 @@ class PlatformNodeParser(NodeParser):
     def pmake(self, data, **kwargs):
         return super(PlatformNodeParser, self).pmake(data, constructor=ty.PlatformNode)
 
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
+
 
 class KernelNodeParser(NodeParser):
     """A ``KernelNode`` is a leaf computation node, typically representing
@@ -417,6 +481,10 @@ class KernelNodeParser(NodeParser):
     @mm.post_load
     def pmake(self, data, **kwargs):
         return super(KernelNodeParser, self).pmake(data, constructor=ty.KernelNode)
+
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
 
 
 class BasicNodeParser(NodeParser):
@@ -442,8 +510,11 @@ class BasicNodeParser(NodeParser):
 
     @mm.post_load
     def pmake(self, data, **kwargs):
-        data["type"] = ty.PrimTy[data["type"]]
         return super(BasicNodeParser, self).pmake(data, constructor=ty.BasicNode)
+
+    @mm.pre_dump
+    def pdump(self, obj, **kwargs):
+        return vars(obj)
 
 
 def parse(*module_args) -> AppGraph:
@@ -469,22 +540,22 @@ def parse(*module_args) -> AppGraph:
     from pathlib import PurePath, PurePosixPath
 
     def _add_uid(node, path):
-        if not (isinstance(node, dict) and ty.ATTR_NAME in node):
+        if not (isinstance(node, dict) and ATTR_NAME in node):
             return node
         node_key = re.sub(r'\[[^]]*\]', '', path.path.name)
-        if node_key not in [ty.KEY_NODE, ty.KEY_PORT, ty.KEY_PRIM]:
+        if node_key not in [KEY_NODE, KEY_PORT, KEY_PRIM]:
             return node
         try:
             parent_uid = Uid(
                 PurePath(*re.findall(r'\[([^]]+)',
                          path.path.parent.as_posix()))
             )
-            if node_key in [ty.KEY_NODE, ty.KEY_PRIM]:
-                node[ty.META_UID] = parent_uid.withNode(node[ty.ATTR_NAME])
-                log.info(f" - added uid: {node[ty.META_UID]}")
-            elif node_key == ty.KEY_PORT:
-                node[ty.META_UID] = parent_uid.withPort(node[ty.ATTR_NAME])
-                log.info(f" - added uid: {node[ty.META_UID]}")
+            if node_key in [KEY_NODE, KEY_PRIM]:
+                node[META_UID] = parent_uid.withNode(node[ATTR_NAME])
+                log.info(f" - added uid: {node[META_UID]}")
+            elif node_key == KEY_PORT:
+                node[META_UID] = parent_uid.withPort(node[ATTR_NAME])
+                log.info(f" - added uid: {node[META_UID]}")
             return node
         except Exception as e:
             msg = f"When processing UID of element at path {path.path.as_posix()}"
@@ -496,7 +567,7 @@ def parse(*module_args) -> AppGraph:
         module.map_doc(_add_uid, with_path=True)
         main_path = PurePosixPath(module.preamble["main-is"])
         top_comp = module.get(main_path)
-        __zoti__.reset(top_comp[ty.META_UID])
+        __zoti__.reset(top_comp[META_UID])
         _ = CompositeNodeParser().load(top_comp)
         return __zoti__
     except mm.ValidationError as error:
