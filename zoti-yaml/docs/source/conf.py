@@ -9,7 +9,7 @@ from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
 
 sys.path.insert(0, os.path.abspath("../../src/"))
-from zoml import __version__
+from zoti_yaml import __version__
 
 project = "zoti-yaml"
 copyright = "2023, Ericsson S&T"

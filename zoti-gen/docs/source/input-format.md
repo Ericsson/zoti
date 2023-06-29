@@ -50,7 +50,7 @@ documnentation to document the entry schemas.
 #### `requirement`
 
 ```{eval-rst}
-.. autosimple:: zoti_gen.core.RequirementSchema
+.. autosimple:: zoti_gen.core.RequirementField
 ```
 
 #### `label`

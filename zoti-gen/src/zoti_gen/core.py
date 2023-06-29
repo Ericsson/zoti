@@ -38,7 +38,7 @@ class Nested(mm.fields.Nested):
         super(Nested, self).__init__(nested, **kwargs)
 
     def _deserialize(self, node, attr, data, **kwargs):
-        try: 
+        try:
             return super(Nested, self)._deserialize(node, attr, data, **kwargs)
         except mm.ValidationError as error:
             if zoml.get_pos(node):
@@ -172,6 +172,12 @@ class Requirement:
 #         return Requirement(requirement=data)
 
 class RequirementField(mm.fields.Field):
+    """Illustrates prerequisites for the parent element. Internally it is
+    represented using a :class:`zoti_gen.core.Requirement` class. It may
+    contain the following entries:
+
+    """
+
     def _deserialize(self, node, attr, data, **kwargs):
         if not isinstance(node, dict):
             raise mm.ValidationError("Expected dict requirement.")

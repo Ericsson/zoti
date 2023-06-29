@@ -1,16 +1,16 @@
 # API Reference
 
-All functions documented on this page are exported by the `zoml`
+All functions documented on this page are exported by the `zoti_yaml`
 module.
 
 ## Handlers
 
 ```{eval-rst}
-.. autoclass:: zoml.handlers.Project
+.. autoclass:: zoti_yaml.handlers.Project
 	:members:
 	:undoc-members:
 	
-.. autoclass:: zoml.handlers.Module
+.. autoclass:: zoti_yaml.handlers.Module
 	:members:
 	:undoc-members:
 
@@ -19,7 +19,7 @@ module.
 ## Document Tree Paths 
 
 ```{eval-rst}
-.. autoclass:: zoml.core.TreePath
+.. autoclass:: zoti_yaml.core.TreePath
 	:members:
 	:undoc-members:
 	
@@ -28,27 +28,27 @@ module.
 ## Position Helpers
 
 ```{eval-rst}
-.. autoclass:: zoml.core.INFO
+.. autoclass:: zoti_yaml.core.INFO
 
-.. autoclass:: zoml.core.POS
+.. autoclass:: zoti_yaml.core.POS
 
-.. autoclass:: zoml.core.Pos
+.. autoclass:: zoti_yaml.core.Pos
 	:members:
 	:undoc-members:
 
-.. autoclass:: zoml.core.PosStack
+.. autoclass:: zoti_yaml.core.PosStack
 	:members:
 	:undoc-members:
 
-.. autofunction:: zoml.core.attach_pos
-.. autofunction:: zoml.core.get_pos
+.. autofunction:: zoti_yaml.core.attach_pos
+.. autofunction:: zoti_yaml.core.get_pos
 
 ```
 
 ## Exceptions
 
 ```{eval-rst}
-.. automodule:: zoml.exceptions
+.. automodule:: zoti_yaml.exceptions
 	:members:
 	:undoc-members:
 ```

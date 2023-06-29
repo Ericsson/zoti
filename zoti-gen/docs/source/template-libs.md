@@ -107,7 +107,7 @@ strings are not ideal for developing in target-specific syntax,
 ZOTI-Gen provides the following utility:
 
 ```{eval-rst}
-.. autofunction:: zoti_gen.util.read_template
+.. autofunction:: zoti_gen.util.read_at
 ```
 
 ### Validator hook
