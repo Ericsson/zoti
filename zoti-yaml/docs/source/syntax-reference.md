@@ -15,7 +15,7 @@ file `MY_PATH/path/to/MyModule.yaml` would correspond to the qualified
 module name `path.to.MyModule`. The search path can be controlled via:
 
 - the CLI flag `--pathvar`, see [Configuration](#configuration);
-- the API, with the constructor for {class}`zoml.handlers.Project`.
+- the API, with the constructor for {class}`zoti_yaml.handlers.Project`.
 
 Each module consists in a YAML source file formatted as:
 
@@ -60,31 +60,31 @@ below.
 #### `!default` [*defaults*, *originals*]
 
 ```{eval-rst}
-.. autosimple:: zoml.core.Default
+.. autosimple:: zoti_yaml.core.Default
 ```
 
 #### `!policy:<merge_policy>` *any*
 
 ```{eval-rst}
-.. autosimple:: zoml.core.MergePolicy
+.. autosimple:: zoti_yaml.core.MergePolicy
 ```
 
 #### `!ref` {*module*, *path* | *name*}
 
 ```{eval-rst}
-.. autosimple:: zoml.core.Ref
+.. autosimple:: zoti_yaml.core.Ref
 ```
 
 #### `!attach` {*ref*, ...}
 
 ```{eval-rst}
-.. autosimple:: zoml.core.Attach
+.. autosimple:: zoti_yaml.core.Attach
 ```
 
 #### `!include` {*file*, *name* | (*begin*, *end*)}
 
 ```{eval-rst}
-.. autosimple:: zoml.loader.ZomlLoader.include
+.. autosimple:: zoti_yaml.loader.ZomlLoader.include
 ```
 
 
@@ -96,7 +96,7 @@ for certain keys under an entry at `_info/_pos`. Exactly which nodes
 are marked for metadata is controlled via:
 
 - the CLI flag `--keys`, see [Configuration](#configuration);
-- the API, with the constructor for {class}`zoml.handlers.Project`.
+- the API, with the constructor for {class}`zoti_yaml.handlers.Project`.
 
 For each key in the provided list, ZOTI-YAML will mark all first
 children of its entry, provided that the children are objects
