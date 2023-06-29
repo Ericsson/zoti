@@ -50,6 +50,11 @@ class ParseError(Exception):
 
 
 class EntryError(Exception):
+    """Exception thrown when the information in a graph entry is not as
+    expected
+
+    """
+
     def __init__(self, what, obj=None):
         self.what = what
         self.pos = f"{get_pos(obj).show()}" if get_pos(obj) else ""

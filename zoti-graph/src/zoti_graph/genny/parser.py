@@ -515,9 +515,9 @@ class BasicNodeParser(NodeParser):
 
 
 def parse(*module_args) -> AppGraph:
-    """Parses a complete (schema-validated) ZOTI input specification tree
-    along with its metadata and returns an application graph that
-    can be futher process by a ZOTI tool (e.g. ZOTI-Tran).
+    """Parses a complete (schema-validated) Genny-Graph input
+    specification tree along with its metadata and returns an
+    application graph that can be futher process by a ZOTI tool.
 
     *module_args* is a list of arguments passed to `zoti_yaml.Module
     <../zoti-yaml/api-reference>`_ constructor (e.g., as loaded from a

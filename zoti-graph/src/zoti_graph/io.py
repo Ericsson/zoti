@@ -152,8 +152,8 @@ def draw_graphviz(
 
 
 def dump_raw(G, stream):
-    """Serializes graph *G* to raw pickle and dumps it to *stream*. The
-    stream will contain a 4-tuple:
+    """Serializes graph *G* to raw JSON and dumps it to *stream*. The
+    stream will contain a 5-tuple:
 
     - the version of zoti-graph (to be compared when loading)
     - the name of the current graph format
@@ -172,7 +172,7 @@ def dump_raw(G, stream):
 
 
 def from_raw(stream, version=None) -> AppGraph:
-    """Deserializes a graph from a *stream* containing the raw pickled
+    """Deserializes a graph from a *stream* containing the raw JSON
     data as dumped by :meth:`dump_raw`. If *version* is passed, it
     will compare it against the loaded version and raise an error if
     they do not match.

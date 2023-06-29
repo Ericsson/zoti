@@ -61,8 +61,6 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
         => e.kind = STORAGE
       | => (inputs(a) in p) is disjoint from (inputs(b) in p)
 
-    *TODO*: check if fusing on ``Relation.EVENT`` is appropriate
-
     *TODO*: fuse FSMs
 
     """
