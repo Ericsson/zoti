@@ -1,8 +1,9 @@
 import networkx as nx
 import logging as log
 
-import zoti_graph.core as ty
-from zoti_graph import AppGraph
+import zoti_graph.genny.core as ty
+from zoti_graph.appgraph import AppGraph
+from zoti_graph.core import Uid
 
 
 def flatten(G: AppGraph, **kwargs):
@@ -33,7 +34,7 @@ def flatten(G: AppGraph, **kwargs):
         G.entry(n).mark["scenario"] = True
 
     # Flatten everything except scenarios
-    def _recursive_flatten(parent: ty.Uid, node: ty.Uid):
+    def _recursive_flatten(parent: Uid, node: Uid):
         entry = G.entry(node)
         if isinstance(entry, ty.KernelNode):
             return
@@ -60,8 +61,6 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
         => e.kind = STORAGE
       | => (inputs(a) in p) is disjoint from (inputs(b) in p)
 
-    *TODO*: check if fusing on ``Relation.EVENT`` is appropriate
-
     *TODO*: fuse FSMs
 
     """
@@ -79,7 +78,7 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
             log.info(f"{msg} {cluster} under {fused_id}")
             for u, v, idx, orientation in parsed_dep:
                 fuse_edgs = [k for s, t, k in proj.edges(data="ports")
-                             if (s,t) == (u,v) or (s,t) == (v,u)]
+                             if (s, t) == (u, v) or (s, t) == (v, u)]
                 if orientation == "forward":
                     G.fuse_nodes(fused_id, v, fuse_edgs)
                 else:
@@ -93,7 +92,7 @@ def fuse_actors(G: AppGraph, flatten, **kwargs):
                 for s, d in G.port_edges(port):
                     if "storage" not in G.edge(s, d).mark:
                         raise Exception("found non-marked connection between SIDE ports")
-        
+
         proj = G.node_projection(pltf, no_parent_ports=True)
         fused_actors = _fuse_children(
             proj,

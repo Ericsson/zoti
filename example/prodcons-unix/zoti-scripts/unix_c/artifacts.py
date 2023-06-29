@@ -1,9 +1,9 @@
 import networkx as nx
 
-import zoti_graph.core as ty
+import zoti_graph.genny.core as ty
 from zoti_ftn.backend.c import TypeABC
 from zoti_ftn.core import Array, Structure
-from zoti_tran import ScriptError
+from zoti_graph import ScriptError
 
 from ports import Timer, Socket
 from dumputils import Ref, Default, PolInter, PolUnion
@@ -630,7 +630,7 @@ def gendepl(G, **kwargs):
         for src, dst in G.node_edges(pltf, which="in+outside"):
             src_entry = G.entry(src)
             dst_entry = G.entry(dst)
-            if isinstance(src_entry, ty.BasicNode) and src_entry.type == ty.PrimTy.SYSTEM:
+            if isinstance(src_entry, ty.BasicNode) and src_entry.type == "SYSTEM":
                 depl["edges"].append([
                     "SYSTEM",
                     f"proc-{entry.name}:{dst_entry.name}",

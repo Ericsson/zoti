@@ -9,10 +9,6 @@ module below.
 There are several ways to read or write a graph in different formats.
 
 ```{eval-rst}
-.. autofunction:: zoti_graph.parser.parse
-```
-
-```{eval-rst}
 .. automodule:: zoti_graph.io
                 :members:
 ```

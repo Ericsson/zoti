@@ -2,13 +2,20 @@ from enum import Flag
 from importlib.metadata import distribution
 
 import pydot
-from yaml import Dumper, Loader, dump_all, load_all
+import json
 
 import zoti_yaml as zoml
 import zoti_graph.core as ty
+import zoti_graph.genny.core as genny_core
+import zoti_graph.genny.parser as genny_parse
+from zoti_graph.util import GenericJSONDecoderHook, GenericJSONEncoder
 from zoti_graph.appgraph import AppGraph
 
-dist = distribution("zoti_graph")
+
+DIST = distribution("zoti_graph")
+GRAPHVIZ_STYLE = {
+    "genny": genny_core.BASE_GRAPHVIZ_STYLE
+}
 
 
 class ZotiGraphLoader(zoml.LoaderWithInfo):
@@ -16,12 +23,12 @@ class ZotiGraphLoader(zoml.LoaderWithInfo):
 
     def __init__(self, stream, **kwargs):
         super(ZotiGraphLoader, self).__init__(stream)
-        self._tool = dist.name + "-" + dist.version
-        self._key_nodes = ["nodes", "ports", "edges", "primitives"]
+        self._tool = DIST.name + "-" + DIST.version
+        self._key_nodes = ["nodes", "ports", "edges"]
 
 
 def print_zoti_yaml_keys():
-    return ["nodes", "ports", "edges", "primitives"]
+    return ["nodes", "ports", "edges"]
 
 
 def dump_node_info(AG, stream):
@@ -52,15 +59,12 @@ def draw_tree(AG, stream, root=None, with_ports=True, **kwargs):
         graph.write_dot(stream.name)
 
 
-def draw_graph(
+def draw_graphviz(
         AG,
         stream,
         root=None,
         max_depth=0,
-        platform_info=None,
-        actor_info=None,
-        composite_info=None,
-        leaf_info=None,
+        node_info=None,
         port_info=None,
         edge_info=None,
         **kwargs
@@ -74,154 +78,67 @@ def draw_graph(
 
     """
 
+    assert GRAPHVIZ_STYLE[AG._instance]  # No Graphviz style for format
     root = ty.Uid(root) if root else AG.root
 
-    def _clusName(uid):
+    def _make_style(key, entry, *args):
+        try:
+            style = GRAPHVIZ_STYLE[AG._instance][key]
+        except KeyError:
+            raise KeyError(
+                f"Format '{AG._instance}' does not have a Graphviz style for {key}")
+        if type(entry).__name__ in style:
+            return style[type(entry).__name__](entry, *args)
+        else:
+            return style["all"](entry, *args)
+
+    def _dot_id(uid):
         return repr(uid).replace("/", "_").replace("-", "_")
 
-    def _label(uid, extract, extra=None):
-        label = AG.entry(uid).name
-        label += f" ({extra})" if extra is not None else ""
-        label += f": {extract(AG.entry(uid))}" if extract is not None else ""
-        return label
-
-    def _draw_ports(parent, node):
-        ports = AG.ports(
-            node, select=lambda p: p.kind == ty.Dir.IN or p.kind == ty.Dir.OUT
-        )
-        ioports = AG.ports(node, select=lambda p: p.kind == ty.Dir.SIDE)
-
-        for port in ports:
-            parent.add_node(
-                pydot.Node(
-                    _clusName(port), label=_label(port, port_info), shape="rarrow"
-                )
-            )
-        for port in ioports:
-            parent.add_node(
-                pydot.Node(
-                    _clusName(port),
-                    label=_label(port, port_info),
-                    shape="hexagon",
-                )
-            )
-
-    def _draw_leaf(parent, node):
-        entry = AG.entry(node)
-        pydot_lbl = _label(node, leaf_info, entry._info.get("old-name"))
-        pydot_id = _clusName(node)
-        iports = [
-            f"<{p.name()}> {_label(p, port_info)}"
-            for p in AG.ports(node, select=lambda p: p.kind == ty.Dir.IN)
-        ]
-        oports = [
-            f"<{p.name()}> {_label(p, port_info)}"
-            for p in AG.ports(node, select=lambda p: p.kind == ty.Dir.OUT)
-        ]
-        ioport = [
-            f"<{p.name()}> {_label(p, port_info)}"
-            for p in AG.ports(node, select=lambda p: p.kind == ty.Dir.SIDE)
-        ]
-        label = f"{{ {' | '.join(iports)} }}"
-        label += f" | {{ {pydot_lbl} | {{ {' | '.join(ioport)} }} }} | "
-        label += f"{{ {' | '.join(oports)} }}"
-        parent.add_node(
-            pydot.Node(pydot_id, shape="record",
-                       style="rounded", label=label)
-        )
-
-    def _draw_primitive(parent, node, entry):
-        pydot_id = _clusName(node)
-        if entry.type == ty.PrimTy.SYSTEM:
-            style = {
-                "label": "",
-                "shape": "doublecircle",
-                "style": "filled",
-                "width": 0.3,
-                "height": 0.3,
-                "fillcolor": "yellow",
-            }
-        elif entry.type == ty.PrimTy.DROP:
-            style = {
-                "label": "",
-                "shape": "invtriangle",
-                "width": 0.4,
-                "height": 0.25,
-                "style": "filled",
-                "fillcolor": "black",
-            }
-            parent.add_node(pydot.Node(pydot_id, **style))
-
     def _draw_edge(src, dst):
-        def _is_inout(port_id):
-            try:
-                return AG.entry(port_id).kind == ty.Dir.SIDE
-            except AttributeError:
-                return False
-
         src_parent = AG.parent(src)
         dst_parent = AG.parent(dst)
 
         if AG.is_leaf(src_parent):
-            src_port = _clusName(src_parent) + ":" + src.name()
+            src_port = _dot_id(src_parent) + ":" + src.name()
         else:
-            src_port = _clusName(src)
+            src_port = _dot_id(src)
         if AG.is_leaf(dst_parent):
-            dst_port = _clusName(dst_parent) + ":" + dst.name()
+            dst_port = _dot_id(dst_parent) + ":" + dst.name()
         else:
-            dst_port = _clusName(dst)
+            dst_port = _dot_id(dst)
 
-        src_arrow = "diamond" if _is_inout(src) else "none"
-        dst_arrow = "diamond" if _is_inout(dst) else "normal"
-        label = edge_info(AG.edge(src, dst)) if edge_info else ""
-        graph.add_edge(
-            pydot.Edge(
-                src_port,
-                dst_port,
-                arrowtail=src_arrow,
-                arrowhead=dst_arrow,
-                dir="both",
-                label=label,
-            )
+        dot_edge = pydot.Edge(
+            src_port,
+            dst_port,
+            **_make_style("edges", AG.edge(src, dst),
+                          AG.entry(src), AG.entry(dst), edge_info)
         )
+        graph.add_edge(dot_edge)
 
     def _recursive_build(parent, node, depth):
-        pydot_id = _clusName(node)
         children = AG.children(node)
-        entry = AG.ir.nodes[node][ty.ATTR_ENT]
         if children and depth > 0:
-            mark = entry._info.get("old-name")
-            if isinstance(entry, ty.ActorNode):
-                style = {
-                    "label": _label(node, actor_info, mark),
-                    "style": "rounded",
-                }
-            elif isinstance(entry, ty.CompositeNode):
-                style = {
-                    "style": "dashed",
-                    "label": _label(node, composite_info, mark),
-                }
-            elif isinstance(entry, ty.PlatformNode):
-                if platform_info is None:
-                    def info(x): return x.target["platform"]
-                else:
-                    def info(x): return platform_info(x)
-                style = {"label": _label(node, info, mark)}
-            elif isinstance(entry, ty.SkeletonNode):
-                def info(x): return x.type
-                style = {"style": "bold",
-                         "label": _label(node, info, mark)}
-
-            cluster = pydot.Cluster(pydot_id, **style)
+            cluster = pydot.Cluster(
+                _dot_id(node),
+                **_make_style("composites", AG.entry(node), node_info))
             for child in children:
                 _recursive_build(cluster, child, depth - 1)
-                parent.add_subgraph(cluster)
-                _draw_ports(cluster, node)
+            for port in AG.ports(node):
+                dot_port = pydot.Node(
+                    _dot_id(port),
+                    **_make_style("ports", AG.entry(port), port_info)
+                )
+                cluster.add_node(dot_port)
+            parent.add_subgraph(cluster)
         else:
-            if isinstance(entry, ty.BasicNode):
-                _draw_primitive(parent, node, entry)
-            else:
-                _draw_leaf(parent, node)
+            dot_node = pydot.Node(
+                _dot_id(node),
+                **_make_style("leafs", AG.entry(node),
+                              [(p.name(), AG.entry(p)) for p in AG.ports(node)],
+                              node_info, port_info)
+            )
+            parent.add_node(dot_node)
 
     depth = max_depth if max_depth else 9999
     graph = pydot.Dot(graph_type="digraph", fontname="Verdana")
@@ -234,128 +151,37 @@ def draw_graph(
     graph.write_dot(stream.name)
 
 
-class AppGraphDumper(Dumper):
-    def repr_tuple(self, obj):
-        return self.represent_sequence("!tuple", list(obj))
+def dump_raw(G, stream):
+    """Serializes graph *G* to raw JSON and dumps it to *stream*. The
+    stream will contain a 5-tuple:
 
-    def repr_uid(self, obj):
-        return self.represent_scalar("!Uid", repr(obj))
-
-    def repr_edge(self, obj):
-        return self.represent_mapping("!Edge", vars(obj))
-
-    def repr_port(self, obj):
-        return self.represent_mapping("!Port", vars(obj))
-
-    def repr_fsm(self, obj):
-        return self.represent_mapping("!FSM", vars(obj))
-
-    def repr_flag(self, obj):
-        return self.represent_scalar(f"!{type(obj).__name__}", obj.name)
-
-    def repr_node(self, obj):
-        return self.represent_mapping(f"!{type(obj).__name__}", vars(obj))
-
-    def ignore_aliases(self, data):
-        return True
-
-
-AppGraphDumper.add_representer(tuple, AppGraphDumper.repr_tuple)
-AppGraphDumper.add_representer(ty.Uid, AppGraphDumper.repr_uid)
-AppGraphDumper.add_representer(ty.ActorNode.FSM, AppGraphDumper.repr_fsm)
-AppGraphDumper.add_representer(ty.Edge, AppGraphDumper.repr_edge)
-AppGraphDumper.add_representer(ty.Port, AppGraphDumper.repr_port)
-AppGraphDumper.add_multi_representer(Flag, AppGraphDumper.repr_flag)
-AppGraphDumper.add_multi_representer(ty.NodeABC, AppGraphDumper.repr_node)
-
-
-class AppGraphLoader(Loader):
-    def cons_tuple(self, node):
-        return tuple(self.construct_sequence(node))
-
-    def cons_uid(self, node):
-        return ty.Uid(self.construct_scalar(node))
-
-    def cons_edge(self, node):
-        return ty.Edge(**self.construct_mapping(node, deep=True))
-
-    def cons_port(self, node):
-        return ty.Port(**self.construct_mapping(node, deep=True))
-
-    def cons_relation(self, node):
-        return ty.Rel[self.construct_scalar(node)]
-
-    def cons_dir(self, node):
-        return ty.Dir[self.construct_scalar(node)]
-
-    def cons_primtype(self, node):
-        return ty.PrimTy[self.construct_scalar(node)]
-
-    def cons_fsm(self, node):
-        return ty.ActorNode.FSM(**self.construct_mapping(node, deep=True))
-
-    def cons_compositen(self, node):
-        return ty.CompositeNode(**self.construct_mapping(node, deep=True))
-
-    def cons_primitiven(self, node):
-        return ty.BasicNode(**self.construct_mapping(node, deep=True))
-
-    def cons_platformn(self, node):
-        return ty.PlatformNode(**self.construct_mapping(node, deep=True))
-
-    def cons_actorn(self, node):
-        return ty.ActorNode(**self.construct_mapping(node, deep=True))
-
-    def cons_skeleton(self, node):
-        return ty.SkeletonNode(**self.construct_mapping(node, deep=True))
-
-    def cons_kerneln(self, node):
-        return ty.KernelNode(**self.construct_mapping(node, deep=True))
-
-
-AppGraphLoader.add_constructor("!tuple", AppGraphLoader.cons_tuple)
-AppGraphLoader.add_constructor("!Uid", AppGraphLoader.cons_uid)
-AppGraphLoader.add_constructor("!Edge", AppGraphLoader.cons_edge)
-AppGraphLoader.add_constructor("!Port", AppGraphLoader.cons_port)
-AppGraphLoader.add_constructor("!Rel", AppGraphLoader.cons_relation)
-AppGraphLoader.add_constructor("!Dir", AppGraphLoader.cons_dir)
-AppGraphLoader.add_constructor("!PrimTy", AppGraphLoader.cons_primtype)
-AppGraphLoader.add_constructor("!CompositeNode", AppGraphLoader.cons_compositen)
-AppGraphLoader.add_constructor("!BasicNode", AppGraphLoader.cons_primitiven)
-AppGraphLoader.add_constructor("!PlatformNode", AppGraphLoader.cons_platformn)
-AppGraphLoader.add_constructor("!ActorNode", AppGraphLoader.cons_actorn)
-AppGraphLoader.add_constructor("!SkeletonNode", AppGraphLoader.cons_skeleton)
-AppGraphLoader.add_constructor("!FSM", AppGraphLoader.cons_fsm)
-AppGraphLoader.add_constructor("!KernelNode", AppGraphLoader.cons_kerneln)
-
-
-def dump_raw_yaml(G, stream):
-    """Serializes graph *G* to YAML and dumps it to *stream*. The stream
-    will contain a 4-tuple:
-
-    - the UID of the root node
     - the version of zoti-graph (to be compared when loading)
+    - the name of the current graph format
+    - the UID of the root node
     - a list of all node entries in the graph.
     - a list of all edge entries in the graph.
+
     """
-    dump_all([
+    return json.dump([
+        DIST.version,
+        G._instance,
         repr(G.root),
-        dist.version,
         list(G.ir.nodes(data=True)),
         list(G.ir.edges(data=True))
-    ], stream, Dumper=AppGraphDumper, default_flow_style=None,)
+    ], stream, cls=GenericJSONEncoder)
 
 
-def from_raw_yaml(stream, version=None) -> AppGraph:
-    """Deserializes a graph from a *stream* containing the raw YAML data
-    as dumped by :meth:`dump_raw_yaml`. If *version* is passed, it
+def from_raw(stream, version=None) -> AppGraph:
+    """Deserializes a graph from a *stream* containing the raw JSON
+    data as dumped by :meth:`dump_raw`. If *version* is passed, it
     will compare it against the loaded version and raise an error if
     they do not match.
 
     """
 
-    root, ver, nodes, edges = tuple(load_all(stream, Loader=AppGraphLoader))
-    G = AppGraph(root)
+    ver, inst, root, nodes, edges = tuple(
+        json.load(stream, object_hook=GenericJSONDecoderHook))
+    G = AppGraph(inst, root)
     if version and version != ver:
         msg = f"Cannot load {stream.name}. Document format version "
         msg += f"{ver} does not match with tool version {version}"

@@ -8,17 +8,16 @@ import logging as log
 from pathlib import Path
 from importlib.metadata import distribution
 
-import artifacts
-import translib as target
-
 import zoti_graph as graph
-import zoti_graph.sanity as sanity
+import zoti_graph.script as tran
+import zoti_graph.genny as genny
+import zoti_graph.genny.sanity as sanity
+import zoti_graph.genny.translib as agnostic
 import zoti_ftn.backend.c as ftn
-import zoti_tran as tran
-import zoti_tran.translib as agnostic
 
 sys.path.insert(0, pathlib.Path(__file__).parent.resolve())
-
+import artifacts
+import translib as target
 
 dist_zoti_graph = distribution("zoti_graph")
 dist_zoti_ftn = distribution("zoti_ftn")
@@ -44,9 +43,9 @@ log.basicConfig(level=args.loglevel,
 gpath = Path(args.graph)
 fpath = Path(args.ftn)
 
-if gpath.suffixes == [".raw", ".yaml"]:
+if gpath.suffixes == [".raw", ".json"]:
     with open(gpath) as f:
-        G = graph.from_raw_yaml(f, version=dist_zoti_graph.version)
+        G = graph.from_raw(f, version=dist_zoti_graph.version)
 else:
     raise NotImplementedError(f"Cannot handle {gpath}")
 
@@ -79,15 +78,15 @@ script.transform([
         target.port_inference,
         dump_title="tran_1_port_inference",
         dump_nodes=debug,
-        dump_graph={
+        dump_graphviz={
             "port_info": lambda p: f"{p.port_type.__class__.__name__},{p.data_type['type'].__class__.__name__}",
-            "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
+            "node_info": lambda p: ",".join([k for k in p.mark.keys()]),
         } if args.debug else None,
     ),
     tran.TransSpec(
         target.prepare_platform_ports,
         dump_title="tran_2_prepare_platform_ports",
-        dump_graph={
+        dump_graphviz={
             # "port_info": lambda p: f"{p.data_type['type']}",
             "port_info": lambda p: ",".join([f"{k}-{v}" for k, v in p.mark.items()]),
         } if args.debug else None,
@@ -96,41 +95,40 @@ script.transform([
         target.expand_actors,
         dump_title="tran_3_expand_actors",
         dump_nodes=debug,
-        dump_graph={
-            "composite_info": lambda p: ",".join([k for k in p.mark.keys()]),
-            "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
+        dump_graphviz={
+            "node_info": lambda p: ",".join([k for k in p.mark.keys()]),
         } if args.debug else None,
     ),
     tran.TransSpec(
         agnostic.flatten,
         dump_title="tran_4_flatten",
-        dump_graph=debug,
+        dump_graphviz=debug,
     ),
     tran.TransSpec(
         target.prepare_side_ports,
         dump_title="tran_5_prepare_side_ports",
-        dump_graph={
-            "composite_info": lambda c: str(c.mark),
-            "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
-            # "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
+        dump_graphviz={
+            "node_info": lambda n: (
+                str(n.mark) if isinstance(n, genny.CompositeNode)
+                else ",".join([k for k in n.mark.keys()])),
             "port_info": lambda p: p.kind.name,
         } if args.debug else None,
     ),
     tran.TransSpec(
         agnostic.fuse_actors,
         dump_title="tran_6_fuse_actors",
-        dump_graph={
-            "composite_info": lambda p: ",".join([k for k in p.mark.keys()]),
+        dump_graphviz={
+            "NODE_info": lambda p: ",".join([k for k in p.mark.keys()]),
         } if args.debug else None,
     ),
     tran.TransSpec(
         target.prepare_intermediate_ports,
         dump_title="tran_7_prepare_intermediate_ports",
-        dump_graph={
-            "composite_info": lambda c: str(c.mark),
-            "leaf_info": lambda p: ",".join([k for k in p.mark.keys()]),
+        dump_graphviz={
+            "node_info": lambda n: (
+                str(n.mark) if isinstance(n, genny.CompositeNode)
+                else ",".join([k for k in n.mark.keys()])),
             "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
-            # "port_info": lambda p: p.kind.name,
         } if args.debug else None,
     ),
     tran.TransSpec(artifacts.typedefs),

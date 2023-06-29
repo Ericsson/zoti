@@ -81,7 +81,7 @@ NATIVE_SRCS 	:= $(shell find $(HUB)/apps -name '*.dfc')
 TYPE_SRCS 	:= $(shell find $(TYPE_LIB) -name '*.ftn')
 
 GYAML_IN 	:= $(GEN_IN_PATH)/$(MAIN)_preparse.yaml
-GRAPH_IN 	:= $(GEN_IN_PATH)/$(MAIN).raw.yaml
+GRAPH_IN 	:= $(GEN_IN_PATH)/$(MAIN).raw.json
 TYPES_IN 	:= $(GEN_IN_PATH)/types.yaml
 GEN_SPEC	:= $(patsubst %, $(GEN_OUT_PATH)/%.zoc, $(NODES))
 GEN_TYPE	:= $(GEN_CODE_PATH)/types.h

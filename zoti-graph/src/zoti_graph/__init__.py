@@ -1,8 +1,10 @@
 from .appgraph import AppGraph
 from .core import *
 from .io import *
-from .parser import parse
+from .script import Script
+from .exceptions import ScriptError, ContextError
 from importlib.metadata import distribution
+
 
 dist = distribution("zoti_graph")
 

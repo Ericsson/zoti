@@ -1,37 +1,43 @@
 # ZOTI-Graph
 
-ZOTI-Graph is the core format for system models used in the [ZOTI
-project](https://ericsson.github.io/zoti/). Its purpose is to provide
-a minimal language to represent system models with the sole purpose of
-generating code, as well as tools to manipulate this representation
-during a (scripted) code synthesis flow.
+ZOTI-Graph is the core format for system models used between tools in
+the [ZOTI project](https://ericsson.github.io/zoti/). Its purpose is
+to provide a minimal language to represent hierarchical graph-like
+structures, as well as an API to manipulate them or extract
+information.
 
-:::{figure} assets/splash.png
-(possible drawing of a ZOTI-Graph model [^id2])
+:::{figure} assets/drawing-0.png
+Possible drawing of a specific instance of a ZOTI-Graph model.
 :::
 
-The main highlights of the ZOTI-Graph representation are:
+## Feature Highlights
 
-- it aims to provide a simple, generic, target-agnostic and
-  language-independent format to describe application models as well
-  as their implementation details in a declarative, parser-friendly
-  manner.
-- it aims to act as a bridge between (possibly formal) system models
-  and their pragmatic implementation on a given (heterogeneous)
-  target platform. In this sense it imposes enough restrictions on
-  the design as to enable hosting behavior semantics as well as it
-  allows custom annotations and "hacks" for aiding towards more
-  efficient implementations. In other words its goal is to enable the
-  use of (upstream) formal models without necesserily crippling the
-  possibility of (downstream) efficient code generation.
-- it represents applications as graphs of concurrent actors where
-  nodes are hierarchically representing compute components and their
-  mapping whereas each edge represents a type of interaction between
-  the compute components.
+ZOTI-Graph is for all intents and purposes a hierarchical graph format
+built on top of [NetworkX](https://networkx.org/). Its main purpose is
+to represent systems descriptions by annnotating its elements or by
+means of class inheritance and specialization. ZOTI-Graph models are
+intended to be used in the development of [synthesis
+flows](https://ericsson.github.io/zoti/), hence the ZOTI-Graph tool
+features:
+
+- a [generic API](api-reference) for parsing, extracting information
+  and altering the structure of ZOTI-graphs. The API also exposes the
+  internal [NetworkX](https://networkx.org/) structure such that
+  generic graph algorithms can be applied on ZOTI-graphs.
+  
+- a [script handler](script) with utilities for setting up
+  transformation flows on ZOTI-graphs.
+
+- (at the moment only) an [specialized instance](genny) of the
+  ZOTI-graph format to be used with the [Genny synthesis
+  flow](https://ericsson.github.io/zoti/), which represents system
+  application views as graphs of concurrent actors. This format comes
+  together with a parser, a set of sanity rules and a set of
+  target-agnostic transformations compatible with the script handler.
 
 For an overview discussion on the role of ZOTI-Graph and its position
-in a synthesis flow please refer to the [ZOTI project hub
-page](https://ericsson.github.io/zoti/).
+in a synthesis flow such as Genny please refer to the [ZOTI project
+hub page](https://ericsson.github.io/zoti/).
 
 The current implementation of ZOTI-Graph is as a Python library using
 mainly [NetworkX](https://networkx.org/) for internal structure
@@ -44,9 +50,13 @@ page](https://github.com/Ericsson/zoti/tree/main/zoti-graph).
 ```{toctree}
 :maxdepth: 2
 
-the-zoti-graph-model
+genny
 
 api-reference
+
+script
+
+tutorial
 ```
 
 ## Indices and tables
@@ -55,7 +65,4 @@ api-reference
 - {ref}`modindex`
 - {ref}`search`
 
-[^id2]: The format is still in development and there might be
-    discrepancies between drawings and definition. For proper
-    definitions check the [Model Documentation](the-zoti-graph-model) page.
 

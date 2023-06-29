@@ -3,15 +3,14 @@ import json
 import logging as log
 import pickle
 import sys
-import os
-import toml
 import yaml
+import importlib
+import types
 from importlib.metadata import distribution
 from pathlib import Path
 
 import zoti_graph.io as io
 import zoti_graph._main_utils as _mu
-from zoti_graph.parser import parse
 
 
 dist = distribution("zoti_graph")
@@ -20,7 +19,7 @@ parser = argparse.ArgumentParser(
     description="ZOTI application graph representation, implemented in Python.\n\n"
     "The following formats are available as inputs/outputs:\n"
     " - *.yaml|*.json: _only inputs_, parsed and schema-validated;\n"
-    " - *.raw.yaml: raw format, compatible with any ZOTI graph representer"
+    " - *.raw.json: raw format, compatible with any ZOTI graph representer"
     f" version ^{dist.version};\n"
     " - *.raw.p: raw binary data, compatible with only this representer.",
     formatter_class=argparse.RawTextHelpFormatter,
@@ -33,6 +32,12 @@ parser.add_argument(
     help="prints additional info statements",
 )
 parser.add_argument(
+    "-f", "--format", metavar="NAME",
+    help="""Name of the graph format used throughout the transformations. Default is 'genny'.""",
+    type=str.lower,
+    default='genny',
+)
+parser.add_argument(
     "-i", "--input", metavar="FILE",
     help="If not specified reads the content of a '.json' file from stdin.",
     type=argparse.FileType('r'),
@@ -40,7 +45,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "-o", "--out", metavar="FILE",
-    help="""If not specified writes output to stdout as '.raw.yaml'.""",
+    help="""If not specified writes output to stdout as '.raw.json'.""",
     type=argparse.FileType('w'),
     default=sys.stdout,
 )
@@ -59,7 +64,7 @@ action.add_argument(
 )
 action.add_argument(
     "--dump-args", type=str, metavar="DICT",
-    help="""Arguments passed to --dump-graph and --dump-tree commands as key-value\n"""
+    help="""Arguments passed to - -dump-graph and --dump-tree commands as key-value\n"""
     """pairs. Only specified via 'zoticonf.toml'""",
 )
 action.add_argument(
@@ -71,6 +76,7 @@ action.add_argument(
     help="""Print info keys for piping from ZOTI-YAML and exit""",
 )
 default_args = {
+    "format": "genny",
     "out": None,
     "dump_path": ".",
     "dump_args": {}
@@ -94,6 +100,14 @@ try:
     # if dumpargs:
     #     log.info("Drawing arguments found:", dumpargs)
 
+    assert conf["format"] in ["genny"]
+    parse = None
+    if conf["format"] == "genny":
+        spec = importlib.util.find_spec('zoti_graph.genny.parser')
+        m = types.ModuleType(spec.loader.name)
+        spec.loader.exec_module(m)
+        parse = m.parse
+
     # Reading input
     i_ext = ("".join(Path(args.input.name).suffixes)
              if not "stdin" in args.input.name else ".json")
@@ -105,14 +119,16 @@ try:
     elif i_ext in [".json"]:
         log.info(f"Parsing graph from JSON: {args.input.name}")
         G = parse(*json.load(args.input))
-    elif i_ext in [".raw.yaml", ".raw.yml"]:
+    elif i_ext in [".raw.json"]:
         log.info(f"Loading graph from raw YAML: {args.input.name}")
-        G = io.from_raw_yaml(args.input, dist.version)
+        G = io.from_raw(args.input, dist.version)
     elif i_ext in [".raw.p", ".raw.pickle"]:
         log.info(f"Loading graph from raw pickle: {args.input.name}")
         G = pickle.load(args.input)
     else:
         raise ValueError(f"Cannot recognize extension of {args.input.name}")
+
+    assert G._instance == conf["format"]
 
     # Dumping debug files
     if conf['dump_info']:
@@ -120,7 +136,7 @@ try:
             io.dump_node_info(G, f)
     if conf['dump_graph']:
         with open(dpath.joinpath(f"{name}_graph.dot"), "w") as f:
-            io.draw_graph(G, f, **dumpargs)
+            io.draw_graphviz(G, f, **dumpargs)
     if conf['dump_tree']:
         with open(dpath.joinpath(f"{name}_tree.dot"), "w") as f:
             io.draw_tree(G, f, **dumpargs)
@@ -129,8 +145,8 @@ try:
     o_ext = ("".join(Path(args.out.name).suffixes)
              if not "stdin" in args.out.name else ".raw.yaml")
 
-    if o_ext in [".raw.yaml", ".raw.yml"]:
-        io.dump_raw_yaml(G, args.out)
+    if o_ext in [".raw.json"]:
+        io.dump_raw(G, args.out)
     elif o_ext in [".raw.pickle", ".raw.p"]:
         pickle.dump(G, args.out,)
     else:

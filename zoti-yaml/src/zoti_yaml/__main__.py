@@ -6,11 +6,11 @@ import sys
 import yaml
 from pathlib import Path
 
-from zoml import __version__
-from zoml import Project
-from zoml.dumper import ZotiDumper, ZotiEncoder
-from zoml.core import ATTR_MODULE, ATTR_PATH
-import zoml._main_utils as _mu
+from zoti_yaml import __version__
+from zoti_yaml import Project
+from zoti_yaml.dumper import ZotiDumper, ZotiEncoder
+from zoti_yaml.core import ATTR_MODULE, ATTR_PATH
+import zoti_yaml._main_utils as _mu
 
 
 parser = argparse.ArgumentParser(

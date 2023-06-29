@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from zoti_tran import ScriptError, ContextError
+from zoti_graph import ScriptError, ContextError
 from dumputils import Ref
 
 

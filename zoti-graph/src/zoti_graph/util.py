@@ -1,7 +1,9 @@
-from enum import EnumMeta
+from enum import EnumMeta, Enum
 from functools import wraps
 from pprint import pformat
 from typing import Any, Dict
+from pathlib import PurePosixPath
+import json
 
 
 def default_init(init):
@@ -52,6 +54,7 @@ def default_repr(repr):
 
     return new_repr
 
+
 def unique_name(name, pool, modifier=lambda n, string: n + string):
     idx, newname = (0, name)
     # print(name, pool)
@@ -71,3 +74,49 @@ class SearchableEnum(EnumMeta):
 
     def __getitem__(cls, item):
         return super(SearchableEnum, cls).__getitem__(item.upper())
+
+
+class GenericJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return super().default(obj)
+        except TypeError:
+            pass
+        cls = type(obj)
+        isenum = False
+        if isinstance(obj, Enum):
+            data = obj.name
+            isenum = True
+        elif isinstance(obj, PurePosixPath):
+            data = obj.as_posix()
+        elif not hasattr(cls, '__json_encode__'):
+            data = obj.__dict__
+        else:
+            data = obj.__json_encode__
+        result = {
+            '__enum__': isenum,
+            '__custom__': True,
+            '__module__': cls.__module__,
+            '__name__': cls.__name__,
+            'data': data
+        }
+        return result
+
+
+def GenericJSONDecoderHook(result):
+    if not isinstance(result, dict) or not result.get('__custom__', False):
+        return result
+    if result['__name__'] == "PurePosixPath":
+        return PurePosixPath(result['data'])
+    import sys
+    module = result['__module__']
+    if module not in sys.modules:
+        __import__(module)
+    cls = getattr(sys.modules[module], result['__name__'])
+    if result['__enum__']:
+        return cls[result['data']]
+    if hasattr(cls, '__json_decode__'):
+        return cls.__json_decode__(result['data'])
+    instance = cls.__new__(cls)
+    instance.__dict__.update(result['data'])
+    return instance
