@@ -34,10 +34,13 @@
           <div class="body" role="main">
             
   <h1>Source code for zoti_gen.exceptions</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span></span><span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
 
 <span class="kn">from</span> <span class="nn">yaml</span> <span class="kn">import</span> <span class="n">Dumper</span><span class="p">,</span> <span class="n">dump</span>
 <span class="kn">from</span> <span class="nn">zoti_yaml</span> <span class="kn">import</span> <span class="n">get_pos</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
 
 
 <span class="k">class</span> <span class="nc">PrettyDumper</span><span class="p">(</span><span class="n">Dumper</span><span class="p">):</span>
@@ -66,12 +69,12 @@
 <div class="viewcode-block" id="ParseError"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.exceptions.ParseError">[docs]</a><span class="k">class</span> <span class="nc">ParseError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">what</span> <span class="o">=</span> <span class="n">what</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">get_pos</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span> <span class="k">if</span> <span class="n">pos</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">get_pos</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span> <span class="k">if</span> <span class="n">get_pos</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
-    
+
 <div class="viewcode-block" id="ModelError"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.exceptions.ModelError">[docs]</a><span class="k">class</span> <span class="nc">ModelError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">what</span> <span class="o">=</span> <span class="n">what</span>
@@ -87,18 +90,21 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Wraps a Jinja template error into a friendlier message. &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">err_line</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">err_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Jinja raised error when processing template&quot;</span><span class="p">,</span>
-        <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">context</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+            <span class="n">err_line</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="n">err_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Jinja raised error when processing template&quot;</span><span class="p">,</span>
+            <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">err_line</span> <span class="o">=</span> <span class="n">err_line</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="n">err_string</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">msg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">msg</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; in node &#39;</span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">if</span> <span class="n">parent</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">show</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">info</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">pformat</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">temp_lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
@@ -118,7 +124,8 @@
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}{</span><span class="n">pre</span><span class="si">}</span><span class="s2"># </span><span class="si">{</span><span class="n">temp_lines</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                 <span class="k">for</span> <span class="n">pre</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">err_lines</span>
             <span class="p">])</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">err_str</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Passed context:</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">level</span> <span class="o">&lt;</span> <span class="n">log</span><span class="o">.</span><span class="n">WARN</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">err_str</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="si">}{</span><span class="n">ctx</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="n">msg</span></div>
 </pre></div>
 

@@ -34,15 +34,17 @@
           <div class="body" role="main">
             
   <h1>Source code for zoti_gen.core</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
-<span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">Template</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">marshmallow</span> <span class="k">as</span> <span class="nn">mm</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">zoti_yaml</span> <span class="k">as</span> <span class="nn">zoml</span>
+<span class="kn">from</span> <span class="nn">zoti_gen.jinja_extensions</span> <span class="kn">import</span> <span class="n">__zoti_gen_env__</span>
+<span class="kn">from</span> <span class="nn">zoti_gen.exceptions</span> <span class="kn">import</span> <span class="n">TemplateError</span>
 
 <span class="n">ATTR_NAME</span> <span class="o">=</span> <span class="s2">&quot;name&quot;</span>
 <span class="n">ATTR_BLOCK</span> <span class="o">=</span> <span class="s2">&quot;block&quot;</span>
@@ -61,9 +63,10 @@
 <span class="n">FUN_UTOL</span> <span class="o">=</span> <span class="s2">&quot;usage_to_label&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
 <span class="n">FUN_PTOP</span> <span class="o">=</span> <span class="s2">&quot;param_to_param&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
 <span class="n">FUN_VTOP</span> <span class="o">=</span> <span class="s2">&quot;value_to_param&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
+<span class="n">FUN_PTOL</span> <span class="o">=</span> <span class="s2">&quot;param_to_label&quot;</span>  <span class="c1"># member of ProjHandler.resolve._map_bindings</span>
 
 <span class="n">KEYS_PRAGMA</span> <span class="o">=</span> <span class="p">[</span><span class="n">PRAGMA_PASS</span><span class="p">,</span> <span class="n">PRAGMA_NEW</span><span class="p">,</span> <span class="n">PRAGMA_EXP</span><span class="p">]</span>
-<span class="n">KEYS_BIND</span> <span class="o">=</span> <span class="p">[</span><span class="n">FUN_LTOL</span><span class="p">,</span> <span class="n">FUN_UTOL</span><span class="p">,</span> <span class="n">FUN_PTOP</span><span class="p">,</span> <span class="n">FUN_VTOP</span><span class="p">]</span>
+<span class="n">KEYS_BIND</span> <span class="o">=</span> <span class="p">[</span><span class="n">FUN_LTOL</span><span class="p">,</span> <span class="n">FUN_UTOL</span><span class="p">,</span> <span class="n">FUN_PTOP</span><span class="p">,</span> <span class="n">FUN_VTOP</span><span class="p">,</span> <span class="n">FUN_PTOL</span><span class="p">]</span>
 
 
 <span class="k">class</span> <span class="nc">Nested</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">):</span>
@@ -79,65 +82,50 @@
             <span class="k">raise</span> <span class="n">error</span>
 
 
-<div class="viewcode-block" id="TemplateFun"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.TemplateFun">[docs]</a><span class="k">class</span> <span class="nc">TemplateFun</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for a template function.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Template"><a class="viewcode-back" href="../../api-reference.html#zoti_gen.core.Template">[docs]</a><span class="k">class</span> <span class="nc">Template</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for a Jinja template.&quot;&quot;&quot;</span>
 
-    <span class="n">template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">string</span><span class="p">:</span> <span class="nb">str</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;formatted string template&quot;&quot;&quot;</span>
 
-    <span class="n">args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;template arguments&quot;&quot;&quot;</span>
-
-    <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">_parent</span><span class="p">:</span> <span class="nb">str</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;name of the parent node  of this template function (for debugging)&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="p">[],</span> <span class="kc">None</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">string</span> <span class="o">=</span> <span class="n">string</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">) -&gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">string</span>
 
     <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot render empty template for field &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span>
-        <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">args</span><span class="p">)),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
-        <span class="k">return</span> <span class="n">Template</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">)</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">{},</span> <span class="n">param</span><span class="o">=</span><span class="p">{},</span> <span class="n">placeholder</span><span class="o">=</span><span class="p">{},</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">LabelSchema</span><span class="p">()</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">label</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="s2">&quot;param&quot;</span><span class="p">:</span> <span class="n">param</span><span class="p">,</span>
+            <span class="s2">&quot;placeholder&quot;</span><span class="p">:</span> <span class="n">placeholder</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tm</span> <span class="o">=</span> <span class="n">__zoti_gen_env__</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tm</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">ty</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">exc_tb</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+            <span class="k">while</span> <span class="n">exc_tb</span> <span class="ow">and</span> <span class="s2">&quot;template code&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exc_tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">:</span>
+                <span class="n">exc_tb</span> <span class="o">=</span> <span class="n">exc_tb</span><span class="o">.</span><span class="n">tb_next</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="n">exc_tb</span><span class="o">.</span><span class="n">tb_lineno</span> <span class="k">if</span> <span class="n">exc_tb</span> <span class="k">else</span> <span class="o">-</span><span class="mi">2</span>
+            <span class="k">raise</span> <span class="n">TemplateError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">err_line</span><span class="o">=</span><span class="n">lineno</span><span class="p">,</span>
+                                <span class="n">err_string</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="n">msg</span><span class="p">),</span>
+                                <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">TemplateFunField</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">TemplateField</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A template function is a Shell-like formatted string where all the</span>
 <span class="sd">    variables are exposed as arguments. This function is meant to be</span>
 <span class="sd">    called by the `Rendering &lt;rendering&gt;`_ engine which would fill in</span>
 <span class="sd">    the arguments.</span>
-
-<span class="sd">    As entry to an input specification node, a template function is</span>
-<span class="sd">    provided as a list of strings, where the first elements are the</span>
-<span class="sd">    arguments and the last argument is the formatted string. For</span>
-<span class="sd">    example the YAML entry:</span>
-
-<span class="sd">    ..  code-block:: yaml</span>
-
-<span class="sd">        [a, b, c, &quot;text with $a, then $b and also $c!&quot;]</span>
-
-<span class="sd">    is parsed internally to a lambda function as follows:</span>
-
-<span class="sd">    ..  code-block:: python</span>
-
-<span class="sd">        lambda a, b, c: &quot;text with $a, then $b and also $c!&quot;</span>
 
 <span class="sd">    The formatted string syntax is documented `here</span>
 <span class="sd">    &lt;https://docs.python.org/3/library/string.html#template-strings&gt;`_.</span>
@@ -145,16 +133,15 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;Expected TemplateFun arguments as a list.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;Expected at least one argument to TemplateFun&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">TemplateFun</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="o">*</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;Expected string template.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Template</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">attr</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">args</span> <span class="o">+</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">template</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">string</span>
 
 
 <span class="c1">###############</span>
@@ -204,21 +191,36 @@
         <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dep_list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requirement</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span></div>
 
 
-<span class="k">class</span> <span class="nc">RequirementSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="c1"># class RequirementSchema(mm.Schema):</span>
+<span class="c1">#     &quot;&quot;&quot;Illustrates prerequisites for the parent element. Internally it is</span>
+<span class="c1">#     represented using a :class:`zoti_gen.core.Requirement` class. It may</span>
+<span class="c1">#     contain the following entries:</span>
+
+<span class="c1">#     :include: (list) files or modules to be included in the preamble</span>
+<span class="c1">#               of the generated target artifact</span>
+
+<span class="c1">#     &quot;&quot;&quot;</span>
+
+<span class="c1">#     include = mm.fields.List(mm.fields.Str())</span>
+
+<span class="c1">#     @mm.post_load</span>
+<span class="c1">#     def make(self, data, **kwargs):</span>
+<span class="c1">#         return Requirement(requirement=data)</span>
+
+<span class="k">class</span> <span class="nc">RequirementField</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Illustrates prerequisites for the parent element. Internally it is</span>
 <span class="sd">    represented using a :class:`zoti_gen.core.Requirement` class. It may</span>
 <span class="sd">    contain the following entries:</span>
 
-<span class="sd">    :include: (list) files or modules to be included in the preamble</span>
-<span class="sd">              of the generated target artifact</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">include</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Str</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">_deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">mm</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;Expected dict requirement.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Requirement</span><span class="p">(</span><span class="n">requirement</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
 
-    <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
-    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Requirement</span><span class="p">(</span><span class="n">requirement</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">requirement</span>
 
 
 <span class="c1">############</span>
@@ -287,30 +289,39 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A binding between one of the labels or parameters of the parent</span>
 <span class="sd">    block and a label or parameter of the referenced block.</span>
 <span class="sd">    Internally it is represented using a :class:`zoti_gen.core.Bind`</span>
-<span class="sd">    class. It may contain one of the following entries:</span>
+<span class="sd">    class. It needs to contain *only one* of the following entries:</span>
 
 <span class="sd">    :label_to_label: (dict)</span>
 
-<span class="sd">        :parent: (str)</span>
-<span class="sd">        :child: (str)</span>
-<span class="sd">        :usage: (`Template Function &lt;#template-function&gt;`_)</span>
+<span class="sd">        :parent: (str) ID of parent</span>
+<span class="sd">        :child: (str) ID of child</span>
+<span class="sd">        :usage: (`Template &lt;#code-template&gt;`_) rendered with context:</span>
+
+<span class="sd">    .. literalinclude:: ../../src/zoti_gen/builder.py</span>
+<span class="sd">       :language: python</span>
+<span class="sd">       :start-after: # CONTEXT-BEGIN: bind/label_to_label</span>
+<span class="sd">       :end-before: # CONTEXT-END: bind/label_to_label</span>
 
 <span class="sd">    :usage_to_label: (dict)</span>
 
-<span class="sd">        :child: (str)</span>
-<span class="sd">        :usage: (`Template Function &lt;#template-function&gt;`_)</span>
+<span class="sd">        :child: (str) ID of child</span>
+<span class="sd">        :usage: (`Template &lt;#code-template&gt;`_) rendered with context:</span>
 
+<span class="sd">    .. literalinclude:: ../../src/zoti_gen/builder.py</span>
+<span class="sd">       :language: python</span>
+<span class="sd">       :start-after: # CONTEXT-BEGIN: bind/usage_to_label</span>
+<span class="sd">       :end-before: # CONTEXT-END: bind/usage_to_label</span>
 
 <span class="sd">    :param_to_param: (dict)</span>
 
-<span class="sd">        :parent: (str)</span>
-<span class="sd">        :child: (str)</span>
+<span class="sd">        :parent: (str) Parent parameter</span>
+<span class="sd">        :child: (str)  Child parameter</span>
 
 
 <span class="sd">    :value_to_param: (dict)</span>
 
-<span class="sd">        :value: (str)</span>
-<span class="sd">        :child: (str) </span>
+<span class="sd">        :value: (str) Value as simple string</span>
+<span class="sd">        :child: (str) Child parameter</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -319,7 +330,7 @@
             <span class="p">{</span>
                 <span class="s2">&quot;parent&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                 <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">TemplateField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
             <span class="p">}</span>
         <span class="p">)</span>
     <span class="p">)</span>
@@ -327,7 +338,7 @@
         <span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
             <span class="p">{</span>
                 <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">TemplateField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
             <span class="p">}</span>
         <span class="p">)</span>
     <span class="p">)</span>
@@ -344,6 +355,14 @@
             <span class="p">{</span>
                 <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                 <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">param_to_label</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;parent&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="s2">&quot;child&quot;</span><span class="p">:</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
             <span class="p">}</span>
         <span class="p">)</span>
     <span class="p">)</span>
@@ -384,7 +403,7 @@
     <span class="n">bind</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Bind</span><span class="p">]</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; list of bindings between the parent block and referenced block &quot;&quot;&quot;</span>
 
-    <span class="n">usage</span><span class="p">:</span> <span class="n">TemplateFun</span>
+    <span class="n">usage</span><span class="p">:</span> <span class="n">Template</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Target-dependent template passed by type system &quot;&quot;&quot;</span>
 
     <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span></div>
@@ -417,10 +436,25 @@
 <span class="sd">        parameters of the parent block and those of the referenced</span>
 <span class="sd">        block.</span>
 
-<span class="sd">    :usage: (`Template Function &lt;#template-function&gt;`_) defines how</span>
-<span class="sd">        this block is being instantiated in case it is not expanded</span>
-<span class="sd">        inline (e.g., as function call). The template string is</span>
-<span class="sd">        defined by the type system.</span>
+<span class="sd">    :usage: (`Template &lt;#code-template&gt;`_) defines how this block is being</span>
+<span class="sd">        instantiated in case it is not expanded inline (e.g., as</span>
+<span class="sd">        function call). The template string is defined by the type</span>
+<span class="sd">        system. It is rendered with the following contexts, depending</span>
+<span class="sd">        on which directive is passed:</span>
+
+<span class="sd">    - ``expand`` is in directives</span>
+
+<span class="sd">    .. literalinclude:: ../../src/zoti_gen/builder.py</span>
+<span class="sd">       :language: python</span>
+<span class="sd">       :start-after: # CONTEXT-BEGIN: instance/usage-expand</span>
+<span class="sd">       :end-before: # CONTEXT-END: instance/usage-expand</span>
+
+<span class="sd">    - ``expand`` is not in directives</span>
+
+<span class="sd">    .. literalinclude:: ../../src/zoti_gen/builder.py</span>
+<span class="sd">       :language: python</span>
+<span class="sd">       :start-after: # CONTEXT-BEGIN: instance/usage-noexpand</span>
+<span class="sd">       :end-before: # CONTEXT-END: instance/usage-noexpand</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">placeholder</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -431,8 +465,8 @@
     <span class="p">)</span>
     <span class="n">bind</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">Nested</span><span class="p">(</span><span class="n">BindSchema</span><span class="p">),</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">[])</span>
     <span class="c1"># usage = mm.fields.String(required=False)</span>
-    <span class="n">usage</span> <span class="o">=</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">load_default</span><span class="o">=</span><span class="n">TemplateFun</span><span class="p">(</span><span class="s2">&quot;instance/usage&quot;</span><span class="p">))</span>
+    <span class="n">usage</span> <span class="o">=</span> <span class="n">TemplateField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">load_default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">&quot;instance/usage&quot;</span><span class="p">))</span>
     <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="s2">&quot;_info&quot;</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
 
     <span class="nd">@mm</span><span class="o">.</span><span class="n">post_load</span>
@@ -452,7 +486,7 @@
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Unique name in the scope of a block&quot;&quot;&quot;</span>
 
-    <span class="n">usage</span><span class="p">:</span> <span class="n">TemplateFun</span>
+    <span class="n">usage</span><span class="p">:</span> <span class="n">Template</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Default usage template. Called on top-level (non-binding) instances.&quot;&quot;&quot;</span>
 
     <span class="n">glue</span><span class="p">:</span> <span class="n">Dict</span>
@@ -469,22 +503,27 @@
 
 <span class="sd">    :name: (string) unique ID in the scope of the parent block</span>
 
-<span class="sd">    :usage: (`Template Function &lt;#template-function&gt;`_) defines how</span>
-<span class="sd">        this label is to be expanded in the code. Provided by the type</span>
-<span class="sd">        system.</span>
-
 <span class="sd">    :glue: (dict) entries with glue code tailored for various</span>
 <span class="sd">        circumstances, provided by the type system and accessible from</span>
 <span class="sd">        within the code template using the `label.&lt;port_id&gt;.glue` key.</span>
 
+<span class="sd">    :usage: (`Template &lt;#code-template&gt;`_) defines how this label is to be</span>
+<span class="sd">        expanded in the code. Provided by the type system. Rendered</span>
+<span class="sd">        with the following context:</span>
+
+<span class="sd">    .. literalinclude:: ../../src/zoti_gen/builder.py</span>
+<span class="sd">       :language: python</span>
+<span class="sd">       :start-after: # CONTEXT-BEGIN: label/usage</span>
+<span class="sd">       :end-before: # CONTEXT-END: label/usage</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Str</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">usage</span> <span class="o">=</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">usage</span> <span class="o">=</span> <span class="n">TemplateField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">glue</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span>
         <span class="n">keys</span><span class="o">=</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span>
             <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># , validate=mm.validate.NoneOf([&quot;name&quot;])</span>
         <span class="p">),</span>
-        <span class="c1"># values=TemplateFunField(),  # TODO</span>
+        <span class="c1"># values=TemplateField(),  # TODO</span>
         <span class="n">values</span><span class="o">=</span><span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(),</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
     <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="s2">&quot;_info&quot;</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
@@ -553,21 +592,31 @@
 <span class="sd">        :`instance &lt;#instance&gt;`_: (list) other blocks instantiated</span>
 <span class="sd">            from this one.</span>
 
-<span class="sd">        :code: (string) containing this block&#39;s `Code Template</span>
-<span class="sd">            &lt;#code-template&gt;`_</span>
+<span class="sd">        :code: (`Template &lt;#code-template&gt;`_) containing this block&#39;s `Code</span>
+<span class="sd">            Template &lt;#code-template&gt;`_. Rendered witn the context: </span>
 
-<span class="sd">        :prototype: (`Template Function &lt;#template-function&gt;`_) defines</span>
-<span class="sd">            this block&#39;s type signature, as provided from a type</span>
-<span class="sd">            system.</span>
+<span class="sd">        .. literalinclude:: ../../src/zoti_gen/builder.py</span>
+<span class="sd">           :language: python</span>
+<span class="sd">           :start-after: # CONTEXT-BEGIN: prototype</span>
+<span class="sd">           :end-before: # CONTEXT-END: prototype</span>
+
+<span class="sd">        :prototype: (`Template &lt;#code-template&gt;`_) defines this block&#39;s type</span>
+<span class="sd">            signature, as provided from a type system. Rendered with</span>
+<span class="sd">            the following context:</span>
+
+<span class="sd">        .. literalinclude:: ../../src/zoti_gen/builder.py</span>
+<span class="sd">           :language: python</span>
+<span class="sd">           :start-after: # CONTEXT-BEGIN: code</span>
+<span class="sd">           :end-before: # CONTEXT-END: code</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">name</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">requirement</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Nested</span><span class="p">(</span><span class="n">RequirementSchema</span><span class="p">)</span>
+        <span class="n">requirement</span> <span class="o">=</span> <span class="n">RequirementField</span><span class="p">()</span>
         <span class="n">label</span> <span class="o">=</span> <span class="n">LabelListField</span><span class="p">()</span>
         <span class="n">param</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Mapping</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">code</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">prototype</span> <span class="o">=</span> <span class="n">TemplateFunField</span><span class="p">(</span><span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">TemplateField</span><span class="p">(</span><span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">prototype</span> <span class="o">=</span> <span class="n">TemplateField</span><span class="p">(</span><span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">instance</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">Nested</span><span class="p">(</span><span class="n">InstanceSchema</span><span class="p">),</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">_info</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">Raw</span><span class="p">(</span><span class="n">data_key</span><span class="o">=</span><span class="s2">&quot;_info&quot;</span><span class="p">,</span> <span class="n">load_default</span><span class="o">=</span><span class="p">{})</span>
 
@@ -578,7 +627,7 @@
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Unique ID of block. &quot;&quot;&quot;</span>
 
-    <span class="n">prototype</span><span class="p">:</span> <span class="n">TemplateFun</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">TemplateFun</span><span class="p">(</span><span class="s2">&quot;prototype&quot;</span><span class="p">))</span>
+    <span class="n">prototype</span><span class="p">:</span> <span class="n">Template</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">&quot;prototype&quot;</span><span class="p">))</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Target dependent function signature provided by the type system &quot;&quot;&quot;</span>
 
     <span class="n">requirement</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Requirement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -598,7 +647,27 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;list of instances that bind template (code) placeholders to other</span>
 <span class="sd">    blocks&quot;&quot;&quot;</span>
 
-    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span></div>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">getLabelKeys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">getLabelNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">getInstancePlaceholders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">placeholder</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">getInstanceBlocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">getType</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

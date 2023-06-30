@@ -1,23 +1,20 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API Reference &#8212; zoti-graph 0.1.0 documentation</title>
+    <title>API Reference &#8212; zoti-graph 0.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Model Documentation" href="the-zoti-graph-model.html" />
+    <link rel="next" title="The Script Handler" href="script.html" />
+    <link rel="prev" title="Genny-Graph" href="genny.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -42,25 +39,13 @@ module below.</p>
 <section id="loading-or-dumping">
 <h2>Loading or Dumping<a class="headerlink" href="#loading-or-dumping" title="Permalink to this heading">¶</a></h2>
 <p>There are several ways to read or write a graph in different formats.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="zoti_graph.parser.parse">
-<span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">module_args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.appgraph.AppGraph" title="zoti_graph.appgraph.AppGraph"><span class="pre">AppGraph</span></a></span></span><a class="reference internal" href="_modules/zoti_graph/parser.html#parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.parser.parse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parses a complete (schema-validated) ZOTI input specification tree
-along with its metadata and returns an application graph that
-can be futher process by a ZOTI tool (e.g. ZOTI-Tran).</p>
-<p><em>module_args</em> is a list of arguments passed to <a class="reference external" href="../zoti-yaml/api-reference">zoti_yaml.Module</a> constructor (e.g., as loaded from a
-JSON or YAML file) and should consist at least of a <em>preamble</em> and
-a <em>document</em>. The <code class="docutils literal notranslate"><span class="pre">preamble</span></code> argument is expected to have a
-field <code class="docutils literal notranslate"><span class="pre">main-is</span></code> containing the path to the top (i.e. root) node.</p>
-<p><strong>ATTENTION:</strong> the design of this library assumes that this
-function is invoked only once per program instance. If for any
-reason you need to call it twice, any previously parsed
-application graph will be reset, so make sure you use <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code>
-in case you need to keep more application graphs in the same
-program instance.</p>
+<span class="target" id="module-zoti_graph.io"></span><dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.io.ZotiGraphLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ZotiGraphLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/io.html#ZotiGraphLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.ZotiGraphLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>YAML loader class with information for ZOTI-Graph inputs.</p>
 </dd></dl>
 
-<span class="target" id="module-zoti_graph.io"></span><dl class="py function">
+<dl class="py function">
 <dt class="sig sig-object py" id="zoti_graph.io.dump_node_info">
 <span class="sig-name descname"><span class="pre">dump_node_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/io.html#dump_node_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.dump_node_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dumps the entry information for all nodes in the <em>AG</em> graph as
@@ -81,8 +66,8 @@ be passed as the <em>root</em> argument.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="zoti_graph.io.draw_graph">
-<span class="sig-name descname"><span class="pre">draw_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actor_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composite_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/io.html#draw_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.draw_graph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.io.draw_graphviz">
+<span class="sig-name descname"><span class="pre">draw_graphviz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/io.html#draw_graphviz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.draw_graphviz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws the <em>AG</em> graph, starting with <em>root</em> as top component and
 dumps the drawing in a DOT file in <em>stream</em>. If <em>max_depth</em> is not
 a positive number it is considered “infinite”.</p>
@@ -91,23 +76,24 @@ additional info (see <a class="reference internal" href="#core-types">Core types
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="zoti_graph.io.dump_raw_yaml">
-<span class="sig-name descname"><span class="pre">dump_raw_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/io.html#dump_raw_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.dump_raw_yaml" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serializes graph <em>G</em> to YAML and dumps it to <em>stream</em>. The stream
-will contain a 4-tuple:</p>
+<dt class="sig sig-object py" id="zoti_graph.io.dump_raw">
+<span class="sig-name descname"><span class="pre">dump_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/io.html#dump_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.dump_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serializes graph <em>G</em> to raw JSON and dumps it to <em>stream</em>. The
+stream will contain a 5-tuple:</p>
 <ul class="simple">
-<li><p>the UID of the root node</p></li>
 <li><p>the version of zoti-graph (to be compared when loading)</p></li>
+<li><p>the name of the current graph format</p></li>
+<li><p>the UID of the root node</p></li>
 <li><p>a list of all node entries in the graph.</p></li>
 <li><p>a list of all edge entries in the graph.</p></li>
 </ul>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="zoti_graph.io.from_raw_yaml">
-<span class="sig-name descname"><span class="pre">from_raw_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.appgraph.AppGraph" title="zoti_graph.appgraph.AppGraph"><span class="pre">AppGraph</span></a></span></span><a class="reference internal" href="_modules/zoti_graph/io.html#from_raw_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.from_raw_yaml" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deserializes a graph from a <em>stream</em> containing the raw YAML data
-as dumped by <a class="reference internal" href="#zoti_graph.io.dump_raw_yaml" title="zoti_graph.io.dump_raw_yaml"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dump_raw_yaml()</span></code></a>. If <em>version</em> is passed, it
+<dt class="sig sig-object py" id="zoti_graph.io.from_raw">
+<span class="sig-name descname"><span class="pre">from_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.appgraph.AppGraph" title="zoti_graph.appgraph.AppGraph"><span class="pre">AppGraph</span></a></span></span><a class="reference internal" href="_modules/zoti_graph/io.html#from_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.io.from_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserializes a graph from a <em>stream</em> containing the raw JSON
+data as dumped by <a class="reference internal" href="#zoti_graph.io.dump_raw" title="zoti_graph.io.dump_raw"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dump_raw()</span></code></a>. If <em>version</em> is passed, it
 will compare it against the loaded version and raise an error if
 they do not match.</p>
 </dd></dl>
@@ -117,7 +103,7 @@ they do not match.</p>
 <h2>The Graph API<a class="headerlink" href="#the-graph-api" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AppGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root=/</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AppGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root=/</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>A ZOTI application graph. Its methods are meant as general purpose
 utilities, however for more advanced functionality one might apply
 <a class="reference external" href="https://networkx.org/documentation/stable/index.html">NetworkX</a>
@@ -207,19 +193,19 @@ can be filtered by passing a <em>select</em> function on
 <span class="sig-name descname"><span class="pre">children</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select=&lt;function</span> <span class="pre">AppGraph.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.children"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.children" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list of IDs for all the children of this parent. The
 result can be filtered by passing a <em>select</em> function on
-entries derived from <a class="reference internal" href="#zoti_graph.core.NodeABC" title="zoti_graph.core.NodeABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_graph.core.NodeABC</span></code></a>.</p>
+entries derived from <code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_graph.core.NodeABC</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.parent">
-<span class="sig-name descname"><span class="pre">parent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.parent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.parent" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">parent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.parent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.parent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the ID for this node’s parent. If this node has no parent
 it returns None.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.commonAncestor">
-<span class="sig-name descname"><span class="pre">commonAncestor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">this</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">that</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.commonAncestor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.commonAncestor" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">commonAncestor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">this</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">that</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.commonAncestor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.commonAncestor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the ID of the common ancestor between <em>this</em> and <em>that</em>. If
 they have no common ancestor it returns None.</p>
 </dd></dl>
@@ -450,13 +436,8 @@ argument is also provided, it creates a port ID.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="zoti_graph.core.Edge">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Edge" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Edge</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#Edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for edge entry.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Edge.edge_type">
-<span class="sig-name descname"><span class="pre">edge_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Edge.edge_type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_graph.core.Edge.mark">
 <span class="sig-name descname"><span class="pre">mark</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Edge.mark" title="Permalink to this definition">¶</a></dt>
@@ -465,15 +446,8 @@ argument is also provided, it creates a port ID.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.Dir">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dir</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#Dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Values = {<strong>NONE</strong>, <strong>IN</strong>, <strong>OUT</strong>, <strong>SIDE</strong>}</p>
-<p>Bitwise flags denoting port directions.</p>
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="zoti_graph.core.Port">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Port</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#Port"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for port entry.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_graph.core.Port.name">
@@ -481,156 +455,29 @@ argument is also provided, it creates a port ID.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.kind">
-<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.Dir" title="zoti_graph.core.Dir"><span class="pre">Dir</span></a></em><a class="headerlink" href="#zoti_graph.core.Port.kind" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.port_type">
-<span class="sig-name descname"><span class="pre">port_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Port.port_type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.data_type">
-<span class="sig-name descname"><span class="pre">data_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Port.data_type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_graph.core.Port.mark">
 <span class="sig-name descname"><span class="pre">mark</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Port.mark" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.is_event">
-<span class="sig-name descname"><span class="pre">is_event</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.is_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.is_event" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.is_side">
-<span class="sig-name descname"><span class="pre">is_side</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.is_side"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.is_side" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.has_dir_in">
-<span class="sig-name descname"><span class="pre">has_dir_in</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.has_dir_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.has_dir_in" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.Port.has_dir_out">
-<span class="sig-name descname"><span class="pre">has_dir_out</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.has_dir_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.has_dir_out" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.NodeABC">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NodeABC</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#NodeABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.NodeABC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for a node</p>
+<dt class="sig sig-object py" id="zoti_graph.core.Node">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Node</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#Node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for a leaf node</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.NodeABC.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.core.NodeABC.name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.NodeABC.parameters">
-<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.NodeABC.parameters" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Node.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.core.Node.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.NodeABC.mark">
-<span class="sig-name descname"><span class="pre">mark</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.NodeABC.mark" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.CompositeNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CompositeNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#CompositeNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.CompositeNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Container for composite node entry</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.PlatformNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PlatformNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#PlatformNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.PlatformNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Container for platform node entry</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.PlatformNode.target">
-<span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.PlatformNode.target" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ActorNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#ActorNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.ActorNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Container for actor node entry</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode.FSM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FSM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preproc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenarios</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#ActorNode.FSM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.ActorNode.FSM" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode.FSM.inputs">
-<span class="sig-name descname"><span class="pre">inputs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_graph.core.ActorNode.FSM.inputs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Node.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Node.parameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode.FSM.expr">
-<span class="sig-name descname"><span class="pre">expr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_graph.core.ActorNode.FSM.expr" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode.FSM.preproc">
-<span class="sig-name descname"><span class="pre">preproc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_graph.core.ActorNode.FSM.preproc" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode.FSM.states">
-<span class="sig-name descname"><span class="pre">states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_graph.core.ActorNode.FSM.states" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode.FSM.scenarios">
-<span class="sig-name descname"><span class="pre">scenarios</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_graph.core.ActorNode.FSM.scenarios" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.ActorNode.detector">
-<span class="sig-name descname"><span class="pre">detector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoti_graph.core.ActorNode.FSM" title="zoti_graph.core.ActorNode.FSM"><span class="pre">FSM</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_graph.core.ActorNode.detector" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.KernelNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KernelNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#KernelNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.KernelNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Container for kernel node entry</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.KernelNode.extern">
-<span class="sig-name descname"><span class="pre">extern</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.core.KernelNode.extern" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.PrimTy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PrimTy</span></span><a class="reference internal" href="_modules/zoti_graph/core.html#PrimTy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.PrimTy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Values = {<strong>DROP</strong>, <strong>SYSTEM</strong>, <strong>BYPASS</strong>}</p>
-<p>Bitwise flags denoting types of primitives.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="zoti_graph.core.BasicNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BasicNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#BasicNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.BasicNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Container for primitive node entry</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="zoti_graph.core.BasicNode.type">
-<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.core.PrimTy" title="zoti_graph.core.PrimTy"><span class="pre">PrimTy</span></a></em><a class="headerlink" href="#zoti_graph.core.BasicNode.type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="zoti_graph.core.BasicNode.is_type">
-<span class="sig-name descname"><span class="pre">is_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#BasicNode.is_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.BasicNode.is_type" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_graph.core.Node.mark">
+<span class="sig-name descname"><span class="pre">mark</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Node.mark" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -663,13 +510,15 @@ argument is also provided, it creates a port ID.</p>
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="the-zoti-graph-model.html">Model Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genny.html">Genny-Graph</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#loading-or-dumping">Loading or Dumping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-graph-api">The Graph API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-zoti_graph.core">Core types</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">The Script Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 </ul>
 
 
@@ -685,7 +534,8 @@ argument is also provided, it creates a port ID.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="the-zoti-graph-model.html" title="previous chapter">Model Documentation</a></li>
+      <li>Previous: <a href="genny.html" title="previous chapter">Genny-Graph</a></li>
+      <li>Next: <a href="script.html" title="next chapter">The Script Handler</a></li>
   </ul></li>
 </ul>
 </div>
@@ -715,7 +565,7 @@ argument is also provided, it creates a port ID.</p>
       &copy;2022-2023 Ericsson.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

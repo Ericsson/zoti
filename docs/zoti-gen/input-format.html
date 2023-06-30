@@ -105,26 +105,36 @@ renderer, accessed with the <cite>param</cite> key.</p>
 from this one.</p>
 </dd>
 <dt class="field-odd">code<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(string) containing this block’s <a class="reference external" href="#code-template">Code Template</a></p>
-</dd>
-<dt class="field-even">prototype<span class="colon">:</span></dt>
-<dd class="field-even"><p>(<a class="reference external" href="#template-function">Template Function</a>) defines
-this block’s type signature, as provided from a type
-system.</p>
+<dd class="field-odd"><p>(<a class="reference external" href="#code-template">Template</a>) containing this block’s <a class="reference external" href="#code-template">Code
+Template</a>. Rendered witn the context:</p>
 </dd>
 </dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>                    <span class="n">name</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>    <span class="c1"># component&#39;s name</span>
+                    <span class="n">label</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>  <span class="c1"># resolved labels</span>
+                    <span class="n">param</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">param</span><span class="p">,</span>  <span class="c1"># parameters</span>
+                    <span class="n">placeholder</span><span class="o">=</span><span class="p">{</span>      <span class="c1"># only one placeholder</span>
+                        <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">code</span>
+                    <span class="p">},</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">prototype<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(<a class="reference external" href="#code-template">Template</a>) defines this block’s type
+signature, as provided from a type system. Rendered with
+the following context:</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>                    <span class="n">label</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>   <span class="c1"># resolved labels</span>
+                    <span class="n">param</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">param</span><span class="p">,</span>   <span class="c1"># parameters</span>
+                    <span class="n">placeholder</span><span class="o">=</span><span class="n">rinst</span><span class="p">,</span>  <span class="c1"># recursivly-expanded block instances</span>
+</pre></div>
+</div>
 </section>
 <section id="requirement">
 <h4><code class="docutils literal notranslate"><span class="pre">requirement</span></code><a class="headerlink" href="#requirement" title="Permalink to this heading">¶</a></h4>
 <p>Illustrates prerequisites for the parent element. Internally it is
 represented using a <a class="reference internal" href="api-reference.html#zoti_gen.core.Requirement" title="zoti_gen.core.Requirement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_gen.core.Requirement</span></code></a> class. It may
 contain the following entries:</p>
-<dl class="field-list simple">
-<dt class="field-odd">include<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(list) files or modules to be included in the preamble
-of the generated target artifact</p>
-</dd>
-</dl>
 </section>
 <section id="label">
 <h4><code class="docutils literal notranslate"><span class="pre">label</span></code><a class="headerlink" href="#label" title="Permalink to this heading">¶</a></h4>
@@ -136,17 +146,22 @@ generation. Internally it is represented using a
 <dt class="field-odd">name<span class="colon">:</span></dt>
 <dd class="field-odd"><p>(string) unique ID in the scope of the parent block</p>
 </dd>
-<dt class="field-even">usage<span class="colon">:</span></dt>
-<dd class="field-even"><p>(<a class="reference external" href="#template-function">Template Function</a>) defines how
-this label is to be expanded in the code. Provided by the type
-system.</p>
-</dd>
-<dt class="field-odd">glue<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(dict) entries with glue code tailored for various
+<dt class="field-even">glue<span class="colon">:</span></dt>
+<dd class="field-even"><p>(dict) entries with glue code tailored for various
 circumstances, provided by the type system and accessible from
 within the code template using the <cite>label.&lt;port_id&gt;.glue</cite> key.</p>
 </dd>
+<dt class="field-odd">usage<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(<a class="reference external" href="#code-template">Template</a>) defines how this label is to be
+expanded in the code. Provided by the type system. Rendered
+with the following context:</p>
+</dd>
 </dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>                        <span class="n">p</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>         <span class="c1"># ID of the current label</span>
+                        <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>  <span class="c1"># complete namespace of resolved labels</span>
+                        <span class="n">param</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>  <span class="c1"># complete namespace of parameters</span>
+</pre></div>
+</div>
 </section>
 <section id="instance">
 <h4><code class="docutils literal notranslate"><span class="pre">instance</span></code><a class="headerlink" href="#instance" title="Permalink to this heading">¶</a></h4>
@@ -180,53 +195,86 @@ parameters of the parent block and those of the referenced
 block.</p>
 </dd>
 <dt class="field-odd">usage<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(<a class="reference external" href="#template-function">Template Function</a>) defines how
-this block is being instantiated in case it is not expanded
-inline (e.g., as function call). The template string is
-defined by the type system.</p>
+<dd class="field-odd"><p>(<a class="reference external" href="#code-template">Template</a>) defines how this block is being
+instantiated in case it is not expanded inline (e.g., as
+function call). The template string is defined by the type
+system. It is rendered with the following contexts, depending
+on which directive is passed:</p>
 </dd>
 </dl>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">expand</span></code> is in directives</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>                        <span class="n">name</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>    <span class="c1"># component&#39;s name</span>
+                        <span class="n">label</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>  <span class="c1"># resolved labels</span>
+                        <span class="n">param</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">param</span><span class="p">,</span>  <span class="c1"># parameters</span>
+                        <span class="n">placeholder</span><span class="o">=</span><span class="p">{</span>      <span class="c1"># only one placeholder</span>
+                            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">code</span>
+                        <span class="p">},</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">expand</span></code> is not in directives</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>                        <span class="n">name</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>    <span class="c1"># component&#39;s name</span>
+                        <span class="n">param</span><span class="o">=</span><span class="n">comp</span><span class="o">.</span><span class="n">param</span><span class="p">,</span>  <span class="c1"># parameters</span>
+                        <span class="n">label</span><span class="o">=</span><span class="n">b_labels</span><span class="p">,</span>    <span class="c1"># bounded (parent) labels</span>
+</pre></div>
+</div>
 </section>
 <section id="bind">
 <h4><code class="docutils literal notranslate"><span class="pre">bind</span></code><a class="headerlink" href="#bind" title="Permalink to this heading">¶</a></h4>
 <p>A binding between one of the labels or parameters of the parent
 block and a label or parameter of the referenced block.
 Internally it is represented using a <a class="reference internal" href="api-reference.html#zoti_gen.core.Bind" title="zoti_gen.core.Bind"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_gen.core.Bind</span></code></a>
-class. It may contain one of the following entries:</p>
+class. It needs to contain <em>only one</em> of the following entries:</p>
 <dl class="field-list simple">
 <dt class="field-odd">label_to_label<span class="colon">:</span></dt>
 <dd class="field-odd"><p>(dict)</p>
 <dl class="field-list simple">
 <dt class="field-odd">parent<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str)</p>
+<dd class="field-odd"><p>(str) ID of parent</p>
 </dd>
 <dt class="field-even">child<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str)</p>
+<dd class="field-even"><p>(str) ID of child</p>
 </dd>
 <dt class="field-odd">usage<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(<a class="reference external" href="#template-function">Template Function</a>)</p>
+<dd class="field-odd"><p>(<a class="reference external" href="#code-template">Template</a>) rendered with context:</p>
 </dd>
 </dl>
 </dd>
-<dt class="field-even">usage_to_label<span class="colon">:</span></dt>
-<dd class="field-even"><p>(dict)</p>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>                    <span class="n">p</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span>      <span class="c1"># ID of parent</span>
+                    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>  <span class="c1"># entire namespace of resolved labels</span>
+                    <span class="n">param</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>  <span class="c1"># entire namespace of parameters</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">usage_to_label<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(dict)</p>
 <dl class="field-list simple">
 <dt class="field-odd">child<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str)</p>
+<dd class="field-odd"><p>(str) ID of child</p>
 </dd>
 <dt class="field-even">usage<span class="colon">:</span></dt>
-<dd class="field-even"><p>(<a class="reference external" href="#template-function">Template Function</a>)</p>
+<dd class="field-even"><p>(<a class="reference external" href="#code-template">Template</a>) rendered with context:</p>
 </dd>
 </dl>
 </dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>                    <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>  <span class="c1"># entire namespace of resolved labels</span>
+                    <span class="n">param</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>  <span class="c1"># entire namespace of parameters</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
 <dt class="field-odd">param_to_param<span class="colon">:</span></dt>
 <dd class="field-odd"><p>(dict)</p>
 <dl class="field-list simple">
 <dt class="field-odd">parent<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str)</p>
+<dd class="field-odd"><p>(str) Parent parameter</p>
 </dd>
 <dt class="field-even">child<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str)</p>
+<dd class="field-even"><p>(str)  Child parameter</p>
 </dd>
 </dl>
 </dd>
@@ -234,10 +282,10 @@ class. It may contain one of the following entries:</p>
 <dd class="field-even"><p>(dict)</p>
 <dl class="field-list simple">
 <dt class="field-odd">value<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str)</p>
+<dd class="field-odd"><p>(str) Value as simple string</p>
 </dd>
 <dt class="field-even">child<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str)</p>
+<dd class="field-even"><p>(str) Child parameter</p>
 </dd>
 </dl>
 </dd>
@@ -267,43 +315,39 @@ module.</p>
 keyword in the <a class="reference external" href="../zoti-yaml">ZOTI-YAML</a> language extension and
 pre-processor.</p>
 </section>
-<section id="template-function">
-<h2>Template Function<a class="headerlink" href="#template-function" title="Permalink to this heading">¶</a></h2>
-<p>A template function is a Shell-like formatted string where all the
-variables are exposed as arguments. This function is meant to be
-called by the <a class="reference external" href="rendering">Rendering</a> engine which would fill in
-the arguments.</p>
-<p>As entry to an input specification node, a template function is
-provided as a list of strings, where the first elements are the
-arguments and the last argument is the formatted string. For
-example the YAML entry:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">[</span><span class="nv">a</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">b</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">c</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;text</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">$a,</span><span class="nv"> </span><span class="s">then</span><span class="nv"> </span><span class="s">$b</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">also</span><span class="nv"> </span><span class="s">$c!&quot;</span><span class="p p-Indicator">]</span>
-</pre></div>
-</div>
-<p>is parsed internally to a lambda function as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="s2">&quot;text with $a, then $b and also $c!&quot;</span>
-</pre></div>
-</div>
-<p>The formatted string syntax is documented <a class="reference external" href="https://docs.python.org/3/library/string.html#template-strings">here</a>.</p>
-</section>
 <section id="code-template">
 <h2>Code Template<a class="headerlink" href="#code-template" title="Permalink to this heading">¶</a></h2>
-<p>The bulk of a block is its template which will be expanded as target
-code. The template uses a
-<a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/templates/">Jinja2</a> syntax
-where the rendering context is formed from some of the parent block’s
-resolved specification entries, more precisely:</p>
-<ul class="simple">
-<li><p>all <a class="reference internal" href="#label"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label</span></code></span></a> entries with updated information (i.e.,
-<code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">usage</span></code> and <code class="docutils literal notranslate"><span class="pre">glue</span></code>) reflecting the block’s bindings.</p></li>
-<li><p>all <code class="docutils literal notranslate"><span class="pre">param</span></code> entries updated according to the block’s bindings.</p></li>
-</ul>
+<p>Code templates are strings with
+<a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/templates/">Jinja2</a> markup
+commands evaluated in a custom context built from the resolved block
+specification. Depending on its role in the input specification (see
+documentation above), each template is evaluated and rendered using a
+custom context built from resolved information from the interal
+representation, most usually having the following context fields:</p>
+<dl class="myst field-list simple">
+<dt class="field-odd">label<span class="colon">:</span></dt>
+<dd class="field-odd"><p>contains a dictionary of all resolved <code class="docutils literal notranslate"><span class="pre">label</span></code> entries (see
+<a class="reference internal" href="#"><span class="doc std std-doc">Input Specification</span></a>), both own and passed via bindings, where the
+keys are the original (specified) names. Each entry contains
+possibly updated information (i.e., <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">usage</span></code> and <code class="docutils literal notranslate"><span class="pre">glue</span></code>)
+reflecting the block’s bindings.</p>
+</dd>
+<dt class="field-even">param<span class="colon">:</span></dt>
+<dd class="field-even"><p>usually contains a merged dictionary with this block’s <code class="docutils literal notranslate"><span class="pre">param</span></code>
+entries and the ones passed via bindings.</p>
+</dd>
+<dt class="field-odd">placeholder<span class="colon">:</span></dt>
+<dd class="field-odd"><p>will contain rendered code blocks for various declared
+instances (e.g., as inline code or function call) in the current
+block’s scope.</p>
+</dd>
+</dl>
 <p>Apart from the <a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/templates/#list-of-builtin-filters">Jinja2 builtin functions</a>,
 ZOTI-Gen adds the following functions that can be called from
 within code templates.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_gen.render.JinjaExtensions.find">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoti_gen/render.html#JinjaExtensions.find"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.render.JinjaExtensions.find" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_gen.jinja_extensions.JinjaExtensions.find">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoti_gen/jinja_extensions.html#JinjaExtensions.find"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.jinja_extensions.JinjaExtensions.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the element with (the dot-separated) <em>path</em> in a <em>json</em>
 dictionary, where <em>path</em> is specified as a string. E.g.</p>
 <div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="c">{# considering the context {&#39;a&#39;: None, &#39;b&#39;:{&#39;foo&#39;:{&#39;bar&#39;: &#39;baz&#39;}}} #}</span>
@@ -319,8 +363,8 @@ dictionary, where <em>path</em> is specified as a string. E.g.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_gen.render.JinjaExtensions.setdefaults">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">setdefaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/zoti_gen/render.html#JinjaExtensions.setdefaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.render.JinjaExtensions.setdefaults" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_gen.jinja_extensions.JinjaExtensions.setdefaults">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">setdefaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/zoti_gen/jinja_extensions.html#JinjaExtensions.setdefaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.jinja_extensions.JinjaExtensions.setdefaults" title="Permalink to this definition">¶</a></dt>
 <dd><p>For every direct child of the given <em>json</em> element it (possibly
 recursively) sets the <em>defaults</em> values if undefined. E.g.:</p>
 <div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">set</span> <span class="nv">json</span> <span class="o">=</span> <span class="o">{</span><span class="s1">&#39;a&#39;</span><span class="o">:</span> <span class="kp">None</span><span class="o">,</span> <span class="s1">&#39;b&#39;</span><span class="o">:{</span><span class="s1">&#39;foo&#39;:&#39;bar&#39;</span><span class="o">}}</span> <span class="cp">%}</span>
@@ -335,21 +379,21 @@ recursively) sets the <em>defaults</em> values if undefined. E.g.:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_gen.render.JinjaExtensions.eval">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/render.html#JinjaExtensions.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.render.JinjaExtensions.eval" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_gen.jinja_extensions.JinjaExtensions.eval">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/jinja_extensions.html#JinjaExtensions.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.jinja_extensions.JinjaExtensions.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Renders a Jinja2 string within a <em>context</em>. Useful if both <em>string</em>
 and <em>context</em> are passed to the current template context.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_gen.render.JinjaExtensions.error">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_gen/render.html#JinjaExtensions.error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.render.JinjaExtensions.error" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_gen.jinja_extensions.JinjaExtensions.error">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_gen/jinja_extensions.html#JinjaExtensions.error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.jinja_extensions.JinjaExtensions.error" title="Permalink to this definition">¶</a></dt>
 <dd><p>Raise an exception from within the template logic.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_gen.render.JinjaExtensions.getter">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">getter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/render.html#JinjaExtensions.getter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.render.JinjaExtensions.getter" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_gen.jinja_extensions.JinjaExtensions.getter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">getter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/jinja_extensions.html#JinjaExtensions.getter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.jinja_extensions.JinjaExtensions.getter" title="Permalink to this definition">¶</a></dt>
 <dd><p>ZOTI-Gen specific formatter that retrieves the type getter macro
 created by ZOTI-FTN and stored in each label’s <code class="docutils literal notranslate"><span class="pre">glue</span></code>
 entry and creates an access expresion based on it:</p>
@@ -363,8 +407,8 @@ entry and creates an access expresion based on it:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="zoti_gen.render.JinjaExtensions.setter">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">setter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/render.html#JinjaExtensions.setter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.render.JinjaExtensions.setter" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zoti_gen.jinja_extensions.JinjaExtensions.setter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JinjaExtensions.</span></span><span class="sig-name descname"><span class="pre">setter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_gen/jinja_extensions.html#JinjaExtensions.setter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_gen.jinja_extensions.JinjaExtensions.setter" title="Permalink to this definition">¶</a></dt>
 <dd><p>ZOTI-Gen specific formatter that retrieves the type setter macro
 created by ZOTI-FTN and stored in each label’s <code class="docutils literal notranslate"><span class="pre">glue</span></code>
 entry and creates an access expression based on it:</p>
@@ -408,7 +452,6 @@ entry and creates an access expression based on it:</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Input Specification</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#format-schema">Format Schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reference">Reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#template-function">Template Function</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#code-template">Code Template</a></li>
 </ul>
 </li>

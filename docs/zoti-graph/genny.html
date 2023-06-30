@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Genny-Graph &#8212; zoti-graph 0.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api-reference.html" />
+    <link rel="prev" title="ZOTI-Graph" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="genny-graph">
+<h1>Genny-Graph<a class="headerlink" href="#genny-graph" title="Permalink to this heading">¶</a></h1>
+<p>Genny-Graph is the instance of ZOTI-Graph used with the
+<a class="reference external" href="https://ericsson.github.io/zoti/">Genny</a> syntesis flow of the ZOTI
+project. As a model it represents applications as graphs of concurrent
+actors where nodes are hierarchically representing compute components
+and their mapping whereas each edge represents a type of interaction
+between the compute components.</p>
+<p>As part of the Genny flow, Genny-Graph aims to act as a bridge between
+(completely solved) system models and their pragmatic implementation
+on a given (heterogeneous) target platform. In this sense it imposes
+enough restrictions on the design as to enable hosting behavior
+semantics as well as it allows custom annotations and “hacks” for
+aiding towards more efficient implementations. In other words its goal
+is to enable the use of (upstream) formal models without necesserily
+crippling the possibility of (downstream) efficient code generation.</p>
+<p>To achieve hierarchy each node is considered as being connected to its
+surroundings via ports, effectively being able to be abstracted as a
+“black-box” component. By adopting this view a node can be itself
+cluster of interconnected nodes, as suggested in the figure below.</p>
+<figure class="align-default" id="id1">
+<img alt="_images/splash.png" src="_images/splash.png" />
+<figcaption>
+<p><span class="caption-text">Drawing of a Genny-graph model</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>There is enough consistency between the input format schema and the
+model specification hence we will use the former to document both
+model and input format.</p>
+<p>Notice that there are several types of nodes, as documented in the
+<a class="reference internal" href="#nodes"><span class="std std-ref">nodes</span></a> section below. These nodes cannot be arranged in any
+arbitrary hierarchy, and there are a set of rules that need to be
+enforced when describing system models, as described in the
+<a class="reference internal" href="#sanity-rules"><span class="std std-ref">Sanity rules</span></a> section below. Finally, a set of
+<a class="reference internal" href="#target-agnostic-transformations"><span class="std std-ref">Target-Agnostic Transformations</span></a> are exported and can be used as
+reference to create own ones.</p>
+<section id="input-schema">
+<h2>Input Schema<a class="headerlink" href="#input-schema" title="Permalink to this heading">¶</a></h2>
+<p>ZOTI-Graphs documents are specified as hierarchical tree-like objects
+where the root is a <a class="reference internal" href="#nodes"><span class="std std-ref">nodes</span></a> field containing a list of definitions
+representing the top-level node(s). From there systems are described
+in a top-down manner where child nodes are specified within the scope
+of parent nodes (i.e. under the parent’s <a class="reference internal" href="#nodes"><span class="std std-ref">nodes</span></a> field).</p>
+<p>A graph is loaded from a list of serialized objects (e.g. in JSON
+format) using the <code class="xref py py-meth docutils literal notranslate"><span class="pre">zoti_graph.parser.parse()</span></code> method, by passing
+them to its arguments. The <em>document</em> object from these arguments
+needs to be defined following the schema below.</p>
+<section id="nodes">
+<h3>nodes<a class="headerlink" href="#nodes" title="Permalink to this heading">¶</a></h3>
+<p>A node is the base entity in ZOTI-Graph. All nodes, regardless of
+their type, may have the following entries:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code>: &lt;str&gt; <em>required</em></dt><dd><p>node name. Needs to be unique within the scope of its parent.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">kind:</span></code> &lt;str&gt;</dt><dd><p>denotes the type of node, see <a class="reference internal" href="#node-kinds">Node Kinds</a>. Default
+<code class="docutils literal notranslate"><span class="pre">CompositeNode</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">description</span></code>: &lt;str&gt;</dt><dd><p>free-form text.</p>
+</dd>
+</dl>
+<p><code class="docutils literal notranslate"><span class="pre">mark</span></code>: &lt;dict&gt;</p>
+<blockquote>
+<div><p>free-form dictionary, markings passed as-is to graph
+transformer. Similar to <code class="docutils literal notranslate"><span class="pre">parameters</span></code> but should become
+obsolete after the transformation phase and should not be passed
+to the code generator,</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">parameters</span></code>: &lt;dict&gt;</p>
+<blockquote>
+<div><p>free-form dictionary of parameters passed as-is to the code
+generator. Similar to <code class="docutils literal notranslate"><span class="pre">mark</span></code>, but should not be touched during
+transformation, but rather handed over to the code generator.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">nodes</span></code>: <a class="reference internal" href="#nodes">nodes</a></dt><dd><p>list of child node entries</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ports</span></code>: <a class="reference internal" href="#ports">ports</a></dt><dd><p>list of ports for this node</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">edges</span></code>: <a class="reference internal" href="#edges">edges</a></dt><dd><p>list of edges connecting children’s ports between them or with
+their parent (this node’s ports)</p>
+</dd>
+</dl>
+<section id="node-kinds">
+<h4>Node Kinds<a class="headerlink" href="#node-kinds" title="Permalink to this heading">¶</a></h4>
+<p>There are several types of nodes, each one denoting a specific part of
+a system. Depending on type, additional fields can be used to
+described specific information, as documented below.</p>
+<section id="compositenode">
+<h5>CompositeNode<a class="headerlink" href="#compositenode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">CompositeNode</span></code> is simply a cluster of nodes. It does not have
+any semantics nor any special field and it is mainly used to group
+sub-systems into (modular) components.</p>
+</section>
+<section id="platformnode">
+<h5>PlatformNode<a class="headerlink" href="#platformnode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">PlatformNode</span></code> denotes a computation platform and is essential
+for determining the synthesis details. As a general rule, all
+components under a platform node will be mapped to the same target
+(e.g. binary, kernel, container or whatever the processing unit of
+the target platform is defined as) It might have the following
+special field:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">target:</span></code> &lt;obj&gt; <em>required</em></dt><dd><p>information on target platform, passd as-is to the graph
+processor downstream, e.g. ZOTI-Tran</p>
+</dd>
+</dl>
+</section>
+<section id="actornode">
+<h5>ActorNode<a class="headerlink" href="#actornode" title="Permalink to this heading">¶</a></h5>
+<p>An <code class="docutils literal notranslate"><span class="pre">ActorNode</span></code> is a behavioral computation unit, and denotes a
+(set of) reactions to the stimuli that arrive to its ports. As a
+modeling element it originates from a model of computation
+process, whose semantics are <em>translated</em> in terms of its
+detector.</p>
+<p><em>NOTE</em>: the detector definition is still under development and is
+likely to change in the future.</p>
+<p>An actor node might contain the following special fields:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">detector:</span></code> &lt;obj&gt;</dt><dd><p>describes a finite state machine (FSM) that determines the
+behavior of this actor. If none is provided, the default
+behavior assumes immediate reaction and run-to-completion for
+every port triger. An FSM is defined using the fields below:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: &lt;list&gt; <em>required</em></dt><dd><p>list of port names to which this actor reacts</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">preproc:</span></code> &lt;str&gt;</dt><dd><p>points to a child (kernel) node which acts as the port
+preprocessor for the inputs mentioned above. If none is
+mentioned the inputs are used as they are.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">states</span></code>: &lt;list&gt;</dt><dd><p>list of state names defined for this FSM. By convention the
+first state in the list is the initial state. If none
+provided, it assumes the actor has unique state, in which case
+it acts as a combinational process.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">scenarios:</span></code> &lt;dict&gt;</dt><dd><p>dictionary associating each state name with a child node
+implementing its scenario. Can be left empty in case of unique
+state, in which case all children constitute this actor’s
+unique scenario.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">expr:</span></code> &lt;dict&gt; <em>required</em></dt><dd><p>dictionary associating each state name with a certain reaction
+described using the fields below:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">cond:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>simple arithmetical and logical expression on the inputs
+which describes the condition that triggers a reaction and a
+state change</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">goto:</span></code> &lt;str&gt;</dt><dd><p>state name active when the previous condition is
+fulfilled. Not necessary in case of unique state.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="kernelnode">
+<h5>KernelNode<a class="headerlink" href="#kernelnode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">KernelNode</span></code> is a leaf computation node, typically representing
+a function in the target platform language. It might have the following
+special field:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">extern:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>Contains the full source code of the kernel as formatted
+text.</p>
+</dd>
+</dl>
+</section>
+<section id="basicnode">
+<h5>BasicNode<a class="headerlink" href="#basicnode" title="Permalink to this heading">¶</a></h5>
+<p>A <code class="docutils literal notranslate"><span class="pre">BasicNode</span></code> is a leaf node with a specific function in the
+target platform. Unlike a <code class="docutils literal notranslate"><span class="pre">KernelNode</span></code>, it does not carry a
+native piece of code, and is only relevant during the
+transformation process where it might trigger a specific
+refinement. It needs to specify the following special field.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">type:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>the primitive type. Possible <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, marking a connection to
+the outside world; <code class="docutils literal notranslate"><span class="pre">DROP</span></code> marks that the connection is dropping
+the data.</p>
+</dd>
+</dl>
+<p><strong>OBS:</strong> Since BasicNodes are replaced during transformation,
+eveything passed to their <code class="docutils literal notranslate"><span class="pre">parameters</span></code> field will be ignored.</p>
+</section>
+</section>
+</section>
+<section id="ports">
+<h3>ports<a class="headerlink" href="#ports" title="Permalink to this heading">¶</a></h3>
+<p>A port is the conduit between a node and an edge and carries
+various functional and behavioral information relevant to
+different abstractions. It is defined using the following
+attributes:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>A unique identifier within the scope of its parent node.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">kind:</span></code> &lt;str&gt; <em>required</em></dt><dd><p>The port kind (in, out, side). In and out ports represent event
+ports triggering connected nodes within the same timeline. Side
+ports stand for side-effects, and do not trigger their nodes,
+i.e. connected nodes may be part of different timelines.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">port_type:</span></code> &lt;obj&gt;</dt><dd><p>Raw dictionary containing behavioral information relevant when
+generating access glue. If not provided, it should be filled in
+by a port inference mechanism further down in the processing
+pipeline (e.g. ZOTI-Tran).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">data_type:</span></code> &lt;obj&gt;</dt><dd><p>Raw data passed to a type system for generating type glue
+(e.g. ZOTI-FTN). If not provided, it should be inferred using a
+port inference mechanism further down in the processing pipeline
+(e.g., ZOTI-Tran)</p>
+</dd>
+</dl>
+</section>
+<section id="edges">
+<h3>edges<a class="headerlink" href="#edges" title="Permalink to this heading">¶</a></h3>
+<p>An edge connects two node ports and represents a data communication
+medium. It can be described using the fields below:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">edge_type:</span></code> &lt;obj&gt;</dt><dd><p>raw dictionary containing information about the transmission
+medium relevant for generating glue code for it. It is passed
+as-is to the tools downstream.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">connect:</span></code> &lt;list&gt;</dt><dd><p>a 4-tuple containing information about the edge connection:</p>
+<ol class="arabic simple">
+<li><p>&lt;path&gt; to node where the edge originates, relative to this
+edge’s parent node.</p></li>
+<li><p>name of port belonging to the source node. If the source is
+a primitive node then this place is declared <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p></li>
+<li><p>&lt;path&gt; to node where the edge is destined, relative to this
+edge’s parent node.</p></li>
+<li><p>name of port belonging to the destination node. If the
+destination is a primitive node then this place is declared
+<code class="docutils literal notranslate"><span class="pre">none</span></code>.</p></li>
+</ol>
+</dd>
+</dl>
+</section>
+</section>
+<section id="model-parser">
+<h2>Model Parser<a class="headerlink" href="#model-parser" title="Permalink to this heading">¶</a></h2>
+<p>The previous schema can describe a serialization format (e.g. JSON or
+YAML) that is parsed and validated using the following method exported
+by <code class="xref py py-mod docutils literal notranslate"><span class="pre">zoti_graph.genny</span></code>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.parser.parse">
+<span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">module_args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="api-reference.html#zoti_graph.appgraph.AppGraph" title="zoti_graph.appgraph.AppGraph"><span class="pre">AppGraph</span></a></span></span><a class="reference internal" href="_modules/zoti_graph/genny/parser.html#parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.parser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a complete (schema-validated) Genny-Graph input
+specification tree along with its metadata and returns an
+application graph that can be futher process by a ZOTI tool.</p>
+<p><em>module_args</em> is a list of arguments passed to <a class="reference external" href="../zoti-yaml/api-reference">zoti_yaml.Module</a> constructor (e.g., as loaded from a
+JSON or YAML file) and should consist at least of a <em>preamble</em> and
+a <em>document</em>. The <code class="docutils literal notranslate"><span class="pre">preamble</span></code> argument is expected to have a
+field <code class="docutils literal notranslate"><span class="pre">main-is</span></code> containing the path to the top (i.e. root) node.</p>
+<p><strong>ATTENTION:</strong> the design of this library assumes that this
+function is invoked only once per program instance. If for any
+reason you need to call it twice, any previously parsed
+application graph will be reset, so make sure you use <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code>
+in case you need to keep more application graphs in the same
+program instance.</p>
+</dd></dl>
+
+</section>
+<section id="sanity-rules">
+<h2>Sanity rules<a class="headerlink" href="#sanity-rules" title="Permalink to this heading">¶</a></h2>
+<p>After parsing and creating an application graph, a set of sanity rules
+need to be enforced. Genny-Graph comes with a set of generic callable
+assertion functions (using the
+<a class="reference internal" href="api-reference.html#zoti_graph.appgraph.AppGraph.sanity" title="zoti_graph.appgraph.AppGraph.sanity"><code class="xref py py-meth docutils literal notranslate"><span class="pre">zoti_graph.appgraph.AppGraph.sanity()</span></code></a> driver). Depending on the
+use case or on the target platform additional sanity rules might need
+to be defined and enforced, or skipped, this is why it is up to the
+synthesis flow designer to call these rules individually. In general
+it is worth noting that:</p>
+<ul class="simple">
+<li><p>the top node of a project is a <code class="docutils literal notranslate"><span class="pre">CompositeNode</span></code> and all its
+children need to be <code class="docutils literal notranslate"><span class="pre">PlatformNode</span></code>. This means that no function
+nor behavior is left “dangling” without being mapped to a specific
+execution platform.</p></li>
+<li><p>similar to the previous rule, it makes no sense to speak of a
+“function” outside the scope of a “behavior”. In other words any
+<code class="docutils literal notranslate"><span class="pre">KernelNode</span></code> needs to (eventually) be part of an <code class="docutils literal notranslate"><span class="pre">ActorNode</span></code>
+which determines the context in which and the mechanisms with which
+a certain (native) function is being executed.”</p></li>
+</ul>
+<blockquote>
+<div><p>The following sanity rules are currently defined by
+Genny-Graph. They are not re-exported by the Genny main module, so
+they need to be imported explicitly from
+<a class="reference internal" href="#module-zoti_graph.genny.sanity" title="zoti_graph.genny.sanity"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zoti_graph.genny.sanity</span></code></a>.</p>
+</div></blockquote>
+<span class="target" id="module-zoti_graph.genny.sanity"></span><dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.edge_direction">
+<span class="sig-name descname"><span class="pre">edge_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#edge_direction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.edge_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edge direction should be consistent with the hierarchy of its connecting elements.</p>
+<dl>
+<dt>forall u,v in edges(G)</dt><dd><div class="line-block">
+<div class="line">u is basic and v is not basic ⇒ v.kind ∈ {IN}</div>
+<div class="line">v is basic and u is not basic ⇒ u.kind ∈ {OUT}</div>
+<div class="line">node(u) and node(v) are siblings ⇒ u.dir ∈ {OUT, SIDE} &amp; v.dir ∈ {IN, SIDE}</div>
+<div class="line">node(u) is parent for node(v) ⇒ u.dir = v.dir ∈ {IN, INOUT}</div>
+<div class="line">node(u) is child for node(v) ⇒ u.dir = v.dir ∈ {OUT, INOUT}</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.edge_hierarchy">
+<span class="sig-name descname"><span class="pre">edge_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#edge_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.edge_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edges can only connect sibling nodes or child nodes to their parents.</p>
+<dl>
+<dt>forall u,v in edges(G)</dt><dd><div class="line-block">
+<div class="line">node(u) and node(v) have different parents ⇒
+node(u) = node(v).parent ⊻ node(v) = node(u).parent</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.edge_sibling_kind">
+<span class="sig-name descname"><span class="pre">edge_sibling_kind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#edge_sibling_kind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.edge_sibling_kind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interconnected sibling nodes (except intrinsics and ignoring the
+hierarchy of composites) are of the same kind.</p>
+<dl>
+<dt>forall u,v in edges(G) where node(u), node(v) are not intrinsic</dt><dd><div class="line-block">
+<div class="line">node(u) and node(v) have same parent ⇒
+flatten(node(u)) ⋃ flatten(node(v)) are all of the same kind</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.node_consistent_tree">
+<span class="sig-name descname"><span class="pre">node_consistent_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#node_consistent_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.node_consistent_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>All nodes except for the root node have only one parent.</p>
+<dl>
+<dt>forall n in nodes(G) - root(G):</dt><dd><div class="line-block">
+<div class="line">⇒ len(n.parents) = 1</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.node_platform_hierarchy">
+<span class="sig-name descname"><span class="pre">node_platform_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#node_platform_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.node_platform_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignoring the hierarchy of composites all platform nodes contain
+only actor nodes.</p>
+<dl>
+<dt>forall n in nodes(G) where n is platform node:</dt><dd><div class="line-block">
+<div class="line">⇒ n.parent is composite node</div>
+<div class="line">⇒ all first children which are not composite
+are only intrinsic or actor nodes</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.node_actor_hierarchy">
+<span class="sig-name descname"><span class="pre">node_actor_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#node_actor_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.node_actor_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignoring the hierarchy of composites, all actor nodes belong to a
+platform node and contain only kernel nodes.</p>
+<dl>
+<dt>forall n in nodes(G) where n is actor node:</dt><dd><div class="line-block">
+<div class="line">⇒ the first parent which is not composite is platform node</div>
+<div class="line">⇒ all first children which are not composite are only intrinsic or kernel nodes</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.node_kernel_hierarchy">
+<span class="sig-name descname"><span class="pre">node_kernel_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#node_kernel_hierarchy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.node_kernel_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignoring the hierarchy of composites, all kernel nodes belong to an
+actor node.</p>
+<dl>
+<dt>forall n in nodes(G) where n is kernel node:</dt><dd><div class="line-block">
+<div class="line">⇒ the immediate parent which is not composite is actor node</div>
+<div class="line">⇒ no child nodes exist</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.sanity.port_dangling">
+<span class="sig-name descname"><span class="pre">port_dangling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/sanity.html#port_dangling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.sanity.port_dangling" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘Dangling port’ means either an event port which is not connected
+(is triggered by nothing or triggers nothing) or a side-effect
+port which is not exposed at the actor level (that might be
+ignored).</p>
+</dd></dl>
+
+</section>
+<section id="target-agnostic-transformations">
+<h2>Target-Agnostic Transformations<a class="headerlink" href="#target-agnostic-transformations" title="Permalink to this heading">¶</a></h2>
+<blockquote>
+<div><p>These functions need to be explicitly imported from
+<a class="reference internal" href="#module-zoti_graph.genny.translib" title="zoti_graph.genny.translib"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zoti_graph.genny.translib</span></code></a>.</p>
+</div></blockquote>
+<span class="target" id="module-zoti_graph.genny.translib"></span><dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.translib.flatten">
+<span class="sig-name descname"><span class="pre">flatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="api-reference.html#zoti_graph.appgraph.AppGraph" title="zoti_graph.appgraph.AppGraph"><span class="pre">AppGraph</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/translib.html#flatten"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.translib.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>This transformation flattens any composite nodes rendering a system
+description made of only basic nodes: platforms, actors and
+kernels. The only exception to this rule is actor scenarios which
+are kept clustered as composites for further processing. After
+this transformation the following holds:</p>
+<dl>
+<dt>forall n in nodes(G):</dt><dd><div class="line-block">
+<div class="line">n.parent is platform node ⇒ n is actor node</div>
+<div class="line">n.parent is actor node ⇒ n is kernel node or composite node marked “scenario”</div>
+<div class="line">n.parent is composite node ⇒ n is kernel node (i.e., belongs to a scenario)</div>
+</div>
+</dd>
+</dl>
+<p><em>NOTE</em>: node IDs remain unchanged, regardless of the new
+hierarchy.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zoti_graph.genny.translib.fuse_actors">
+<span class="sig-name descname"><span class="pre">fuse_actors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="api-reference.html#zoti_graph.appgraph.AppGraph" title="zoti_graph.appgraph.AppGraph"><span class="pre">AppGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/translib.html#fuse_actors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.translib.fuse_actors" title="Permalink to this definition">¶</a></dt>
+<dd><p>This transformation fuses all inter-dependent actors within the
+same timeline. After this transformation there will be no
+EVENT-like dependency between any two actors belonging to the same
+platform node, i.e., the following holds:</p>
+<dl>
+<dt>foreach a, b in p, where p is platform node in nodes(G):</dt><dd><div class="line-block">
+<div class="line">there exists e in edges(G) such that e.src = a and e.dst = b
+=&gt; e.kind = STORAGE</div>
+<div class="line">=&gt; (inputs(a) in p) is disjoint from (inputs(b) in p)</div>
+</div>
+</dd>
+</dl>
+<p><em>TODO</em>: fuse FSMs</p>
+</dd></dl>
+
+</section>
+<section id="core-container-types">
+<h2>Core Container Types<a class="headerlink" href="#core-container-types" title="Permalink to this heading">¶</a></h2>
+<p>Each graph element in a Genny-Graph is associated with a container
+entry used for storing information that can be used during various
+stages of model transformations.</p>
+<blockquote>
+<div><p>These classes are re-exported by <a class="reference internal" href="#module-zoti_graph.genny.translib" title="zoti_graph.genny.translib"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zoti_graph.genny.translib</span></code></a></p>
+</div></blockquote>
+<span class="target" id="module-zoti_graph.genny.core"></span><dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Dir">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dir</span></span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#Dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.Dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Flag</span></code></p>
+<p>Values = {<strong>NONE</strong>, <strong>IN</strong>, <strong>OUT</strong>, <strong>SIDE</strong>}</p>
+<p>Bitwise flags denoting port directions.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#Port"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.Port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for port entry.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port.kind">
+<span class="sig-name descname"><span class="pre">kind</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.genny.core.Dir" title="zoti_graph.genny.core.Dir"><span class="pre">Dir</span></a></em><a class="headerlink" href="#zoti_graph.genny.core.Port.kind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port.port_type">
+<span class="sig-name descname"><span class="pre">port_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.genny.core.Port.port_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port.data_type">
+<span class="sig-name descname"><span class="pre">data_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.genny.core.Port.data_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port.is_event">
+<span class="sig-name descname"><span class="pre">is_event</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#Port.is_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.Port.is_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port.is_side">
+<span class="sig-name descname"><span class="pre">is_side</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#Port.is_side"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.Port.is_side" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port.has_dir_in">
+<span class="sig-name descname"><span class="pre">has_dir_in</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#Port.has_dir_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.Port.has_dir_in" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Port.has_dir_out">
+<span class="sig-name descname"><span class="pre">has_dir_out</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#Port.has_dir_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.Port.has_dir_out" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Edge">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#Edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.Edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for edge entry.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.Edge.edge_type">
+<span class="sig-name descname"><span class="pre">edge_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.genny.core.Edge.edge_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.CompositeNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CompositeNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#CompositeNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.CompositeNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for composite node entry</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.SkeletonNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SkeletonNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#SkeletonNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.SkeletonNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for a skeleton node entry</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.SkeletonNode.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.genny.core.SkeletonNode.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.PlatformNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PlatformNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#PlatformNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.PlatformNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for platform node entry</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.PlatformNode.target">
+<span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.genny.core.PlatformNode.target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ActorNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#ActorNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.ActorNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for actor node entry</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode.FSM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FSM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preproc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenarios</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#ActorNode.FSM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.ActorNode.FSM" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode.FSM.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_graph.genny.core.ActorNode.FSM.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode.FSM.expr">
+<span class="sig-name descname"><span class="pre">expr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_graph.genny.core.ActorNode.FSM.expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode.FSM.preproc">
+<span class="sig-name descname"><span class="pre">preproc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_graph.genny.core.ActorNode.FSM.preproc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode.FSM.states">
+<span class="sig-name descname"><span class="pre">states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_graph.genny.core.ActorNode.FSM.states" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode.FSM.scenarios">
+<span class="sig-name descname"><span class="pre">scenarios</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_graph.genny.core.ActorNode.FSM.scenarios" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.ActorNode.detector">
+<span class="sig-name descname"><span class="pre">detector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#zoti_graph.genny.core.ActorNode.FSM" title="zoti_graph.genny.core.ActorNode.FSM"><span class="pre">FSM</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_graph.genny.core.ActorNode.detector" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.KernelNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KernelNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#KernelNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.KernelNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for kernel node entry</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.KernelNode.extern">
+<span class="sig-name descname"><span class="pre">extern</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.genny.core.KernelNode.extern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.BasicNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BasicNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/genny/core.html#BasicNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.genny.core.BasicNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for primitive node entry</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_graph.genny.core.BasicNode.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_graph.genny.core.BasicNode.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">zoti-graph</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Genny-Graph</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#input-schema">Input Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-parser">Model Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sanity-rules">Sanity rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#target-agnostic-transformations">Target-Agnostic Transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-container-types">Core Container Types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">The Script Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-graph">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">ZOTI-Graph</a></li>
+      <li>Next: <a href="api-reference.html" title="next chapter">API Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/genny.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

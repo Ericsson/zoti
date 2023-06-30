@@ -24,7 +24,7 @@
   path: example
   subpages:
   - title: "Producer-Consumer (Genny)"
-    path: example/prod-cons
+    path: example/prodcons-unix
   
 - title: "Acknowledgements"
   path: acknowledgements

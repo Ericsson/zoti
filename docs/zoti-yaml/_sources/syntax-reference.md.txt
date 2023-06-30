@@ -10,10 +10,12 @@ set of language extensions, such as references and a module system.
 
 Modules are the main organization units in ZOTI-YAML projects. Each
 module name needs to reflect the path of its associated source
-file. Assuming the search path for ZOTI modules is set to `ZOTI_PATH`
-(see [Configuration](#configuration)), then the file
-`ZOTI_PATH/path/to/MyModule.yaml` would correspond to the qualified
-module name `path.to.MyModule`.
+file. Assuming that a path `NY_PATH` is in the search path, then the
+file `MY_PATH/path/to/MyModule.yaml` would correspond to the qualified
+module name `path.to.MyModule`. The search path can be controlled via:
+
+- the CLI flag `--pathvar`, see [Configuration](#configuration);
+- the API, with the constructor for {class}`zoti_yaml.handlers.Project`.
 
 Each module consists in a YAML source file formatted as:
 
@@ -32,8 +34,8 @@ descriptions or other document-wide definitions, whereas
 
 
 A module's peramble is for the most part a free-form dictionary
-containing metadata preserved and used by downstream tools. Out of
-these entries, ZOTI-YAML uses two:
+containing metadata preserved and used by downstream tools. ZOTI-YAML
+uses two of these entries:
 
 
 `module` *(string)*
@@ -67,7 +69,7 @@ below.
 .. autosimple:: zoti_yaml.core.MergePolicy
 ```
 
-#### `!ref` {*module*, *path*, *name*}
+#### `!ref` {*module*, *path* | *name*}
 
 ```{eval-rst}
 .. autosimple:: zoti_yaml.core.Ref
@@ -79,10 +81,10 @@ below.
 .. autosimple:: zoti_yaml.core.Attach
 ```
 
-#### `!include` {*file*, *name*|(*begin*, *end*)}
+#### `!include` {*file*, *name* | (*begin*, *end*)}
 
 ```{eval-rst}
-.. autosimple:: zoti_yaml.loader.ZotiLoader.include
+.. autosimple:: zoti_yaml.loader.ZomlLoader.include
 ```
 
 
@@ -93,8 +95,8 @@ In addition to the explicit behavior controlled with
 for certain keys under an entry at `_info/_pos`. Exactly which nodes
 are marked for metadata is controlled via:
 
-- the CLI flag `--keys`, see [below](#configuration);
-- the API, with the constructor for {class}`zoti_yaml.project.Project`.
+- the CLI flag `--keys`, see [Configuration](#configuration);
+- the API, with the constructor for {class}`zoti_yaml.handlers.Project`.
 
 For each key in the provided list, ZOTI-YAML will mark all first
 children of its entry, provided that the children are objects
@@ -158,7 +160,7 @@ current folder, under the following sections:
 
 # specialized configuration loaded with:
 #
-#      $(ZOTI_YAML) --spec <class>
+#      $(ZOML) --spec <class>
 #
 # where <class> is replaced with an arbitrary name. Overrides 
 # parameters in [zoti.yaml]

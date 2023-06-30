@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>zoti_yaml.module &#8212; zoti-yaml 0.1.0 documentation</title>
+    <title>zoti_yaml.handlers &#8212; zoti-yaml 0.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -32,8 +32,9 @@
 
           <div class="body" role="main">
             
-  <h1>Source code for zoti_yaml.module</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+  <h1>Source code for zoti_yaml.handlers</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePosixPath</span>
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
@@ -42,7 +43,7 @@
 
 <span class="kn">import</span> <span class="nn">zoti_yaml.core</span> <span class="k">as</span> <span class="nn">ty</span>
 <span class="kn">from</span> <span class="nn">zoti_yaml.exceptions</span> <span class="kn">import</span> <span class="n">MarkedError</span><span class="p">,</span> <span class="n">SearchError</span>
-<span class="kn">from</span> <span class="nn">zoti_yaml.loader</span> <span class="kn">import</span> <span class="n">ZotiLoader</span><span class="p">,</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">zoti_yaml.loader</span> <span class="kn">import</span> <span class="n">ZomlLoader</span><span class="p">,</span> <span class="n">load</span>
 
 
 <span class="k">class</span> <span class="nc">PreambleSchema</span><span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
@@ -58,7 +59,7 @@
     <span class="p">),</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_key</span><span class="o">=</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_IMPORT</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Module"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module">[docs]</a><span class="k">class</span> <span class="nc">Module</span><span class="p">:</span>
+<div class="viewcode-block" id="Module"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Module">[docs]</a><span class="k">class</span> <span class="nc">Module</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A ZOTI-YAML module wraps a document with metadata and a bunch of</span>
 <span class="sd">    utilities used for convenient data access and manipulation.</span>
 
@@ -80,8 +81,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">preamble</span> <span class="o">=</span> <span class="n">preamble</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
 
-<div class="viewcode-block" id="Module.from_zoml"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.from_zoml">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_zoml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tool</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">key_nodes</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]):</span>
+<div class="viewcode-block" id="Module.from_zoml"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Module.from_zoml">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_zoml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">key_nodes</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;:class:`Module` constructor which incoprorates both file loader and</span>
 <span class="sd">        parser.</span>
 
@@ -98,8 +99,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># print(key_nodes)</span>
-        <span class="n">docs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">filepath</span><span class="p">,</span> <span class="n">tool</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span>
-                         <span class="n">Loader</span><span class="o">=</span><span class="n">ZotiLoader</span><span class="p">,</span> <span class="n">key_nodes</span><span class="o">=</span><span class="n">key_nodes</span><span class="p">))</span>
+        <span class="n">docs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">filepath</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">ZomlLoader</span><span class="p">,</span> <span class="n">key_nodes</span><span class="o">=</span><span class="n">key_nodes</span><span class="p">))</span>
         <span class="c1"># print(docs)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&#39; is not a ZOTI-YAML module.&quot;</span>
@@ -112,12 +112,12 @@
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="n">preamble</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_PATH</span><span class="p">]</span> <span class="o">=</span> <span class="n">filepath</span>
-        <span class="k">if</span> <span class="s2">&quot;tool-log&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">preamble</span><span class="p">:</span>
-            <span class="n">preamble</span><span class="p">[</span><span class="s2">&quot;tool-log&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">preamble</span><span class="p">[</span><span class="s2">&quot;tool-log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span> <span class="n">tool</span><span class="p">])</span>
+        <span class="c1"># if &quot;tool-log&quot; not in preamble:</span>
+        <span class="c1">#     preamble[&quot;tool-log&quot;] = []</span>
+        <span class="c1"># preamble[&quot;tool-log&quot;].append([str(datetime.now()), tool])</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">preamble</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Module.map_doc"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.map_doc">[docs]</a>    <span class="k">def</span> <span class="nf">map_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">with_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Module.map_doc"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Module.map_doc">[docs]</a>    <span class="k">def</span> <span class="nf">map_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">with_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Functor on a Module document. Maps function *f(n)* on each node *n*</span>
 <span class="sd">        in the document tree. If *with_path* is set to True, it</span>
 <span class="sd">        expects function to be of form *f(n, path)* where *path* is</span>
@@ -159,7 +159,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">_map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Module.get"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">TreePath</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Module.get"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Module.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">TreePath</span><span class="p">,</span> <span class="n">PurePosixPath</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an arbitrary node in the document tree vased on its path</span>
 <span class="sd">        relative to the document root (see :class:`TreePath`). The</span>
 <span class="sd">        path is formed like::</span>
@@ -227,9 +227,158 @@
         <span class="n">parts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">root</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">parts</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
         <span class="k">return</span> <span class="n">_recursive_node_getter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">,</span> <span class="n">parts</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Module.to_dump"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.module.Module.to_dump">[docs]</a>    <span class="k">def</span> <span class="nf">to_dump</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Module.to_dump"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Module.to_dump">[docs]</a>    <span class="k">def</span> <span class="nf">to_dump</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the *preamble* and *doc* as a list suitable for storing.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">preamble</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">]</span></div></div>
+
+
+
+<div class="viewcode-block" id="Project"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Project">[docs]</a><span class="k">class</span> <span class="nc">Project</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handler for loading and containing a set of ZOTI-YAML modules. All</span>
+<span class="sd">    modules are loaded relative to the roots specified by *pathvar*,</span>
+<span class="sd">    in a similar fashion as UNIX path variables. The order of priority</span>
+<span class="sd">    for resolving paths to module names is right-to-left.</span>
+
+<span class="sd">    :param keys: list of keys to mark for storing positional metadata</span>
+<span class="sd">      (see :doc:`syntax-reference`)</span>
+
+<span class="sd">    :param pathvar: list of root paths where modules will be searched</span>
+<span class="sd">      (see :doc:`syntax-reference`)</span>
+
+<span class="sd">    :param ext: list of file extensions for searching module</span>
+<span class="sd">      sources. Any file with another extension that specified here</span>
+<span class="sd">      will be ignored.</span>
+
+<span class="sd">    :param argfields: list of keys for fields used as placholders for,</span>
+<span class="sd">      e.g., argument exchange. These fields will be deleted from the</span>
+<span class="sd">      output result.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">modules</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Module</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;dictionary of loaded modules indexed by their name&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+            <span class="n">pathvar</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+            <span class="n">ext</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yml&quot;</span><span class="p">],</span>
+            <span class="n">argfields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;zoti-args&quot;</span><span class="p">],</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="n">path_var</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">pathvar</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">pathvar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">path_var</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key_nodes</span> <span class="o">=</span> <span class="n">keys</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exts</span> <span class="o">=</span> <span class="n">ext</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_argfields</span> <span class="o">=</span> <span class="n">argfields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modules</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Project.resolve_path"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Project.resolve_path">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a global file path where the source file for module *name*</span>
+<span class="sd">        is found. If none found returns *FileNotFoundError*.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Searching for module: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_paths</span><span class="p">:</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="o">*</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  - in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fpath</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exts</span><span class="p">:</span>
+                <span class="n">full_path</span> <span class="o">=</span> <span class="n">fpath</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">full_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  ! found and loading </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">full_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+                    <span class="k">return</span> <span class="n">full_path</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No file found for module &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.load_module"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Project.load_module">[docs]</a>    <span class="k">def</span> <span class="nf">load_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">with_deps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recursively loads a (top) module with an arbitrary *name*, along</span>
+<span class="sd">        with all its `include` dependencies declared in the modules&#39;</span>
+<span class="sd">        preamblies. *source* and *path* are passed to</span>
+<span class="sd">        :class:`Module`. If *with_deps* is unset it ignores the</span>
+<span class="sd">        `include` directives.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+        <span class="c1"># resolves &quot;!ref&quot; entries</span>
+        <span class="k">def</span> <span class="nf">_resolve_aliases</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">aliases</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Ref</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">node</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">aliases</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">node</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">Module</span><span class="o">.</span><span class="n">from_zoml</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key_nodes</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">path</span> <span class="o">==</span> <span class="n">module</span><span class="o">.</span><span class="n">path</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="n">module</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Wrong module name in preamble of </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;expected &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; got &#39;</span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">i</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_ALIAS</span><span class="p">]:</span> <span class="n">i</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_MODULE</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">preamble</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_IMPORT</span><span class="p">,</span> <span class="p">[])</span>
+                <span class="k">if</span> <span class="n">ty</span><span class="o">.</span><span class="n">ATTR_ALIAS</span> <span class="ow">in</span> <span class="n">i</span>
+            <span class="p">}</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">map_doc</span><span class="p">(</span><span class="n">_resolve_aliases</span><span class="p">,</span> <span class="n">aliases</span><span class="o">=</span><span class="n">aliases</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">with_deps</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">preamble</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_IMPORT</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="n">dep</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_MODULE</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+                    <span class="n">dep_name</span> <span class="o">=</span> <span class="n">dep</span><span class="p">[</span><span class="n">ty</span><span class="o">.</span><span class="n">ATTR_MODULE</span><span class="p">]</span>
+                    <span class="n">dep_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_path</span><span class="p">(</span><span class="n">dep_name</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dep_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">dep_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ModuleError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ModuleError</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.build"><a class="viewcode-back" href="../../api-reference.html#zoti_yaml.handlers.Project.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parses and resolves module *name*.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot; ** Building module </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">restart</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># stitches nodes referenced with &quot;!attach&quot;</span>
+        <span class="k">def</span> <span class="nf">_stitch_and_resolve</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+            <span class="k">nonlocal</span> <span class="n">restart</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Attach</span><span class="p">):</span>
+                    <span class="n">restart</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Ref</span><span class="p">):</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">this</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">node</span>
+                <span class="k">return</span> <span class="n">node</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">show</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">pos</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ModuleError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                  <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># resolves default values specified with &quot;!default&quot;</span>
+        <span class="k">def</span> <span class="nf">_postproc</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Default</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argfields</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                            <span class="k">del</span> <span class="n">node</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">node</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ModuleError</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">restart</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  * (re)starting the tree build...&quot;</span><span class="p">)</span>
+            <span class="n">restart</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">map_doc</span><span class="p">(</span><span class="n">_stitch_and_resolve</span><span class="p">,</span> <span class="n">with_path</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  * post-processing the tree...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">map_doc</span><span class="p">(</span><span class="n">_postproc</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

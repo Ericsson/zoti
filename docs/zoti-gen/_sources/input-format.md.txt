@@ -50,7 +50,7 @@ documnentation to document the entry schemas.
 #### `requirement`
 
 ```{eval-rst}
-.. autosimple:: zoti_gen.core.RequirementSchema
+.. autosimple:: zoti_gen.core.RequirementField
 ```
 
 #### `label`
@@ -77,28 +77,32 @@ documnentation to document the entry schemas.
 .. autosimple:: zoti_gen.core.RefSchema
 ```
 
-## Template Function
-
-```{eval-rst}
-.. autosimple:: zoti_gen.core.TemplateFunField
-```
 
 ## Code Template
 
-The bulk of a block is its template which will be expanded as target
-code. The template uses a
-[Jinja2](https://jinja.palletsprojects.com/en/3.1.x/templates/) syntax
-where the rendering context is formed from some of the parent block's
-resolved specification entries, more precisely:
+Code templates are strings with
+[Jinja2](https://jinja.palletsprojects.com/en/3.1.x/templates/) markup
+commands evaluated in a custom context built from the resolved block
+specification. Depending on its role in the input specification (see
+documentation above), each template is evaluated and rendered using a
+custom context built from resolved information from the interal
+representation, most usually having the following context fields:
 
-* all [`label`](#label) entries with updated information (i.e.,
-  `name`, `usage` and `glue`) reflecting the block's bindings.
-  
-* all `param` entries updated according to the block's bindings.
+:label: contains a dictionary of all resolved `label` entries (see
+    [](input-format)), both own and passed via bindings, where the
+    keys are the original (specified) names. Each entry contains
+    possibly updated information (i.e., `name`, `usage` and `glue`)
+    reflecting the block's bindings.
 
+:param: usually contains a merged dictionary with this block's `param`
+    entries and the ones passed via bindings.
+
+:placeholder: will contain rendered code blocks for various declared
+    instances (e.g., as inline code or function call) in the current
+    block's scope.
 
 ```{eval-rst}
-.. autosimple:: zoti_gen.render.JinjaExtensions
+.. autosimple:: zoti_gen.jinja_extensions.JinjaExtensions
 	:members:
 	:undoc-members:
 ```

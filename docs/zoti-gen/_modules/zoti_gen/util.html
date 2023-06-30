@@ -36,7 +36,7 @@
   <h1>Source code for zoti_gen.util</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">pkgutil</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">marshmallow</span> <span class="kn">import</span> <span class="n">post_load</span>
 
@@ -81,9 +81,12 @@
 <span class="c1">#     f.seek(pos)</span>
 <span class="c1">#     return line</span>
 
+<span class="n">C_DELIMITERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;// *Template: *</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;// *End: *</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">VHDL_DELIMITERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;-- *Template: *</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;-- *End: *</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="read_template"><a class="viewcode-back" href="../../template-libs.html#zoti_gen.util.read_template">[docs]</a><span class="k">def</span> <span class="nf">read_template</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-                  <span class="n">delimiters</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2"> *Template: *</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2"> *End: *</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+<div class="viewcode-block" id="read_at"><a class="viewcode-back" href="../../template-libs.html#zoti_gen.util.read_at">[docs]</a><span class="k">def</span> <span class="nf">read_at</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">delimiters</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">C_DELIMITERS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a template string from a (possibly formatted) external</span>
 <span class="sd">    source file. A source file may contain multiple templates, hence</span>
 <span class="sd">    this method returns only the one between ``delimiter`` for</span>
@@ -101,14 +104,6 @@
 <span class="sd">    :arg delimiters: tuple containing the begin and end marker for the</span>
 <span class="sd">        issued template, formatted as regular expressions where</span>
 <span class="sd">        ``{name}`` is replaced with **name**.</span>
-
-<span class="sd">    Example usage:</span>
-
-<span class="sd">    .. code-block:: python</span>
-
-<span class="sd">        code: str = field(</span>
-<span class="sd">            default=read_template(__name__, &quot;templates.c&quot;, &quot;ReadArray.C&quot;)</span>
-<span class="sd">        )</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">begin</span> <span class="o">=</span> <span class="n">delimiters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Syntax Reference &#8212; zoti-yaml 0.1.0 documentation</title>
+    <title>Syntax Reference &#8212; zoti-yaml 0.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -45,10 +45,13 @@ set of language extensions, such as references and a module system.</p>
 <h2>Modules<a class="headerlink" href="#modules" title="Permalink to this heading">¶</a></h2>
 <p>Modules are the main organization units in ZOTI-YAML projects. Each
 module name needs to reflect the path of its associated source
-file. Assuming the search path for ZOTI modules is set to <code class="docutils literal notranslate"><span class="pre">ZOTI_PATH</span></code>
-(see <a class="reference internal" href="#configuration"><span class="std std-doc">Configuration</span></a>), then the file
-<code class="docutils literal notranslate"><span class="pre">ZOTI_PATH/path/to/MyModule.yaml</span></code> would correspond to the qualified
-module name <code class="docutils literal notranslate"><span class="pre">path.to.MyModule</span></code>.</p>
+file. Assuming that a path <code class="docutils literal notranslate"><span class="pre">NY_PATH</span></code> is in the search path, then the
+file <code class="docutils literal notranslate"><span class="pre">MY_PATH/path/to/MyModule.yaml</span></code> would correspond to the qualified
+module name <code class="docutils literal notranslate"><span class="pre">path.to.MyModule</span></code>. The search path can be controlled via:</p>
+<ul class="simple">
+<li><p>the CLI flag <code class="docutils literal notranslate"><span class="pre">--pathvar</span></code>, see <a class="reference internal" href="#configuration"><span class="std std-doc">Configuration</span></a>;</p></li>
+<li><p>the API, with the constructor for <a class="reference internal" href="api-reference.html#zoti_yaml.handlers.Project" title="zoti_yaml.handlers.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.handlers.Project</span></code></a>.</p></li>
+</ul>
 <p>Each module consists in a YAML source file formatted as:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">preamble</span>
 <span class="nn">---</span>
@@ -62,8 +65,8 @@ descriptions or other document-wide definitions, whereas
 <section id="preamble">
 <h2>Preamble<a class="headerlink" href="#preamble" title="Permalink to this heading">¶</a></h2>
 <p>A module’s peramble is for the most part a free-form dictionary
-containing metadata preserved and used by downstream tools. Out of
-these entries, ZOTI-YAML uses two:</p>
+containing metadata preserved and used by downstream tools. ZOTI-YAML
+uses two of these entries:</p>
 <dl class="simple myst">
 <dt><code class="docutils literal notranslate"><span class="pre">module</span></code> <em>(string)</em></dt><dd><p>Mandatory field containing the qualified module
 name. It <em>needs</em> to reflect its path relative to the <a class="reference internal" href="#modules"><span class="std std-doc">loading
@@ -101,13 +104,13 @@ active from that node to all its childred until the last leaf node
 or until a node with a policy changing marker. E.g.:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="kt">!default</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!policy:A</span>
-<span class="w">  </span><span class="nt">root</span><span class="p">:</span><span class="w">          </span><span class="c1"># policy A</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">foo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bar</span><span class="w">     </span><span class="c1"># policy A</span>
+<span class="w">  </span><span class="nt">root</span><span class="p">:</span><span class="w">          </span><span class="c1"># policy A holds</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">foo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bar</span><span class="w">     </span><span class="c1"># policy A holds</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!policy:B</span>
-<span class="w">    </span><span class="nt">biz</span><span class="p">:</span><span class="w">         </span><span class="c1"># policy B</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">baz</span><span class="w">        </span><span class="c1"># policy B</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">buzz</span><span class="w">       </span><span class="c1"># policy B</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">bam</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">blep</span><span class="w">    </span><span class="c1"># policy A</span>
+<span class="w">    </span><span class="nt">biz</span><span class="p">:</span><span class="w">         </span><span class="c1"># policy B holds</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">baz</span><span class="w">        </span><span class="c1"># policy B holds</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">buzz</span><span class="w">       </span><span class="c1"># policy B holds</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">bam</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">blep</span><span class="w">    </span><span class="c1"># policy A holds</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">root</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
@@ -163,7 +166,7 @@ key is found.</p>
 </dl>
 </section>
 <section id="ref-module-path-name">
-<h4><code class="docutils literal notranslate"><span class="pre">!ref</span></code> {<em>module</em>, <em>path</em>, <em>name</em>}<a class="headerlink" href="#ref-module-path-name" title="Permalink to this heading">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">!ref</span></code> {<em>module</em>, <em>path</em> | <em>name</em>}<a class="headerlink" href="#ref-module-path-name" title="Permalink to this heading">¶</a></h4>
 <p>Reference to an element in a module. When resolved, this object
 contains the qualified name or path to a (unique) element. It may
 have the following keyword arguments:</p>
@@ -208,9 +211,15 @@ downstream manipulation.</p>
 can have any number of keyword arguments, of which one needs to be
 <em>ref</em>.</p>
 <dl>
-<dt><em>ref</em>: (object) Qualified <a class="reference internal" href="api-reference.html#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.core.TreePath</span></code></a>-based</dt><dd><p>reference to another node (see <code class="docutils literal notranslate"><span class="pre">!ref</span></code>). The <em>path</em> is absolute
-(i.e. relative to the root of the <em>module</em>) if it starts with a
-<code class="docutils literal notranslate"><span class="pre">/</span></code> or relative to this node otherwise.</p>
+<dt><em>ref</em>: (object) Qualified <a class="reference internal" href="api-reference.html#zoti_yaml.core.TreePath" title="zoti_yaml.core.TreePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.core.TreePath</span></code></a>-based</dt><dd><p>reference to another node (see <code class="docutils literal notranslate"><span class="pre">!ref</span></code>). If the <em>path</em></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>begins with character <code class="docutils literal notranslate"><span class="pre">/</span></code> , it is absolute (i.e. relative
+to the root of the module)</p></li>
+<li><p>begins with a character other than <code class="docutils literal notranslate"><span class="pre">/</span></code>, it is relative to this
+node.</p></li>
+</ul>
+</div></blockquote>
 </dd>
 <dt><em>…</em>: (keyword pairs)</dt><dd><p>Arbitrary entries passed to the attached node in the following
 conditions:</p>
@@ -236,7 +245,7 @@ node.</p>
 they can be used to construct references.</p>
 <p><em>OBS3</em>: when exchanging arguments between the caller and callee it
 is recommended to use a dedicated field (e.g., check the
-<em>argfields</em> argument of <a class="reference internal" href="api-reference.html#zoti_yaml.project.Project" title="zoti_yaml.project.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.project.Project</span></code></a>)</p>
+<em>argfields</em> argument of <a class="reference internal" href="api-reference.html#zoti_yaml.handlers.Project" title="zoti_yaml.handlers.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.handlers.Project</span></code></a>)</p>
 <p>Example:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Foo</span>
 <span class="nn">---</span>
@@ -267,7 +276,7 @@ is recommended to use a dedicated field (e.g., check the
 <p>Module <code class="docutils literal notranslate"><span class="pre">Bar</span></code> remains unchanged.</p>
 </section>
 <section id="include-file-name-begin-end">
-<h4><code class="docutils literal notranslate"><span class="pre">!include</span></code> {<em>file</em>, <em>name</em>|(<em>begin</em>, <em>end</em>)}<a class="headerlink" href="#include-file-name-begin-end" title="Permalink to this heading">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">!include</span></code> {<em>file</em>, <em>name</em> | (<em>begin</em>, <em>end</em>)}<a class="headerlink" href="#include-file-name-begin-end" title="Permalink to this heading">¶</a></h4>
 <p>One can import raw (chunks of) files using the the <code class="docutils literal notranslate"><span class="pre">!include</span></code>
 command. It should be used to attach entire source code to
 entries of certain nodes. Usage:</p>
@@ -291,8 +300,8 @@ specified either as line numbers or by arbitrary keywords.</p>
 for certain keys under an entry at <code class="docutils literal notranslate"><span class="pre">_info/_pos</span></code>. Exactly which nodes
 are marked for metadata is controlled via:</p>
 <ul class="simple">
-<li><p>the CLI flag <code class="docutils literal notranslate"><span class="pre">--keys</span></code>, see <a class="reference internal" href="#configuration"><span class="std std-doc">below</span></a>;</p></li>
-<li><p>the API, with the constructor for <a class="reference internal" href="api-reference.html#zoti_yaml.project.Project" title="zoti_yaml.project.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.project.Project</span></code></a>.</p></li>
+<li><p>the CLI flag <code class="docutils literal notranslate"><span class="pre">--keys</span></code>, see <a class="reference internal" href="#configuration"><span class="std std-doc">Configuration</span></a>;</p></li>
+<li><p>the API, with the constructor for <a class="reference internal" href="api-reference.html#zoti_yaml.handlers.Project" title="zoti_yaml.handlers.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoti_yaml.handlers.Project</span></code></a>.</p></li>
 </ul>
 <p>For each key in the provided list, ZOTI-YAML will mark all first
 children of its entry, provided that the children are objects
@@ -350,7 +359,7 @@ current folder, under the following sections:</p>
 
 <span class="c1"># specialized configuration loaded with:</span>
 <span class="c1">#</span>
-<span class="c1">#      $(ZOTI_YAML) --spec &lt;class&gt;</span>
+<span class="c1">#      $(ZOML) --spec &lt;class&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># where &lt;class&gt; is replaced with an arbitrary name. Overrides </span>
 <span class="c1"># parameters in [zoti.yaml]</span>

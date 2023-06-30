@@ -1,22 +1,22 @@
 # API Reference
 
-All functions documented in the modules presented in this page are
-re-exported by `zoti_yaml`, so one does not need to import every
-module below.
+All functions documented on this page are exported by the `zoti_yaml`
+module.
 
-## Modules and Projects
+## Handlers
 
 ```{eval-rst}
-.. autoclass:: zoti_yaml.project.Project
+.. autoclass:: zoti_yaml.handlers.Project
 	:members:
 	:undoc-members:
 	
-.. autoclass:: zoti_yaml.module.Module
+.. autoclass:: zoti_yaml.handlers.Module
 	:members:
 	:undoc-members:
+
 ```
 
-## Dcument Tree Paths 
+## Document Tree Paths 
 
 ```{eval-rst}
 .. autoclass:: zoti_yaml.core.TreePath

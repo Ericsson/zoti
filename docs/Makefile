@@ -1,4 +1,4 @@
-TOOLS = zoti-yaml zoti-graph zoti-tran zoti-gen
+TOOLS = zoti-yaml zoti-graph zoti-gen
 
 HUB = ..
 
@@ -8,7 +8,7 @@ TOOL_ROOTS	:= $(patsubst %, $(HUB)/%, $(TOOLS))
 TOOL_BUILDS	:= $(patsubst %, %/dist, $(TOOL_ROOTS))
 TOOL_DOCS	:= $(patsubst %, %/docs/build, $(TOOL_ROOTS))
 
-EXAMPLES = prod-cons
+EXAMPLES = prodcons-unix
 
 all: dists sphinx examples
 
@@ -64,9 +64,9 @@ cleansphinx:
 # EXAMPLES
 
 
-examples: examples-prod-cons
+examples: examples-prodcons-unix
 
-cleanexamples: cleanexamples-prod-cons
+cleanexamples: cleanexamples-prodcons-unix
 
 define make-examples
 EXAMPLE_PATH_$1 := example/$1
