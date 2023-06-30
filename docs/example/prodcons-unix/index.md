@@ -1,6 +1,6 @@
 ---
 layout: default
-version: 0.1.0
+version: 0.2.0
 release_url: TBA
 root-path: https://github.com/Ericsson/zoti/tree/main/example/prod-cons
 ---
