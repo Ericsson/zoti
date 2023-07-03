@@ -79,13 +79,13 @@ To run the CLI tool either call it from inside the Pipenv shell:
 
 ```shell
 pipenv shell
-python -m zoml --help
+python -m zoti_yaml --help
 ```
 
 or from outside it, in the folder where the `Pipfile` resides:
 
 ```shell
-pipenv run python3 -m zoml --help
+pipenv run python3 -m zoti_yaml --help
 ```
 
 CLI arguments documented with the `--help` command can be also passed
