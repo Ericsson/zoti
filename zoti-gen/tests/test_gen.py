@@ -1,6 +1,4 @@
 import zoti_gen.io as io
-from zoti_gen.builder import Builder
-from zoti_yaml import Module
 import os
 import sys
 import yaml
@@ -9,6 +7,8 @@ from pathlib import PurePosixPath
 
 sys.path.insert(0, "src")
 sys.path.insert(0, "tests/inputs")
+from zoti_gen.builder import Builder
+from zoti_yaml import Module
 
 
 def test_scenario1() -> None:
