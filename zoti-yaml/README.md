@@ -135,7 +135,7 @@ or even in the global scope using `pip` (not recommended yet).
 Inside your project, ZOTI-YAML is loaded by importing the `zoml` module, i.e.
 
 ```python
-import zoml
+import zoti_yaml
 ```
 
 Documentation
