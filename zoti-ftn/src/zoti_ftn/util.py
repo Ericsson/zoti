@@ -31,3 +31,10 @@ class SearchableEnum(EnumMeta):
         return super(SearchableEnum, cls).__getitem__(item.upper())
 
 
+def uniqueName(name, namespace):
+    if not namespace or name not in namespace:
+        return name
+    it = 0
+    while f"name_{it}"  in namespace:
+        it+=1
+    return f"name_{it}"

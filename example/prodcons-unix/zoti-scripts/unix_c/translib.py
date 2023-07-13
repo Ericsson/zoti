@@ -8,14 +8,14 @@ import ports
 
 
 def port_inference(G, T, **kwargs):
-    """Resolves and fills in the *data_type* and the *port_type* fields
-    for all groups of interconnected ports. Port resolution is defined
-    in :module:`zoti_tran.unix_c.ports`. After this transformation the
-    following holds:
+    """Resolves and fills in the *data_type*, *port_type* adn *mark*
+    fields for all groups of interconnected ports. Port resolution is
+    defined in :module:`zoti_tran.unix_c.ports`. After this
+    transformation the following holds:
 
     forall p in ports(G)
       | p.data_type ∈ zoti_ftn.backend.c
-      | p.port_type ∈ zoti_tran.unix_c.ports
+      | p.port_type ∈ ports
 
     """
     ag = G.only_graph().to_undirected()
@@ -24,13 +24,13 @@ def port_inference(G, T, **kwargs):
         pents = [G.entry(p) for p in pids]
         if not pids:
             continue
-        port_type = ports.make_port_type(pents, pids)
-        data_type = ports.make_data_type(pents, T, pids)
-        orig_mark = ports.make_markings(pents, pids)
+        port_attr = ports.merge_attrs(pents, "port_type", "Port type argument mismatch: ")
+        data_attr = ports.merge_attrs(pents, "data_type", "Data type argument mismatch: ")
+        orig_mark = ports.merge_attrs(pents, "mark", "Mismatched markings: ")
         for p in pids:
-            G.entry(p).port_type = port_type
-            G.entry(p).data_type = data_type
-            G.entry(p).mark = orig_mark
+            G.update(p, ports.make_port_type(port_attr, G.entry(p)))
+            G.entry(p).make_data_type(T, data_attr)
+            G.entry(p).make_markings(orig_mark)
         log.info(f"  - Resolved {pids}")
 
     return True  # Byproduct is a flag
@@ -43,25 +43,20 @@ def prepare_platform_ports(G, T, port_inference, **kwargs):
 
     """
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
+        # change data types of input ports. TODO: deprecated
         for iport in G.ports(pltf, select=lambda p: p.kind == ty.Dir.IN):
-            entry = G.entry(iport)
-            entry.data_type = T.make_type(**entry.port_type.buffer_type())
+            G.entry(iport).update_input_buffer_type(T)
             log.info(f"  - Changed type for in port: {iport}")
 
         # alter exit ports to reflect socket variables
         for oport in G.ports(pltf, select=lambda p: p.kind == ty.Dir.OUT):
-            entry = G.entry(oport)
             socket_id = oport.withSuffix(f"{pltf.name()}_socket")
-            for p in G.connected_ports(oport):
-                if G.has_ancestor(p, pltf):
-                    G.decouple(p)
-                    G.entry(p).mark["socket_port"] = socket_id
-
-            attrs = entry.port_type.out_port()
-            attrs["data_type"] = T.make_type(**attrs["data_type"])
-            G.register_port(pltf, G.new(socket_id, ty.Port(
-                name=socket_id.name(), kind=ty.Dir.SIDE, **attrs
-            )))
+            # for p in G.connected_ports(oport):
+            #     if G.has_ancestor(p, pltf):
+            #         G.decouple(p)
+            #         G.entry(p).mark["socket_port"] = socket_id
+            socket_port = G.entry(oport).new_output_socket_port(socket_id, T)
+            G.register_port(pltf, G.new(socket_id, socket_port))
             log.info(f"  - Added global out port for: {oport}")
     return True
 
@@ -92,8 +87,9 @@ def prepare_side_ports(G, port_inference, **kwargs):
                 entry = G.entry(port)
 
                 # sync names of interconneted storage ports and make globals for them
-                if (G.entry(port).kind == ty.Dir.SIDE  # and not G.entry(port).mark.get("global_var")
-                        ):
+                if (G.entry(port).kind == ty.Dir.SIDE
+                    # and not G.entry(port).mark.get("global_var")
+                    ):
                     glb_name = _make_global(pltf, entry.name, entry)
                     for p in [e for e in ends if isinstance(G.entry(e), ty.Port)]:
                         G.entry(p).name = glb_name
@@ -133,6 +129,10 @@ def prepare_intermediate_ports(G, port_inference, **kwargs):
 
     for pltf in G.children(G.root, select=lambda n: isinstance(n, ty.PlatformNode)):
         for actor in G.children(pltf, select=lambda n: isinstance(n, ty.ActorNode)):
+            proj = G.node_projection(actor, no_parent_ports=True)
+            for src_scen, dst_scen, ports in proj.edges(data="ports"):
+                inter = _new_intermediate_connection(actor, *ports)
+                log.info(f"  - Using {inter} as intemediate between {ports}")
             for scen in G.children(actor, select=lambda n: isinstance(n, ty.CompositeNode)):
                 # expose intermediate variables in scenarios
                 proj = G.node_projection(scen, no_parent_ports=True)

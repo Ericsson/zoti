@@ -79,7 +79,7 @@ script.transform([
         dump_title="tran_1_port_inference",
         dump_nodes=debug,
         dump_graphviz={
-            "port_info": lambda p: f"{p.port_type.__class__.__name__},{p.data_type['type'].__class__.__name__}",
+            "port_info": lambda p: f"{p.port_type.__class__.__name__},{p.data_type.uid}",
             "node_info": lambda p: ",".join([k for k in p.mark.keys()]),
         } if args.debug else None,
     ),
@@ -128,7 +128,8 @@ script.transform([
             "node_info": lambda n: (
                 str(n.mark) if isinstance(n, genny.CompositeNode)
                 else ",".join([k for k in n.mark.keys()])),
-            "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
+            # "port_info": lambda p: ",".join([k for k in p.mark.keys()]),
+            "port_info": lambda p: type(p).__name__,
         } if args.debug else None,
     ),
     tran.TransSpec(artifacts.typedefs),

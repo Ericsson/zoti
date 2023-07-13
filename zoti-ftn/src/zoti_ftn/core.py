@@ -63,7 +63,27 @@ class Uid:
             uid.module = val["module"]
             return uid
 
+        
+@dataclass
+class Entry:
+    uid: Uid
+    value: Optional[str] = None
 
+    def __hash__(self):
+        return hash(self.uid)
+ 
+    class Schema(mm.Schema):
+        uid = Uid.Field(required=True)
+        value = mm.fields.String(load_default=None)
+
+        @mm.post_load
+        def construct(self, data, **kwargs):
+            return Entry(**data)
+        
+        @mm.pre_dump
+        def deconstruct(self, obj, **kwargs):
+            return vars(obj)
+        
 ## Endian ##
 
 
@@ -215,7 +235,8 @@ class Constant:
 class TypeABC:
     type: str
     readonly: bool
-    _info: dict
+    # value: Optional[str]
+    _info: Optional[dict]
 
     class Schema(mm.Schema):
         class Meta:
@@ -223,6 +244,7 @@ class TypeABC:
 
         type = mm.fields.String()
         readonly = mm.fields.Bool(load_default=False)
+        # value = mm.fields.String(load_default=None)
         _info = mm.fields.Raw(data_key=tok.ATTR_INFO, load_default=None)
 
         # @mm.post_load
@@ -511,16 +533,22 @@ class FtnDb:
             raise Exception(msg)
         return self.__specs[base_type_name]
 
-    def get(self, uid: Union[Uid, str, TypeABC], **kwargs):
+    def get(self, what: Union[Uid, str, TypeABC, Entry]) -> TypeABC:
         """Returns a type definition. If not found it searches for its source
         module, loads it and deserializes its respective field using
         a corresponding base type schema.
 
         """
-        if isinstance(uid, TypeABC):
-            return uid
+        if isinstance(what, TypeABC):
+            return what
 
-        uid = uid if isinstance(uid, Uid) else Uid(uid)
+        if isinstance(what, Entry):
+            uid = what.uid
+        elif isinstance(what, Uid):
+            uid = what
+        else:
+            uid = Uid(what)
+            
         if uid in self._defs:
             return self._defs[uid]
 
@@ -538,7 +566,7 @@ class FtnDb:
             )
         return self._defs[uid]
 
-    def make_type(self, name=None, from_ftn=None, from_spec=None, from_assign=None, value=None):
+    def make_entry(self, name=None, from_ftn=None, from_spec=None, value=None):
         def _newsource(assignment):
             qual = next(iter(assignment))
             newid = Uid(qual)
@@ -546,25 +574,32 @@ class FtnDb:
             return newid
 
         ndefs = len(
-            [x for x in [name, from_ftn, from_spec, from_assign] if x is not None])
+            [x for x in [name, from_ftn, from_spec] if x is not None])
         if ndefs == 0:
             raise FtnError("No data type definition provided.")
         if ndefs != 1:
             raise FtnError("Too many definitions provided.")
+        
         if name is not None:
             self.get(name)
-            return {"type": Uid(name), "value": value}
+            return Entry(uid=Uid(name), value=value)
+        
         if from_ftn is not None:
             try:
                 bind = lang.load_binding(from_ftn)
-                return {"type": _newsource(bind), "value": value}
+                return Entry(uid=_newsource(bind), value=value)
             except Exception:
                 spec = lang.load_str(from_ftn)
-                return {"type": self.parse(spec), "value": value}
-        if from_assign is not None:
-            return {"type": _newsource(from_assign), "value": value}
+                qual = util.uniqueName("loctype", self._srcs.get("__local__"))
+                uid  = _newsource({f"__local__.{qual}": spec})
+                return Entry(uid=uid, value=value)
         if from_spec is not None:
-            return {"type": self.parse(from_spec), "value": value}
+            try:
+                return Entry(uid=_newsource(from_spec), value=value)
+            except Exception:
+                qual = util.uniqueName("loctype", self._srcs.get("__local__"))
+                uid  = _newsource({f"__local__.{qual}": from_spec})
+                return Entry(uid=uid, value=value)
 
     def dump(self, uid: Union[Uid, str]):
         """Serializes a previously loaded type."""
@@ -598,39 +633,3 @@ class FtnDb:
                 raise FtnError(e, type=t, info=i)
         return deps
 
-
-#####################################################
-# if __name__ == "__main__":
-#     from pprint import pprint
-
-#     import zoti_ftn.frontend as front
-
-#     class Test(mm.Schema):
-#         num = IntBase.Field()
-#         range = Range.Field()
-
-#     tst = Test()
-#     print(tst.dump(tst.load({"num": (20, 8)})))
-#     print(tst.dump(tst.load({"num": "0x1221"})))
-#     print(tst.dump(tst.load({"num": "0b1001"})))
-#     print(tst.load({"range": [20, "0x22123"]}))
-#     print(tst.dump(tst.load({"range": 20})))
-
-#     print("================================")
-#     handler = FtnDb(search_paths=["test/types"], loader=front.FtnLoader())
-#     x = handler.get("Common.TimeSlot")
-#     print(x)
-#     pprint(handler.dump("Common.TimeSlot"))
-#     x = handler.get("Tst.ResData")
-#     print(x)
-#     pprint(handler.dump("Tst.ResData"))
-#     x = handler.get(Uid("Tst.StreamData"))
-#     print(x)
-#     pprint(handler.dump("Tst.StreamData"))
-#     for f in x.select_types(of_class=TypeRef):
-#         print(f.derefer())
-#     print(handler.loaded_types())
-#     print("================================")
-#     handler.load_module("Res", loader=front.FtnLoader())
-#     x = handler.get(Uid("Res.InterSample"))
-#     pprint(handler.dump("Res.InterSample"))

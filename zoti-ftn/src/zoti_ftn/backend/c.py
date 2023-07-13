@@ -483,19 +483,17 @@ class FtnDb(ftn.FtnDb):
     def __init__(self, *args, **kwargs):
         super(FtnDb, self).__init__(*args, **kwargs)
 
-    def c_name(self, uid: Union[ftn.Uid, str, TypeABC]):
-        if isinstance(uid, TypeABC):
-            return uid.gen_c_type("", allow_void=True)[0]
-        uid = uid if isinstance(uid, ftn.Uid) else ftn.Uid(uid)
-        return _mangle_to_C_name(uid) + "_t"
-
+    def c_name(self, entry: ftn.Entry):
+        if entry.uid.module == "__local__":
+            return self.get(entry).gen_c_type("", allow_void=True)[0]
+        return _mangle_to_C_name(entry.uid) + "_t"
+        
     def requirements(self):
         return ["<stdlib.h>", "<stdbool.h>", "<inttypes.h>", "<string.h>"]
 
-    def gen_c_typedef(self, uid: Union[ftn.Uid, str], allow_void=False):
-        uid = uid if isinstance(uid, ftn.Uid) else ftn.Uid(uid)
-        qname = _mangle_to_C_name(uid)
-        prefix, suffix = self.get(uid).gen_c_type(qname, allow_void=allow_void)
+    def gen_c_typedef(self, entry: ftn.Entry, allow_void=False):
+        qname = _mangle_to_C_name(entry.uid)
+        prefix, suffix = self.get(entry).gen_c_type(qname, allow_void=allow_void)
 
         # print(uid, [t.ref for t in self.get(
         #     uid).select_types(of_class=tok.TYPE_REF)])
@@ -503,11 +501,10 @@ class FtnDb(ftn.FtnDb):
         typedef += f"typedef {prefix} {qname}_t{suffix};\n"
         return typedef
 
-    def gen_access_macros(self, uid: Union[ftn.Uid, str], read_only: bool = False):
-        uid = uid if isinstance(uid, ftn.Uid) else ftn.Uid(uid)
-        qname = _mangle_to_C_name(uid)
+    def gen_access_macros(self, entry: ftn.Entry, read_only: bool = False):
+        qname = _mangle_to_C_name(entry.uid)
         hdr_lines = [f'/* FTN: Access macros for type "{qname}_t" */\n']
-        for expr_info in self.get(uid).gen_access_expr("(x)", 0):
+        for expr_info in self.get(entry).gen_access_expr("(x)", 0):
             getset_names, getset_args, getset_expr, read_only_expr = expr_info
             name_components = [qname] + getset_names
             getter_args = ["x"] + getset_args
@@ -524,7 +521,7 @@ class FtnDb(ftn.FtnDb):
             )
         return hdr_lines
 
-    def gen_access_dict(self, uid: Union[ftn.Uid, str], read_only: bool = False):
+    def gen_access_dict(self, entry: Union[TypeABC, ftn.Entry], read_only: bool = False):
         def _recursive_dict(what, dct, lst, accessor):
             if not lst:
                 return
@@ -535,13 +532,12 @@ class FtnDb(ftn.FtnDb):
             dct[lst[0]] = dct.get(lst[0], {})
             _recursive_dict(what, dct[lst[0]], lst[1:], accessor)
 
-        if isinstance(uid, TypeABC):
+        if isinstance(entry, TypeABC):
             return {"_get": "", "_set": "FTNC_ASSIGN"}
+        assert isinstance(entry, ftn.Entry)
 
-        if not (isinstance(uid, ftn.Uid) or isinstance(uid, str)):
-            return None
         access_dict: Dict = {}
-        uid = uid if isinstance(uid, ftn.Uid) else ftn.Uid(uid)
+        uid = entry.uid
         qname = _mangle_to_C_name(uid)
         for getset_names, _, _, read_only_expr in self.get(uid).gen_access_expr("(x)", 0):
             name_components = [qname] + getset_names
@@ -559,29 +555,13 @@ class FtnDb(ftn.FtnDb):
                 _recursive_dict("_set", access_dict, getset_names, setter_name)
         return access_dict
 
-    # def gen_decl(self, var, name=None, usage=None, value=None, static=False):
-    #     if usage is not None:
-    #         ty_str = usage
-    #     elif name is not None:
-    #         ty_str = _mangle_to_C_name(ftn.Uid(name)) + "_t"
-    #     else:
-    #         raise ValueError("Cannot generate type declaration")
-    #     static_str = "static " if static else ""
-    #     value_str = f" = {value}" if value else ""
-    #     return f"{static_str}{ty_str} {var}{value_str};"
-    def gen_decl(self, var, type=None, value=None, usage=None, static=False, allow_void=False):
+    def gen_decl(self, var, entry: ftn.Entry, usage=None, static=False, allow_void=False):
         if usage is not None:
             ty_str = usage
-        elif isinstance(type, ftn.Uid):
-            ty_str = _mangle_to_C_name(type) + "_t"
-            # ty_str, _ = self.get(type).gen_c_type("", allow_void=allow_void)
-        elif isinstance(type, str):
-            ty_str = _mangle_to_C_name(ftn.Uid(type)) + "_t"
-            # ty_str, _ = self.get(ftn.Uid(type)).gen_c_type("", allow_void=allow_void)
-        elif isinstance(type, TypeABC):
-            ty_str, _ = type.gen_c_type("", allow_void=allow_void)
+        elif entry is not None:
+            ty_str = self.c_name(entry)
         else:
             raise ValueError("Cannot generate type declaration")
         static_str = "static " if static else ""
-        value_str = f" = {value}" if value else ""
+        value_str = f" = {entry.value}" if entry.value else ""
         return f"{static_str}{ty_str} {var}{value_str};"
