@@ -1,4 +1,4 @@
-TOOLS = zoti-yaml zoti-graph zoti-gen
+TOOLS = zoti-yaml zoti-graph zoti-gen zoti-ftn
 
 HUB = ..
 

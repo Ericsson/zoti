@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The C-Specific Core &#8212; zoti-ftn 0.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="The Target-Agnostic Core" href="agnostic.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="the-c-specific-core">
+<h1>The C-Specific Core<a class="headerlink" href="#the-c-specific-core" title="Permalink to this heading">¶</a></h1>
+<p>The API of the C-specific core is meant to aid in generating glue code
+in the C language for the represented types. Method naming roughly
+follows the convention:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code>: utility function. One should check the type signature and
+documentation to find out its purpose.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gen_&lt;name&gt;</span></code>: method that generates a list of “naked” C statements
+in the sense that the caller needs to properly format them and add
+separators.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gen_&lt;name&gt;_expr</span></code>: method that generates a (sub-)expression of a
+statement. Used by the caller in building statements.</p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FtnDb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#FtnDb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agnostic.html#zoti_ftn.core.FtnDb" title="zoti_ftn.core.FtnDb"><code class="xref py py-class docutils literal notranslate"><span class="pre">FtnDb</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.FTN_GETTER_PREFIX">
+<span class="sig-name descname"><span class="pre">FTN_GETTER_PREFIX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FTNC_get__'</span></em><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.FTN_GETTER_PREFIX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.FTN_SETTER_PREFIX">
+<span class="sig-name descname"><span class="pre">FTN_SETTER_PREFIX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FTNC_put__'</span></em><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.FTN_SETTER_PREFIX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#FtnDb.requirements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.requirements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses through a list of given <em>types</em> and returns a set of their
+include requirements. If <em>types</em> not provided it searches
+through all defined types.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.gen_typename_expr">
+<span class="sig-name descname"><span class="pre">gen_typename_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#FtnDb.gen_typename_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.gen_typename_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the (prefix) type name for a loaded type. If the type is
+local, generates the C expression for that type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.gen_decl">
+<span class="sig-name descname"><span class="pre">gen_decl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Entry" title="zoti_ftn.core.Entry"><span class="pre">Entry</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#FtnDb.gen_decl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.gen_decl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for declaring (and eventually
+initializing) a type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>usage</strong> – overrides the generated expression</p></li>
+<li><p><strong>static</strong> – prefixes the definition with the ‘static’ keyword</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.gen_typedef">
+<span class="sig-name descname"><span class="pre">gen_typedef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_void</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#FtnDb.gen_typedef"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.gen_typedef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a statement for a typedef expression.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.gen_access_macros_expr">
+<span class="sig-name descname"><span class="pre">gen_access_macros_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#FtnDb.gen_access_macros_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.gen_access_macros_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates access macros for all elements of this type as
+newline-separated expressions (not statements).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.access_dict">
+<span class="sig-name descname"><span class="pre">access_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TypeABC</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#FtnDb.access_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.access_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the access expressions for each element in this type as a
+dictionary tree (i.e., JSON object) accessible, e.g., from
+within a template expander.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.add_source">
+<span class="sig-name descname"><span class="pre">add_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.add_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.add_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a user-provided raw source in the database.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.clear_instance">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.clear_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.clear_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Static destructor. Allows the subsequent creation of a new handler.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.dump">
+<span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serializes a previously loaded type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">what</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a fully-built and loaded type definition. If not found it
+searches for its source module, deserializes using a
+corresponding base type schema and stores it in the database
+for future use.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.instance">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Static access method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.loaded_types">
+<span class="sig-name descname"><span class="pre">loaded_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.loaded_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.loaded_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns UIDs of all constructed and stored types</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.make_entry">
+<span class="sig-name descname"><span class="pre">make_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_ftn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Entry" title="zoti_ftn.core.Entry"><span class="pre">Entry</span></a></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.make_entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.make_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Possibly constructs and) stores a FTN data type into the current
+database and returns an <code class="xref py py-class docutils literal notranslate"><span class="pre">Entry</span></code> object pointing to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – (mutually exclusive with <em>from_ftn</em>, <em>from_spec</em>)
+qualified name to previously loaded type (calls
+<a class="reference internal" href="#zoti_ftn.backend.c.FtnDb.get" title="zoti_ftn.backend.c.FtnDb.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a> for good measure)</p></li>
+<li><p><strong>from_ftn</strong> – (mutually exclusive with <em>name</em>, <em>from_spec</em>)
+string with binding or expression in the FTN language.</p></li>
+<li><p><strong>from_spec</strong> – (mutually exclusive with <em>name</em>, <em>from_ftn</em>)
+string with binding or expression in raw format.</p></li>
+<li><p><strong>value</strong> – initialization value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.parse">
+<span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a base FTN type from a raw source expression without adding
+it to the database.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.schema">
+<span class="sig-name descname"><span class="pre">schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_type_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Schema</span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the JSON schema used to parse a raw source expression into
+a base type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.to_raw">
+<span class="sig-name descname"><span class="pre">to_raw</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.to_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.to_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the dictionaries of raw JSON/AST sources.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.FtnDb.type_dependency_graph">
+<span class="sig-name descname"><span class="pre">type_dependency_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DiGraph</span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#FtnDb.type_dependency_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.FtnDb.type_dependency_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a NetworkX graph representing the type dependencies of all
+constructed and stored types.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-zoti_ftn.backend.c"></span><dl class="py class">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TypeRef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Range" title="zoti_ftn.core.Range"><span class="pre">Range</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endian_mod</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Endian" title="zoti_ftn.core.Endian"><span class="pre">Endian</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.IntBase" title="zoti_ftn.core.IntBase"><span class="pre">IntBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeRef" title="zoti_ftn.core.TypeRef"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeRef</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeABC</span></code></p>
+<p>Qualified reference to another (defined) type.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef.requirements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.requirements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the include requirements of the referred type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.has_subscript">
+<span class="sig-name descname"><span class="pre">has_subscript</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef.has_subscript"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.has_subscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if referred type needs to be indexed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_ctype_expr">
+<span class="sig-name descname"><span class="pre">gen_ctype_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_void</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef.gen_ctype_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_ctype_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the referred type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(prefix, “”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_access_expr">
+<span class="sig-name descname"><span class="pre">gen_access_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_lvl</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef.gen_access_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_access_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the components to build the access expression for the
+referred type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_expr</strong> – arbitrary name for the variable in the access macro.</p></li>
+<li><p><strong>iter_lvl</strong> – how deep the current index level is.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of 4-tuples (field-path, access-args, access-expr, read-only)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_subscript_expr">
+<span class="sig-name descname"><span class="pre">gen_subscript_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef.gen_subscript_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_subscript_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the components for generating an eventual subscript
+expression for the referred type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arr_expr</strong> – expression which evauates to an array type.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_length_expr">
+<span class="sig-name descname"><span class="pre">gen_length_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef.gen_length_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_length_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the components to build the length expression for the
+referred type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arr_expr</strong> – expression which evauates to an array type.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.need_malloc">
+<span class="sig-name descname"><span class="pre">need_malloc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#TypeRef.need_malloc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.need_malloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the referred type needs memory allocation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.bit_size">
+<span class="sig-name descname"><span class="pre">bit_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.IntBase" title="zoti_ftn.core.IntBase"><span class="pre">IntBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.bit_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.derefer">
+<span class="sig-name descname"><span class="pre">derefer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#TypeRef.derefer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.derefer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloads the base method. Recurs into the referenced type.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.endian_mod">
+<span class="sig-name descname"><span class="pre">endian_mod</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Endian" title="zoti_ftn.core.Endian"><span class="pre">Endian</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.endian_mod" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_base_size_expr">
+<span class="sig-name descname"><span class="pre">gen_base_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_base_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the header size for this
+type (i.e., the first element)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_copy">
+<span class="sig-name descname"><span class="pre">gen_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for a copy expressions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>dst_acc_expr</strong> – access expression for the data in <em>dst_ptr</em></p></li>
+<li><p><strong>src_ptr</strong> – name of the source buffer.</p></li>
+<li><p><strong>src_acc_expr</strong> – access expression for the data in <em>src_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_ctor">
+<span class="sig-name descname"><span class="pre">gen_ctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptr_fixup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_ctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.TypeRef.need_malloc" title="zoti_ftn.backend.c.TypeRef.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a constructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for data in <em>buf_var</em> (e.g.,
+pointer notation)</p></li>
+<li><p><strong>prt_fixup</strong> – true if it needs a pointer fixup expression
+after construction (i.e., update the pointer).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_desctor">
+<span class="sig-name descname"><span class="pre">gen_desctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buf_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_desctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.TypeRef.need_malloc" title="zoti_ftn.backend.c.TypeRef.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a destructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable</p></li>
+<li><p><strong>buf_val</strong> – initial (reset) value for the buffer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_marshal">
+<span class="sig-name descname"><span class="pre">gen_marshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_marshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_size_expr">
+<span class="sig-name descname"><span class="pre">gen_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the total size of the data
+contained by this type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.gen_unmarshal">
+<span class="sig-name descname"><span class="pre">gen_unmarshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.gen_unmarshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.get_referred_type">
+<span class="sig-name descname"><span class="pre">get_referred_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#TypeRef.get_referred_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.get_referred_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the (previously loaded) referenced type from the current
+<a class="reference internal" href="#zoti_ftn.backend.c.FtnDb" title="zoti_ftn.backend.c.FtnDb"><code class="xref py py-class docutils literal notranslate"><span class="pre">FtnDb</span></code></a> singleton.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.range_mod">
+<span class="sig-name descname"><span class="pre">range_mod</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Range" title="zoti_ftn.core.Range"><span class="pre">Range</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.range_mod" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.select_types">
+<span class="sig-name descname"><span class="pre">select_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">of_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#TypeRef.select_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.select_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicate selection function. Recurs into the referenced type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.set_readonly">
+<span class="sig-name descname"><span class="pre">set_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.set_readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.ref">
+<span class="sig-name descname"><span class="pre">ref</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Uid" title="zoti_ftn.core.Uid"><span class="pre">Uid</span></a></em><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.TypeRef.readonly">
+<span class="sig-name descname"><span class="pre">readonly</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#zoti_ftn.backend.c.TypeRef.readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Structure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agnostic.html#zoti_ftn.core.Structure" title="zoti_ftn.core.Structure"><code class="xref py py-class docutils literal notranslate"><span class="pre">Structure</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeABC</span></code></p>
+<p>A structure type is represented as a dictionary of other types.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Structure.requirements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Structure.requirements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the set of include requirements for all fields.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_ctype_expr">
+<span class="sig-name descname"><span class="pre">gen_ctype_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_void</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Structure.gen_ctype_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_ctype_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the full C expression for defining this struct
+type. Structure definitions do not have a suffix, hence the
+second element of the tupe is an empty string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(prefix, “”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_access_expr">
+<span class="sig-name descname"><span class="pre">gen_access_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_lvl</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Structure.gen_access_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_access_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the components to build the access expression every field
+in this structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_expr</strong> – arbitrary name for the variable in the access macro.</p></li>
+<li><p><strong>iter_lvl</strong> – how deep the current index level is.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of 4-tuples (field-path, access-args, access-expr, read-only)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.need_malloc">
+<span class="sig-name descname"><span class="pre">need_malloc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Structure.need_malloc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Structure.need_malloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if any of the fields needs memory allocation</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.derefer">
+<span class="sig-name descname"><span class="pre">derefer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.derefer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns ‘self’. Possibly overloaded by instances.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_base_size_expr">
+<span class="sig-name descname"><span class="pre">gen_base_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_base_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the header size for this
+type (i.e., the first element)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_copy">
+<span class="sig-name descname"><span class="pre">gen_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for a copy expressions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>dst_acc_expr</strong> – access expression for the data in <em>dst_ptr</em></p></li>
+<li><p><strong>src_ptr</strong> – name of the source buffer.</p></li>
+<li><p><strong>src_acc_expr</strong> – access expression for the data in <em>src_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_ctor">
+<span class="sig-name descname"><span class="pre">gen_ctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptr_fixup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_ctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Structure.need_malloc" title="zoti_ftn.backend.c.Structure.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a constructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for data in <em>buf_var</em> (e.g.,
+pointer notation)</p></li>
+<li><p><strong>prt_fixup</strong> – true if it needs a pointer fixup expression
+after construction (i.e., update the pointer).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_desctor">
+<span class="sig-name descname"><span class="pre">gen_desctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buf_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_desctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Structure.need_malloc" title="zoti_ftn.backend.c.Structure.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a destructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable</p></li>
+<li><p><strong>buf_val</strong> – initial (reset) value for the buffer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_length_expr">
+<span class="sig-name descname"><span class="pre">gen_length_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_length_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple of None. This type does not have a length
+expression.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_marshal">
+<span class="sig-name descname"><span class="pre">gen_marshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_marshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_size_expr">
+<span class="sig-name descname"><span class="pre">gen_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the total size of the data
+contained by this type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.gen_unmarshal">
+<span class="sig-name descname"><span class="pre">gen_unmarshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.gen_unmarshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.has_subscript">
+<span class="sig-name descname"><span class="pre">has_subscript</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.has_subscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns false this type does not need indexing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.select_types">
+<span class="sig-name descname"><span class="pre">select_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">of_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#Structure.select_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Structure.select_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicate selection function. Recurs into all contained types.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.set_readonly">
+<span class="sig-name descname"><span class="pre">set_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zoti_ftn.backend.c.Structure.set_readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.field">
+<span class="sig-name descname"><span class="pre">field</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TypeABC</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#zoti_ftn.backend.c.Structure.field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Structure.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Structure.readonly">
+<span class="sig-name descname"><span class="pre">readonly</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Structure.readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Range" title="zoti_ftn.core.Range"><span class="pre">Range</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">len_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agnostic.html#zoti_ftn.core.Array" title="zoti_ftn.core.Array"><code class="xref py py-class docutils literal notranslate"><span class="pre">Array</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeABC</span></code></p>
+<p>Array type.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array.requirements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.requirements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the requirements of the base type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.has_subscript">
+<span class="sig-name descname"><span class="pre">has_subscript</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array.has_subscript"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.has_subscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true. An array needs indexing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_ctype_expr">
+<span class="sig-name descname"><span class="pre">gen_ctype_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_void</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array.gen_ctype_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_ctype_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the C expression defining this array. If its range is
+fixed (i.e., <em>range.low</em> = <em>range.high</em>) then it is defined as
+a statically-allocated C array. Otherwise, it is defined as a
+structure with inferred elements such as pointer, offset and
+length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(prefix, suffix)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_access_expr">
+<span class="sig-name descname"><span class="pre">gen_access_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_lvl</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array.gen_access_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_access_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the components to build the access expression for
+everything contained in the element with an appended static
+LEN field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_expr</strong> – arbitrary name for the variable in the access macro.</p></li>
+<li><p><strong>iter_lvl</strong> – how deep the current index level is.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of 4-tuples (field-path, access-args, access-expr, read-only)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_subscript_expr">
+<span class="sig-name descname"><span class="pre">gen_subscript_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array.gen_subscript_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_subscript_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an indexing expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(“&lt;expr&gt;[”, “]”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_length_expr">
+<span class="sig-name descname"><span class="pre">gen_length_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array.gen_length_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_length_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a lenghth expression, together with a bool representing
+whether the length is fixed or not.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.need_malloc">
+<span class="sig-name descname"><span class="pre">need_malloc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Array.need_malloc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.need_malloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the length is not fixed or if the element needs
+memory allocation; otherwise false.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.derefer">
+<span class="sig-name descname"><span class="pre">derefer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.derefer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns ‘self’. Possibly overloaded by instances.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_base_size_expr">
+<span class="sig-name descname"><span class="pre">gen_base_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_base_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the header size for this
+type (i.e., the first element)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_copy">
+<span class="sig-name descname"><span class="pre">gen_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for a copy expressions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>dst_acc_expr</strong> – access expression for the data in <em>dst_ptr</em></p></li>
+<li><p><strong>src_ptr</strong> – name of the source buffer.</p></li>
+<li><p><strong>src_acc_expr</strong> – access expression for the data in <em>src_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_ctor">
+<span class="sig-name descname"><span class="pre">gen_ctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptr_fixup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_ctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Array.need_malloc" title="zoti_ftn.backend.c.Array.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a constructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for data in <em>buf_var</em> (e.g.,
+pointer notation)</p></li>
+<li><p><strong>prt_fixup</strong> – true if it needs a pointer fixup expression
+after construction (i.e., update the pointer).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_desctor">
+<span class="sig-name descname"><span class="pre">gen_desctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buf_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_desctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Array.need_malloc" title="zoti_ftn.backend.c.Array.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a destructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable</p></li>
+<li><p><strong>buf_val</strong> – initial (reset) value for the buffer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_marshal">
+<span class="sig-name descname"><span class="pre">gen_marshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_marshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_size_expr">
+<span class="sig-name descname"><span class="pre">gen_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the total size of the data
+contained by this type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.gen_unmarshal">
+<span class="sig-name descname"><span class="pre">gen_unmarshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Array.gen_unmarshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.len_field">
+<span class="sig-name descname"><span class="pre">len_field</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Array.len_field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.select_types">
+<span class="sig-name descname"><span class="pre">select_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">of_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#Array.select_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Array.select_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicate selection function. Recurs into the contained type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.set_readonly">
+<span class="sig-name descname"><span class="pre">set_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zoti_ftn.backend.c.Array.set_readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.range">
+<span class="sig-name descname"><span class="pre">range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Range" title="zoti_ftn.core.Range"><span class="pre">Range</span></a></em><a class="headerlink" href="#zoti_ftn.backend.c.Array.range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.element_type">
+<span class="sig-name descname"><span class="pre">element_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></em><a class="headerlink" href="#zoti_ftn.backend.c.Array.element_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Array.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Array.readonly">
+<span class="sig-name descname"><span class="pre">readonly</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Array.readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Void</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Void"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Void" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agnostic.html#zoti_ftn.core.Void" title="zoti_ftn.core.Void"><code class="xref py py-class docutils literal notranslate"><span class="pre">Void</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_ctype_expr">
+<span class="sig-name descname"><span class="pre">gen_ctype_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_void</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Void.gen_ctype_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_ctype_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>allow_void</em> is false, throws an error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(“void”, “”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_access_expr">
+<span class="sig-name descname"><span class="pre">gen_access_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_lvl</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Void.gen_access_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_access_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>A void element has no access expresison.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.derefer">
+<span class="sig-name descname"><span class="pre">derefer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.derefer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns ‘self’. Possibly overloaded by instances.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_base_size_expr">
+<span class="sig-name descname"><span class="pre">gen_base_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_base_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the header size for this
+type (i.e., the first element)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_copy">
+<span class="sig-name descname"><span class="pre">gen_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for a copy expressions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>dst_acc_expr</strong> – access expression for the data in <em>dst_ptr</em></p></li>
+<li><p><strong>src_ptr</strong> – name of the source buffer.</p></li>
+<li><p><strong>src_acc_expr</strong> – access expression for the data in <em>src_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_ctor">
+<span class="sig-name descname"><span class="pre">gen_ctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptr_fixup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_ctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Void.need_malloc" title="zoti_ftn.backend.c.Void.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a constructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for data in <em>buf_var</em> (e.g.,
+pointer notation)</p></li>
+<li><p><strong>prt_fixup</strong> – true if it needs a pointer fixup expression
+after construction (i.e., update the pointer).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_desctor">
+<span class="sig-name descname"><span class="pre">gen_desctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buf_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_desctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Void.need_malloc" title="zoti_ftn.backend.c.Void.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a destructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable</p></li>
+<li><p><strong>buf_val</strong> – initial (reset) value for the buffer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_length_expr">
+<span class="sig-name descname"><span class="pre">gen_length_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_length_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple of None. This type does not have a length
+expression.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_marshal">
+<span class="sig-name descname"><span class="pre">gen_marshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_marshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_size_expr">
+<span class="sig-name descname"><span class="pre">gen_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the total size of the data
+contained by this type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.gen_unmarshal">
+<span class="sig-name descname"><span class="pre">gen_unmarshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.gen_unmarshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.has_subscript">
+<span class="sig-name descname"><span class="pre">has_subscript</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.has_subscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns false this type does not need indexing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.need_malloc">
+<span class="sig-name descname"><span class="pre">need_malloc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.need_malloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns false. This type does not need memory allocation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Void.requirements" title="Permalink to this definition">¶</a></dt>
+<dd><p>This type has no include requirement.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.select_types">
+<span class="sig-name descname"><span class="pre">select_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">of_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#Void.select_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Void.select_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicate selection function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.set_readonly">
+<span class="sig-name descname"><span class="pre">set_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zoti_ftn.backend.c.Void.set_readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Void.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Void.readonly">
+<span class="sig-name descname"><span class="pre">readonly</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Void.readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Integer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Range" title="zoti_ftn.core.Range"><span class="pre">Range</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.Endian" title="zoti_ftn.core.Endian"><span class="pre">Endian</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.IntBase" title="zoti_ftn.core.IntBase"><span class="pre">IntBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Integer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Integer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agnostic.html#zoti_ftn.core.Integer" title="zoti_ftn.core.Integer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Integer</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeABC</span></code></p>
+<p>C integer type.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Integer.requirements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Integer.requirements" title="Permalink to this definition">¶</a></dt>
+<dd><p>This representation uses explicit integer types as defined in
+&lt;inttypes.h&gt;. Bit-swap functions are defined in the in-house
+header file ‘DFL_util.h’ found in the ‘assets’ folder.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_ctype_expr">
+<span class="sig-name descname"><span class="pre">gen_ctype_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_void</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Integer.gen_ctype_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_ctype_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Chooses an appropriate type representation for this integer based
+on its properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(“&lt;expr&gt;”, “”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_c_value">
+<span class="sig-name descname"><span class="pre">gen_c_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Integer.gen_c_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_c_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalizes a given value to a C integer value representation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_access_expr">
+<span class="sig-name descname"><span class="pre">gen_access_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_lvl</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Integer.gen_access_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_access_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the appropriate access expression for this integer based
+on its properties (e.g., endianness).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_expr</strong> – arbitrary name for the variable in the access macro.</p></li>
+<li><p><strong>iter_lvl</strong> – how deep the current index level is.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>singleton list witn a 4-tuple ([], [], access-expr, read-only)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.bit_size">
+<span class="sig-name descname"><span class="pre">bit_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.IntBase" title="zoti_ftn.core.IntBase"><span class="pre">IntBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Integer.bit_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.derefer">
+<span class="sig-name descname"><span class="pre">derefer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.derefer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns ‘self’. Possibly overloaded by instances.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.endian">
+<span class="sig-name descname"><span class="pre">endian</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Endian" title="zoti_ftn.core.Endian"><span class="pre">Endian</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Integer.endian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_base_size_expr">
+<span class="sig-name descname"><span class="pre">gen_base_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_base_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the header size for this
+type (i.e., the first element)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_copy">
+<span class="sig-name descname"><span class="pre">gen_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for a copy expressions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>dst_acc_expr</strong> – access expression for the data in <em>dst_ptr</em></p></li>
+<li><p><strong>src_ptr</strong> – name of the source buffer.</p></li>
+<li><p><strong>src_acc_expr</strong> – access expression for the data in <em>src_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_ctor">
+<span class="sig-name descname"><span class="pre">gen_ctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptr_fixup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_ctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Integer.need_malloc" title="zoti_ftn.backend.c.Integer.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a constructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for data in <em>buf_var</em> (e.g.,
+pointer notation)</p></li>
+<li><p><strong>prt_fixup</strong> – true if it needs a pointer fixup expression
+after construction (i.e., update the pointer).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_desctor">
+<span class="sig-name descname"><span class="pre">gen_desctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buf_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_desctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Integer.need_malloc" title="zoti_ftn.backend.c.Integer.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a destructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable</p></li>
+<li><p><strong>buf_val</strong> – initial (reset) value for the buffer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_length_expr">
+<span class="sig-name descname"><span class="pre">gen_length_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_length_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple of None. This type does not have a length
+expression.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_marshal">
+<span class="sig-name descname"><span class="pre">gen_marshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_marshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_size_expr">
+<span class="sig-name descname"><span class="pre">gen_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the total size of the data
+contained by this type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.gen_unmarshal">
+<span class="sig-name descname"><span class="pre">gen_unmarshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.gen_unmarshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.has_subscript">
+<span class="sig-name descname"><span class="pre">has_subscript</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.has_subscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns false this type does not need indexing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.need_malloc">
+<span class="sig-name descname"><span class="pre">need_malloc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.need_malloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns false. This type does not need memory allocation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.normalize_value">
+<span class="sig-name descname"><span class="pre">normalize_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#Integer.normalize_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Integer.normalize_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to convert a value to a Python int. Returns None if
+unsuccessful.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.select_types">
+<span class="sig-name descname"><span class="pre">select_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">of_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#Integer.select_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Integer.select_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicate selection function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.set_readonly">
+<span class="sig-name descname"><span class="pre">set_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zoti_ftn.backend.c.Integer.set_readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.range">
+<span class="sig-name descname"><span class="pre">range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.Range" title="zoti_ftn.core.Range"><span class="pre">Range</span></a></em><a class="headerlink" href="#zoti_ftn.backend.c.Integer.range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Integer.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Integer.readonly">
+<span class="sig-name descname"><span class="pre">readonly</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Integer.readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Boolean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="agnostic.html#zoti_ftn.core.IntBase" title="zoti_ftn.core.IntBase"><span class="pre">IntBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Boolean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agnostic.html#zoti_ftn.core.Boolean" title="zoti_ftn.core.Boolean"><code class="xref py py-class docutils literal notranslate"><span class="pre">Boolean</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeABC</span></code></p>
+<p>Boolean C type.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Boolean.requirements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.requirements" title="Permalink to this definition">¶</a></dt>
+<dd><p>This representation uses the “bool” type as defined in &lt;stdbool.h&gt;</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_ctype_expr">
+<span class="sig-name descname"><span class="pre">gen_ctype_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_void</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Boolean.gen_ctype_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_ctype_expr" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(“bool”, “”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_c_value">
+<span class="sig-name descname"><span class="pre">gen_c_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Boolean.gen_c_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_c_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalizes a given value to a C bool representation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_access_expr">
+<span class="sig-name descname"><span class="pre">gen_access_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_lvl</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/backend/c.html#Boolean.gen_access_expr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_access_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns access expression. Relevant for complex caller types.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.bit_size">
+<span class="sig-name descname"><span class="pre">bit_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="agnostic.html#zoti_ftn.core.IntBase" title="zoti_ftn.core.IntBase"><span class="pre">IntBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.bit_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.derefer">
+<span class="sig-name descname"><span class="pre">derefer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.derefer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns ‘self’. Possibly overloaded by instances.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_base_size_expr">
+<span class="sig-name descname"><span class="pre">gen_base_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_base_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the header size for this
+type (i.e., the first element)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_copy">
+<span class="sig-name descname"><span class="pre">gen_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for a copy expressions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>dst_acc_expr</strong> – access expression for the data in <em>dst_ptr</em></p></li>
+<li><p><strong>src_ptr</strong> – name of the source buffer.</p></li>
+<li><p><strong>src_acc_expr</strong> – access expression for the data in <em>src_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_ctor">
+<span class="sig-name descname"><span class="pre">gen_ctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptr_fixup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_ctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Boolean.need_malloc" title="zoti_ftn.backend.c.Boolean.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a constructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for data in <em>buf_var</em> (e.g.,
+pointer notation)</p></li>
+<li><p><strong>prt_fixup</strong> – true if it needs a pointer fixup expression
+after construction (i.e., update the pointer).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_desctor">
+<span class="sig-name descname"><span class="pre">gen_desctor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buf_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_desctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type needs memory allocation (see <a class="reference internal" href="#zoti_ftn.backend.c.Boolean.need_malloc" title="zoti_ftn.backend.c.Boolean.need_malloc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">need_malloc()</span></code></a>) it
+generates the statements for a destructor and returns
+it. Otherwise it returns an empty list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_var</strong> – name of the buffer variable</p></li>
+<li><p><strong>buf_val</strong> – initial (reset) value for the buffer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_length_expr">
+<span class="sig-name descname"><span class="pre">gen_length_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_length_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple of None. This type does not have a length
+expression.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_marshal">
+<span class="sig-name descname"><span class="pre">gen_marshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_marshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_size_expr">
+<span class="sig-name descname"><span class="pre">gen_size_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_size_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an expression that calculates the total size of the data
+contained by this type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acc_expr</strong> – data access expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.gen_unmarshal">
+<span class="sig-name descname"><span class="pre">gen_unmarshal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf_ptr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acc_expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.gen_unmarshal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the statements for type marshalling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf_ptr</strong> – name of the destination buffer.</p></li>
+<li><p><strong>acc_expr</strong> – access expression for the data at <em>buf_ptr</em></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.has_subscript">
+<span class="sig-name descname"><span class="pre">has_subscript</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.has_subscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns false this type does not need indexing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.need_malloc">
+<span class="sig-name descname"><span class="pre">need_malloc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.need_malloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns false. This type does not need memory allocation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.normalize_value">
+<span class="sig-name descname"><span class="pre">normalize_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#Boolean.normalize_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.normalize_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to convert a value to a Python bool. Returns None if
+unsuccessful.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.select_types">
+<span class="sig-name descname"><span class="pre">select_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">of_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agnostic.html#zoti_ftn.core.TypeABC" title="zoti_ftn.core.TypeABC"><span class="pre">TypeABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoti_ftn/core.html#Boolean.select_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.select_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicate selection function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.set_readonly">
+<span class="sig-name descname"><span class="pre">set_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.set_readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoti_ftn.backend.c.Boolean.readonly">
+<span class="sig-name descname"><span class="pre">readonly</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#zoti_ftn.backend.c.Boolean.readonly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">zoti-ftn</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Ericsson&repo=zoti&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="language.html">The ZOTI-FTN Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agnostic.html">The Target-Agnostic Core</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The C-Specific Core</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#zoti_ftn.backend.c.FtnDb"><code class="docutils literal notranslate"><span class="pre">FtnDb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zoti_ftn.backend.c.TypeRef"><code class="docutils literal notranslate"><span class="pre">TypeRef</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zoti_ftn.backend.c.Structure"><code class="docutils literal notranslate"><span class="pre">Structure</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zoti_ftn.backend.c.Array"><code class="docutils literal notranslate"><span class="pre">Array</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zoti_ftn.backend.c.Void"><code class="docutils literal notranslate"><span class="pre">Void</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zoti_ftn.backend.c.Integer"><code class="docutils literal notranslate"><span class="pre">Integer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zoti_ftn.backend.c.Boolean"><code class="docutils literal notranslate"><span class="pre">Boolean</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://ericsson.github.io/zoti/">ZOTI</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/Ericsson/zoti/tree/main/zoti-ftn">GitHub</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="agnostic.html" title="previous chapter">The Target-Agnostic Core</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022-2023 Ericsson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/backend-c.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

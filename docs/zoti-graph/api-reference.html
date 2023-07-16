@@ -155,6 +155,12 @@ graph. Returns <em>uid</em> for chaining it with other functions (see
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces an old ZOTI node or port object with a new one</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="zoti_graph.appgraph.AppGraph.register_port">
 <span class="sig-name descname"><span class="pre">register_port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoti_graph.core.Uid" title="zoti_graph.core.Uid"><span class="pre">Uid</span></a></span></span><a class="reference internal" href="_modules/zoti_graph/appgraph.html#AppGraph.register_port"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.appgraph.AppGraph.register_port" title="Permalink to this definition">¶</a></dt>
 <dd><p>Registers a pre-created port to a node (see <a class="reference internal" href="#zoti_graph.appgraph.AppGraph.new" title="zoti_graph.appgraph.AppGraph.new"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new()</span></code></a>). Returns
@@ -459,6 +465,11 @@ argument is also provided, it creates a port ID.</p>
 <span class="sig-name descname"><span class="pre">mark</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Port.mark" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.core.Port.duplicate">
+<span class="sig-name descname"><span class="pre">duplicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Port.duplicate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Port.duplicate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -478,6 +489,11 @@ argument is also provided, it creates a port ID.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="zoti_graph.core.Node.mark">
 <span class="sig-name descname"><span class="pre">mark</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#zoti_graph.core.Node.mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoti_graph.core.Node.duplicate">
+<span class="sig-name descname"><span class="pre">duplicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoti_graph/core.html#Node.duplicate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoti_graph.core.Node.duplicate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

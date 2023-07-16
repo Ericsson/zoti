@@ -14,8 +14,7 @@
     path: zoti-graph
   
   - title: "ZOTI-FTN"
-    path: "https://github.com/Ericsson/zoti/tree/main/zoti-ftn"
-    noweb: true
+    path: zoti-ftn
     
   - title: "ZOTI-Gen"
     path: zoti-gen

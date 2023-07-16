@@ -455,48 +455,55 @@ some of the template design tips described in <a class="reference internal" href
 <div class="literal-block-wrapper docutils container" id="id6">
 <div class="code-block-caption"><span class="caption-text">Generic/IO.py</span><a class="headerlink" href="#id6" title="Permalink to this code">¶</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">read_template</span><span class="p">,</span> <span class="n">with_schema</span><span class="p">,</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">Template</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">read_at</span><span class="p">,</span> <span class="n">with_schema</span><span class="p">,</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">Template</span><span class="p">,</span> <span class="n">C_DELIMITERS</span>
 <span class="linenos"> 3</span>
-<span class="linenos"> 4</span>
-<span class="linenos"> 5</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
-<span class="linenos"> 6</span><span class="nd">@dataclass</span>
-<span class="linenos"> 7</span><span class="k">class</span> <span class="nc">ReadArray</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
-<span class="linenos"> 8</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic implementation for monitoring a system. Gets outside</span>
-<span class="linenos"> 9</span><span class="sd">    information from the console.</span>
-<span class="linenos">10</span><span class="sd">    &quot;&quot;&quot;</span>
-<span class="linenos">11</span>
-<span class="linenos">12</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">13</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stdio.h&quot;</span><span class="p">]}))</span>
-<span class="linenos">14</span>
-<span class="linenos">15</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">16</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span><span class="n">read_template</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;ReadArray.C&quot;</span><span class="p">))</span>
-<span class="linenos">17</span>    <span class="p">)</span>
+<span class="linenos"> 4</span><span class="n">file_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;module&quot;</span><span class="p">:</span> <span class="vm">__name__</span><span class="p">,</span>
+<span class="linenos"> 5</span>             <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span>
+<span class="linenos"> 6</span>             <span class="s2">&quot;delimiters&quot;</span><span class="p">:</span> <span class="n">C_DELIMITERS</span><span class="p">}</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos">10</span><span class="nd">@dataclass</span>
+<span class="linenos">11</span><span class="k">class</span> <span class="nc">ReadArray</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos">12</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic implementation for monitoring a system. Gets outside</span>
+<span class="linenos">13</span><span class="sd">    information from the console.</span>
+<span class="linenos">14</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">15</span>
+<span class="linenos">16</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">17</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stdio.h&quot;</span><span class="p">]}))</span>
 <span class="linenos">18</span>
-<span class="linenos">19</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="linenos">20</span>        <span class="k">assert</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
-<span class="linenos">21</span>        <span class="k">assert</span> <span class="s2">&quot;size&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
-<span class="linenos">22</span>        <span class="k">assert</span> <span class="s2">&quot;arg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
-<span class="linenos">23</span>
+<span class="linenos">19</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">20</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span>
+<span class="linenos">21</span>            <span class="n">read_at</span><span class="p">(</span><span class="o">**</span><span class="n">file_args</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ReadArray.C&quot;</span><span class="p">),</span>
+<span class="linenos">22</span>            <span class="n">parent</span><span class="o">=</span><span class="s2">&quot;code&quot;</span><span class="p">)</span>
+<span class="linenos">23</span>    <span class="p">)</span>
 <span class="linenos">24</span>
-<span class="linenos">25</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
-<span class="linenos">26</span><span class="nd">@dataclass</span>
-<span class="linenos">27</span><span class="k">class</span> <span class="nc">PrintArray</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
-<span class="linenos">28</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic implementation for monitoring a system. Prints an array to</span>
-<span class="linenos">29</span><span class="sd">    the console.</span>
-<span class="linenos">30</span><span class="sd">    &quot;&quot;&quot;</span>
-<span class="linenos">31</span>
-<span class="linenos">32</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">33</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stdio.h&quot;</span><span class="p">]}))</span>
-<span class="linenos">34</span>
-<span class="linenos">35</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">36</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span><span class="n">read_template</span><span class="p">(</span>
-<span class="linenos">37</span>            <span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;PrintArray.C&quot;</span><span class="p">))</span>
-<span class="linenos">38</span>    <span class="p">)</span>
-<span class="linenos">39</span>
-<span class="linenos">40</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="linenos">41</span>        <span class="k">assert</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
-<span class="linenos">42</span>        <span class="k">assert</span> <span class="s2">&quot;size&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
-<span class="linenos">43</span>        <span class="k">assert</span> <span class="s2">&quot;arg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">25</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">26</span>        <span class="k">assert</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">27</span>        <span class="k">assert</span> <span class="s2">&quot;size&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">28</span>        <span class="k">assert</span> <span class="s2">&quot;arg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">29</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos">32</span><span class="nd">@dataclass</span>
+<span class="linenos">33</span><span class="k">class</span> <span class="nc">PrintArray</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos">34</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic implementation for monitoring a system. Prints an array to</span>
+<span class="linenos">35</span><span class="sd">    the console.</span>
+<span class="linenos">36</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">39</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stdio.h&quot;</span><span class="p">]}))</span>
+<span class="linenos">40</span>
+<span class="linenos">41</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">42</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span>
+<span class="linenos">43</span>            <span class="n">read_at</span><span class="p">(</span><span class="o">**</span><span class="n">file_args</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;PrintArray.C&quot;</span><span class="p">),</span>
+<span class="linenos">44</span>            <span class="n">parent</span><span class="o">=</span><span class="s2">&quot;code&quot;</span><span class="p">)</span>
+<span class="linenos">45</span>    <span class="p">)</span>
+<span class="linenos">46</span>
+<span class="linenos">47</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">48</span>        <span class="k">assert</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">49</span>        <span class="k">assert</span> <span class="s2">&quot;size&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">50</span>        <span class="k">assert</span> <span class="s2">&quot;arg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
 </pre></div>
 </div>
 </div>
@@ -530,62 +537,70 @@ the ZOTI-Gen Jinja extensions.</p>
 <div class="literal-block-wrapper docutils container" id="id8">
 <div class="code-block-caption"><span class="caption-text">Skeleton/Compute.py</span><a class="headerlink" href="#id8" title="Permalink to this code">¶</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">read_template</span><span class="p">,</span> <span class="n">with_schema</span><span class="p">,</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">Template</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">zoti_gen</span> <span class="kn">import</span> <span class="n">read_at</span><span class="p">,</span> <span class="n">with_schema</span><span class="p">,</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">Template</span><span class="p">,</span> <span class="n">C_DELIMITERS</span>
 <span class="linenos"> 3</span>
 <span class="linenos"> 4</span>
-<span class="linenos"> 5</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
-<span class="linenos"> 6</span><span class="nd">@dataclass</span>
-<span class="linenos"> 7</span><span class="k">class</span> <span class="nc">ShiftFarm</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
-<span class="linenos"> 8</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="linenos"> 9</span><span class="sd">    Shift-farm specialized skeleton</span>
-<span class="linenos">10</span><span class="sd">    &quot;&quot;&quot;</span>
-<span class="linenos">11</span>
-<span class="linenos">12</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">13</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cutils.h&quot;</span><span class="p">]}))</span>
-<span class="linenos">14</span>
-<span class="linenos">15</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">16</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span><span class="n">read_template</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;ShiftFarm.C&quot;</span><span class="p">))</span>
-<span class="linenos">17</span>    <span class="p">)</span>
-<span class="linenos">18</span>
-<span class="linenos">19</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="linenos">20</span>        <span class="c1"># internal iterator (resolved name)</span>
-<span class="linenos">21</span>        <span class="k">assert</span> <span class="s2">&quot;_it&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
-<span class="linenos">22</span>
-<span class="linenos">23</span>        <span class="c1"># auto-bound to &#39;size1&#39; from placeholder? TODO</span>
-<span class="linenos">24</span>        <span class="k">assert</span> <span class="s2">&quot;_range&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos"> 5</span><span class="n">file_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;module&quot;</span><span class="p">:</span> <span class="vm">__name__</span><span class="p">,</span>
+<span class="linenos"> 6</span>             <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span>
+<span class="linenos"> 7</span>             <span class="s2">&quot;delimiters&quot;</span><span class="p">:</span> <span class="n">C_DELIMITERS</span><span class="p">}</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos">11</span><span class="nd">@dataclass</span>
+<span class="linenos">12</span><span class="k">class</span> <span class="nc">ShiftFarm</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos">13</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">14</span><span class="sd">    Shift-farm specialized skeleton</span>
+<span class="linenos">15</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">18</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cutils.h&quot;</span><span class="p">]}))</span>
+<span class="linenos">19</span>
+<span class="linenos">20</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">21</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span>
+<span class="linenos">22</span>            <span class="n">read_at</span><span class="p">(</span><span class="o">**</span><span class="n">file_args</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ShiftFarm.C&quot;</span><span class="p">),</span>
+<span class="linenos">23</span>            <span class="n">parent</span><span class="o">=</span><span class="s2">&quot;code&quot;</span><span class="p">)</span>
+<span class="linenos">24</span>    <span class="p">)</span>
 <span class="linenos">25</span>
-<span class="linenos">26</span>        <span class="c1"># called template</span>
-<span class="linenos">27</span>        <span class="k">assert</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">placeholder</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
-<span class="linenos">28</span>
+<span class="linenos">26</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">27</span>        <span class="c1"># internal iterator (resolved name)</span>
+<span class="linenos">28</span>        <span class="k">assert</span> <span class="s2">&quot;_it&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
 <span class="linenos">29</span>
-<span class="linenos">30</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
-<span class="linenos">31</span><span class="nd">@dataclass</span>
-<span class="linenos">32</span><span class="k">class</span> <span class="nc">FarmRed_Acc</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
-<span class="linenos">33</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="linenos">34</span><span class="sd">    Farm-reduce skeleton with initial element, fused map-reduce kernel function</span>
-<span class="linenos">35</span><span class="sd">    and programmable (exposed) size param.</span>
-<span class="linenos">36</span><span class="sd">    &quot;&quot;&quot;</span>
-<span class="linenos">37</span>
-<span class="linenos">38</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">39</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cutils.h&quot;</span><span class="p">]}))</span>
-<span class="linenos">40</span>
-<span class="linenos">41</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
-<span class="linenos">42</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span><span class="n">read_template</span><span class="p">(</span>
-<span class="linenos">43</span>            <span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;templates.c&quot;</span><span class="p">,</span> <span class="s2">&quot;FarmRed_Acc.C&quot;</span><span class="p">))</span>
-<span class="linenos">44</span>    <span class="p">)</span>
-<span class="linenos">45</span>
-<span class="linenos">46</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="linenos">47</span>        <span class="c1"># internal iterator (resolved name)</span>
-<span class="linenos">48</span>        <span class="k">assert</span> <span class="s2">&quot;_it&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
-<span class="linenos">49</span>
-<span class="linenos">50</span>        <span class="c1"># auto-bound to &#39;size1&#39; from placeholder? TODO</span>
-<span class="linenos">51</span>        <span class="k">assert</span> <span class="s2">&quot;_acc&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
-<span class="linenos">52</span>
-<span class="linenos">53</span>        <span class="c1"># label IDs over which &#39;_it&#39; iterates</span>
-<span class="linenos">54</span>        <span class="k">assert</span> <span class="s2">&quot;iterate_over&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
-<span class="linenos">55</span>
-<span class="linenos">56</span>        <span class="c1"># called fused farm-reduce kernel</span>
-<span class="linenos">57</span>        <span class="k">assert</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">placeholder</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
+<span class="linenos">30</span>        <span class="c1"># auto-bound to &#39;size1&#39; from placeholder? TODO</span>
+<span class="linenos">31</span>        <span class="k">assert</span> <span class="s2">&quot;_range&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span>        <span class="c1"># called template</span>
+<span class="linenos">34</span>        <span class="k">assert</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">placeholder</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
+<span class="linenos">35</span>
+<span class="linenos">36</span>
+<span class="linenos">37</span><span class="nd">@with_schema</span><span class="p">(</span><span class="n">Block</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span>
+<span class="linenos">38</span><span class="nd">@dataclass</span>
+<span class="linenos">39</span><span class="k">class</span> <span class="nc">FarmRed_Acc</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+<span class="linenos">40</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">41</span><span class="sd">    Farm-reduce skeleton with initial element, fused map-reduce kernel function</span>
+<span class="linenos">42</span><span class="sd">    and programmable (exposed) size param.</span>
+<span class="linenos">43</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">44</span>
+<span class="linenos">45</span>    <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">46</span>        <span class="n">default</span><span class="o">=</span><span class="n">Requirement</span><span class="p">({</span><span class="s2">&quot;include&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cutils.h&quot;</span><span class="p">]}))</span>
+<span class="linenos">47</span>
+<span class="linenos">48</span>    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+<span class="linenos">49</span>        <span class="n">default</span><span class="o">=</span><span class="n">Template</span><span class="p">(</span>
+<span class="linenos">50</span>            <span class="n">read_at</span><span class="p">(</span><span class="o">**</span><span class="n">file_args</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;FarmRed_Acc.C&quot;</span><span class="p">),</span>
+<span class="linenos">51</span>            <span class="n">parent</span><span class="o">=</span><span class="s2">&quot;code&quot;</span><span class="p">)</span>
+<span class="linenos">52</span>    <span class="p">)</span>
+<span class="linenos">53</span>
+<span class="linenos">54</span>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">55</span>        <span class="c1"># internal iterator (resolved name)</span>
+<span class="linenos">56</span>        <span class="k">assert</span> <span class="s2">&quot;_it&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">57</span>
+<span class="linenos">58</span>        <span class="c1"># auto-bound to &#39;size1&#39; from placeholder? TODO</span>
+<span class="linenos">59</span>        <span class="k">assert</span> <span class="s2">&quot;_acc&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+<span class="linenos">60</span>
+<span class="linenos">61</span>        <span class="c1"># label IDs over which &#39;_it&#39; iterates</span>
+<span class="linenos">62</span>        <span class="k">assert</span> <span class="s2">&quot;iterate_over&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span>
+<span class="linenos">63</span>
+<span class="linenos">64</span>        <span class="c1"># called fused farm-reduce kernel</span>
+<span class="linenos">65</span>        <span class="k">assert</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">placeholder</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>

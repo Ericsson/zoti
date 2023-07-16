@@ -32,6 +32,7 @@
 <span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Flag</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PurePosixPath</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
 <span class="kn">from</span> <span class="nn">zoti_graph.util</span> <span class="kn">import</span> <span class="n">SearchableEnum</span><span class="p">,</span> <span class="n">default_init</span><span class="p">,</span> <span class="n">default_repr</span>
 
@@ -158,7 +159,13 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for port entry.&quot;&quot;&quot;</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">mark</span><span class="p">:</span> <span class="n">Dict</span>
-    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span></div>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span>
+
+<div class="viewcode-block" id="Port.duplicate"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Port.duplicate">[docs]</a>    <span class="k">def</span> <span class="nf">duplicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div></div>
 
 
 <span class="c1">###########</span>
@@ -171,7 +178,13 @@
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span>
     <span class="n">mark</span><span class="p">:</span> <span class="n">Dict</span>
-    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span></div>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span>
+    
+<div class="viewcode-block" id="Node.duplicate"><a class="viewcode-back" href="../../api-reference.html#zoti_graph.core.Node.duplicate">[docs]</a>    <span class="k">def</span> <span class="nf">duplicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div></div>
 </pre></div>
 
           </div>
