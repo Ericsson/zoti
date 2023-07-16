@@ -184,7 +184,7 @@ class RequirementField(mm.fields.Field):
         return Requirement(requirement=node)
 
     def _serialize(self, obj, attr, data, **kwargs):
-        return obj.requirement
+        return obj.requirement if obj is not None else None
 
 
 ############

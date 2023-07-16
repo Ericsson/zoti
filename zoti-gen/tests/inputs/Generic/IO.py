@@ -1,5 +1,9 @@
 from dataclasses import dataclass, field
-from zoti_gen import read_template, with_schema, Block, Requirement, Template
+from zoti_gen import read_at, with_schema, Block, Requirement, Template, C_DELIMITERS
+
+file_args = {"module": __name__,
+             "filename": "templates.c",
+             "delimiters": C_DELIMITERS}
 
 
 @with_schema(Block.Schema)
@@ -13,7 +17,9 @@ class ReadArray(Block):
         default=Requirement({"include": ["stdio.h"]}))
 
     code: str = field(
-        default=Template(read_template(__name__, "templates.c", "ReadArray.C"))
+        default=Template(
+            read_at(**file_args, name="ReadArray.C"),
+            parent="code")
     )
 
     def check(self):
@@ -33,8 +39,9 @@ class PrintArray(Block):
         default=Requirement({"include": ["stdio.h"]}))
 
     code: str = field(
-        default=Template(read_template(
-            __name__, "templates.c", "PrintArray.C"))
+        default=Template(
+            read_at(**file_args, name="PrintArray.C"),
+            parent="code")
     )
 
     def check(self):
