@@ -44,6 +44,8 @@ class AppGraph:
         except Exception:
             raise KeyError(f"node {uid}")
 
+
+        
     def edge(self, u: Uid, v: Uid) -> Any:
         """Returns a ZOTI edge entry with a given identifier.
 
@@ -72,6 +74,12 @@ class AppGraph:
         self.ir.add_node(uid, **{ty.ATTR_ENT: obj})
         return uid
 
+    def update(self, uid: Uid, obj: Any) -> Uid:
+        """Replaces an old ZOTI node or port object with a new one
+
+        """
+        self.ir.nodes[uid][ty.ATTR_ENT] = obj
+        
     def register_port(self, parent_id: Uid, port_id: Uid) -> Uid:
         """Registers a pre-created port to a node (see :meth:`new`). Returns
         *port_id*.

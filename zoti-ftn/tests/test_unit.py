@@ -56,22 +56,25 @@ def test_c_backend(ftn) -> None:
         # print(ftn)
         _ = ftn.get("Tst.TypeOne")
         _ = ftn.get("Tst.TypeTwo")
-        assert ftn.c_name("Tst.TypeOne") == "Tst__TypeOne_t"
-        assert ftn.c_name("Tst.TypeTwo") == "Tst__TypeTwo_t"
+        assert ftn.gen_typename_expr(core.Uid("Tst.TypeOne")) == "Tst__TypeOne_t"
+        assert ftn.gen_typename_expr(core.Uid("Tst.TypeTwo")) == "Tst__TypeTwo_t"
         assert ftn.requirements()
-        for t in ["Tst.TypeOne", "Tst.TypeTwo", "test_import.TimeSlot", "test_import.ArrId"]:
-            assert ftn.gen_c_typedef(t, allow_void=True)
-            assert ftn.gen_access_macros(t)
-            assert ftn.gen_access_macros(t, read_only=True)
-            assert ftn.gen_access_dict(t)
-            assert ftn.gen_decl("x", t, value="y")
-            assert ftn.gen_decl("x", t, value="y", usage="z")
-            assert ftn.get(t).gen_ctor("x", "y", ptr_fixup=True)
-            assert ftn.get(t).gen_desctor("x", "y")
-            assert ftn.get(t).gen_copy_stmt("x", "y", "z", "q")
+        for t in [core.Entry(uid, value="y")
+                  for uid in ["Tst.TypeOne", "Tst.TypeTwo",
+                              "test_import.TimeSlot", "test_import.ArrId"]]:
+            assert ftn.gen_typedef(t, allow_void=True)
+            assert ftn.gen_access_macros_expr(t)
+            assert ftn.gen_access_macros_expr(t, read_only=True)
+            assert ftn.access_dict(t)
+            assert ftn.gen_decl(t, "x")
+            assert ftn.gen_decl(t, "x", usage="z")
+            if ftn.get(t).need_malloc():
+                assert ftn.get(t).gen_ctor("x", "y", ptr_fixup=True)
+                assert ftn.get(t).gen_desctor("x", "y")
+                assert ftn.get(t).gen_marshal("x", "y")
+                assert ftn.get(t).gen_unmarshal("x", "y")
+            assert ftn.get(t).gen_copy("x", "y", "z", "q")
             assert ftn.get(t).gen_size_expr("x")
-            assert ftn.get(t).gen_marshal("x", "y")
-            assert ftn.get(t).gen_unmarshal("x", "y")
     except Exception as e:
         raise e
     finally:
