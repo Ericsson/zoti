@@ -1,6 +1,7 @@
 from enum import Flag
 from pathlib import PurePosixPath
 from typing import Dict
+from copy import deepcopy
 
 from zoti_graph.util import SearchableEnum, default_init, default_repr
 
@@ -129,6 +130,12 @@ class Port:
     mark: Dict
     _info: Dict
 
+    def duplicate(self, **kwargs):
+        ret = deepcopy(self)
+        for k, v in kwargs.items():
+            setattr(ret, k, v)
+        return ret
+
 
 ###########
 ## NODES ##
@@ -141,3 +148,9 @@ class Node:
     parameters: Dict
     mark: Dict
     _info: Dict
+    
+    def duplicate(self, **kwargs):
+        ret = deepcopy(self)
+        for k, v in kwargs.items():
+            setattr(ret, k, v)
+        return ret

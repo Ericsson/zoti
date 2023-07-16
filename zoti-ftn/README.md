@@ -1,9 +1,3 @@
-*ATTENTION: this tool is marked for obsoletion and will be replaced
-in the future with a new design. It is only present for the purpose of
-running a [demonstrator example](../example). No further development
-nor documentation outside this scope is planned.*
-
-
 ZOTI-FTN
 ========
 
@@ -63,7 +57,7 @@ python -m zoti_ftn parse --help
 or from outside it, in the folder where the `Pipfile` resides:
 
 ```shell
-pipenv run python3 -m zoti_yaml --help
+pipenv run python3 -m zoti_ftn --help
 ```
 
 The API library can be loaded like any other Python package, e.g., by
