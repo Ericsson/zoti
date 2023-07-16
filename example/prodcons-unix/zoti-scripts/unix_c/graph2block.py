@@ -79,7 +79,7 @@ script.transform([
         dump_title="tran_1_port_inference",
         dump_nodes=debug,
         dump_graphviz={
-            "port_info": lambda p: f"{p.port_type.__class__.__name__},{p.data_type.uid}",
+            "port_info": lambda p: f"{type(p).__name__},{p.data_type}",
             "node_info": lambda p: ",".join([k for k in p.mark.keys()]),
         } if args.debug else None,
     ),

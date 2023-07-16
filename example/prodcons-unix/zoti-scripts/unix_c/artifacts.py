@@ -26,18 +26,20 @@ def _gen_arg(var, typ, T, casting=False, out=False, **kwargs):
     elif (not casting) and out and need_malloc:
         return f"{var}"
     elif casting and (not out) and (not need_malloc):
-        return f"({T.c_name(typ)} *) &{var}"
+        return f"({T.gen_typename_expr(typ)} *) &{var}"
     elif casting and (not out) and need_malloc:
-        return f"({T.c_name(typ)} *) &{var}"
+        return f"({T.gen_typename_expr(typ)} *) &{var}"
     elif casting and out and (not need_malloc):
-        return f"({T.c_name(typ)} *) &{var}"
+        return f"({T.gen_typename_expr(typ)} *) &{var}"
     elif casting and out and need_malloc:
-        return f"({T.c_name(typ)} *) {var}"
+        return f"({T.gen_typename_expr(typ)} *) {var}"
 
 
 def _mangle_c_name(fullname):
     return str(fullname).replace("/", "_").replace("-", "_").replace(".", "_")
 
+def _from_stmts(stmts):
+    return ";\n".join(stmts) + ";\n"
 
 def _make_global_inits(name, atoms, ports, G, T):
     port_entries = [G.entry(p) for p in ports]
@@ -46,17 +48,18 @@ def _make_global_inits(name, atoms, ports, G, T):
         "block": Ref("InitGlobalVariables"),
         "directive": ["pass"],
     }
-    code = "".join([
-        f"{prefix}{p['usage']}{suffix};\n"
+    code_stmts = [
+        f"{prefix}{p['usage']}{suffix}"
         for p, prefix, suffix in atoms
-    ]) + "\n".join([
-        T.gen_decl(p.name, p.data_type, static=("probe_buffer" in p.mark))
+    ] + [
+        stmt
         for p in port_entries
-    ])
+        for stmt in T.gen_decl(p.data_type, p.name, static=("probe_buffer" in p.mark))
+    ]
     comp = {
         "name": "InitGlobalVariables",
         "prototype": "{{ placeholder['code'] }}",
-        "code": code,
+        "code": _from_stmts(code_stmts),
     }
     return inst, comp
 
@@ -163,17 +166,15 @@ def _make_kernel_component(node, parent, G, T):
 
     entry = G.entry(node)
     globs = G.ports(node, select=lambda p: not _is_local(p))
-    iports = G.ports(node, select=lambda p: _is_local(p)
-                     and p.kind == ty.Dir.IN)
-    oports = G.ports(node, select=lambda p: _is_local(p)
-                     and p.kind == ty.Dir.OUT)
+    iports = G.ports(node, select=lambda p: _is_local(p) and p.kind == ty.Dir.IN)
+    oports = G.ports(node, select=lambda p: _is_local(p) and p.kind == ty.Dir.OUT)
 
     # TODO: casting should happen as part of type handling (i.e. by FTN)
     portinfo = [{
         "locid": p.name(),
-        "access": T.gen_access_dict(G.entry(p).data_type, read_only=True),
+        "access": T.access_dict(G.entry(p).data_type, read_only=True),
         "prefix": "*",
-        "prtarg": f"const {T.c_name(G.entry(p).data_type)}* {G.entry(p).name}",
+        "prtarg": f"const {T.gen_typename_expr(G.entry(p).data_type)}* {G.entry(p).name}",
         "usearg": _gen_arg(
             f"{{{{ label.{p.name()}.name }}}}",
             G.entry(p).data_type, T,
@@ -183,9 +184,9 @@ def _make_kernel_component(node, parent, G, T):
     } for p in iports]
     portinfo += [{
         "locid": p.name(),
-        "access": T.gen_access_dict(G.entry(p).data_type, read_only=False),
+        "access": T.access_dict(G.entry(p).data_type, read_only=False),
         "prefix": "*",
-        "prtarg": f"{T.c_name(G.entry(p).data_type)}* {G.entry(p).name}",
+        "prtarg": f"{T.gen_typename_expr(G.entry(p).data_type)}* {G.entry(p).name}",
         "usearg": _gen_arg(
             f"{{{{ label.{p.name()}.name }}}}",
             G.entry(p).data_type, T, out=True)
@@ -194,15 +195,15 @@ def _make_kernel_component(node, parent, G, T):
     inst = {
         "placeholder": str(node),
         "block": Ref(_mangle_c_name(node)),
-        "bind": (
-            [{"label_to_label": {
+        "bind": ([
+            {"label_to_label": {
                 "child": p.name(),
-                "parent": [o.name() for o in G.connected_ports(p) if G.parent(o) == parent][0], }
-              }
-             for p in iports + oports] +
-            [{"usage_to_label": {"child": p.name(), "usage": G.entry(p).name}}
-             for p in globs]
-        ),
+                "parent": [o.name() for o in G.connected_ports(p) if G.parent(o) == parent][0], }}
+            for p in iports + oports
+        ] + [
+            {"usage_to_label": {"child": p.name(), "usage": G.entry(p).name}}
+            for p in globs
+        ])
     }
     if "inline" in entry.mark:
         inst["directive"] = ["expand"]
@@ -217,7 +218,7 @@ def _make_kernel_component(node, parent, G, T):
                    for p in portinfo] +
                   [{"name": p.name(),
                     "usage": G.entry(p).name,
-                    "glue": T.gen_access_dict(G.entry(p).data_type, read_only=False)}
+                    "glue": T.access_dict(G.entry(p).data_type, read_only=False)}
                    for p in globs]
                   ),
         "prototype": ('inline static void {{name}} ('
@@ -253,35 +254,34 @@ def _make_actor_scenario(node, G, T):
     def _nameAndTy(p):
         return (f"{{{{label.{G.entry(p).name}.name}}}}", G.entry(p).data_type)
 
-    usage =  [
-        T.get(ty).gen_ctor(var, f"(*{var})")
+    pre_usage = [
+        stmt 
         for p in out_ports
         for var, ty in (_nameAndTy(p),)
+        for stmt in T.get(ty).gen_ctor(var, f"(*{var})")
     ] + [
-        T.gen_decl(f"*{var}", ty)
+        stmt 
         for p in inter_ports
         for var, ty in (_nameAndTy(p),)
+        for stmt in T.gen_decl(ty, f"*{var}")
     ] + [
-        T.get(ty).gen_ctor(var, f"(*{var})")
-        for p in inter_ports
+        stmt
+        for p in out_ports + inter_ports
         for var, ty in (_nameAndTy(p),)
-    ] + [
-        '{{ placeholder.code }}'
-    ] + [
-        T.get(ty).gen_desctor(var, ty.value)
-        for p in inter_ports
+        for stmt in T.get(ty).gen_ctor(var, f"(*{var})")
+    ]
+    post_usage = [
+        stmt
+        for p in inter_ports + out_ports
         for var, ty in (_nameAndTy(p),)
-    ] + [
-        T.get(ty).gen_desctor(var, ty.value)
-        for p in out_ports
-        for var, ty in (_nameAndTy(p),)
+        for stmt in T.get(ty).gen_desctor(var, ty.value)
     ]
     inst = {
         "placeholder": entry.name,
         "block": Ref(prefix),
         "directive": ["expand"],  # TODO
         "bind": [{"label_to_label": bind} for bind in binds],
-        "usage": "\n".join(usage),
+        "usage": _from_stmts(pre_usage) + '{{ placeholder.code }}\n' + _from_stmts(post_usage) ,
         "_info": entry._info,
     }
 
@@ -331,13 +331,21 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
               for p in G.ports(actor_id, select=lambda p: p.kind == ty.Dir.IN)
               if p != port_id])
 
-    oport_name_type = [
-       (f"{'* ' if T.get(p.data_type).need_malloc() else ''}{{{{label.{p.name}.name}}}}",
-        p.data_type) for p in oports]
-    proto = (
-        rcv_proto
-        + "\n ".join([T.gen_decl(name, ty) for name, ty in oport_name_type])
-        + '\n {{ placeholder.code }}\n}')
+
+    def _nameAndTy(p):
+        prefix = '* ' if T.get(p.data_type).need_malloc() else ''
+        return (f"{prefix}{{{{label.{p.name}.name}}}}", p.data_type)
+
+    # oport_name_type = [
+    #    (f"{'* ' if T.get(p.data_type).need_malloc() else ''}{{{{label.{p.name}.name}}}}",
+    #     p.data_type) for p in oports]
+    
+    pre_proto = rcv_proto + [
+        stmt 
+        for p in oports
+        for var, ty in (_nameAndTy(p),)
+        for stmt in T.gen_decl(ty, var)
+    ]
 
     # TODO:
     preproc = None
@@ -355,12 +363,13 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
 
     schedule = [inst.get("placeholder") for inst in insts]
 
+    print (pre_proto)
     comp = {
         "name": f"DFLF_{pltf_name}_{iport.name}",
         "type": {"module": "Generic", "name": "Composite"},
         "param": {"schedule": schedule},
         "label": ports,
-        "prototype": proto,
+        "prototype": _from_stmts(pre_proto) + " {{ placeholder.code }}\n}",
         "instance": insts,
         "_info": iport._info,
     }
@@ -435,8 +444,8 @@ def genspec(G, T, prepare_platform_ports, expand_actors, fuse_actors,
             "name": "Main",
             "type": {"module": "Generic.Dfl", "name": "Main"},
             "requirement": {
-                "include": T.requirements() + ["<stdio.h>"]
-                + ['"DFL_core.h"', '"DFL_util.h"', '"dfl_cfg.h"', '"dfl_evt.h"']
+                "include": T.requirements() + ["<stdio.h>", "<string.h>"]
+                + ['"DFL_core.h"', '"dfl_cfg.h"', '"dfl_evt.h"']
                 + [f'"{h}"' for h in typedefs.keys()]
             },
             "label": [a for a, _, _ in atomports] + [{"name": p} for _, p in oport],
@@ -488,14 +497,14 @@ def typedefs(G, T, port_inference, **kwargs):
     types = dict()
     for port in [p for p in G.ir.nodes if isinstance(G.entry(p), ty.Port)]:
         entry = G.entry(port).data_type
-        if entry.uid.module == "__local__":
+        if entry.module == "__local__":
             continue
         if entry not in types:
             types[entry] = []
         types[entry].append(port)
 
     deps = nx.DiGraph()
-    root_dep = Entry("__root__")
+    root_dep = Entry("__root__.dep")
     deps.add_node(root_dep)
     for typ, ports in types.items():
         try:
@@ -503,14 +512,14 @@ def typedefs(G, T, port_inference, **kwargs):
                 deps.add_edge(typ, typdep)
             deps.add_edge(root_dep, typ)
         except Exception as e:
-            msg = f"Cannot load type '{typ.uid}' needed for {ports}:\n{e}"
+            msg = f"Cannot load type '{typ}' needed for {ports}:\n{e}"
             raise ScriptError(msg, G.entry(ports[0]))
     tydefs = ""
     # print(deps.edges)
     # print(list(nx.dfs_postorder_nodes(deps)))
     for typ in list(nx.dfs_postorder_nodes(deps))[:-1]:
-        tydefs += T.gen_c_typedef(typ) + "\n"
-        tydefs += "".join(T.gen_access_macros(typ)) + "\n"
+        tydefs += _from_stmts(T.gen_typedef(typ))
+        tydefs += "".join(T.gen_access_macros_expr(typ)) + "\n"
     return {"types.h": tydefs}
 
 

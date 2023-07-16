@@ -104,7 +104,8 @@ class Socket(PortType):
         )
         
     def receiver_genspec(self, prefix: str, T):
-        exp_type, exp_type_name = (T.get(self.data_type), T.c_name(self.data_type))
+        exp_type = T.get(self.data_type)
+        exp_type_name = T.gen_typename_expr(self.data_type)
         exp_base_size = exp_type._gen_base_size_expr(exp_type_name)
         exp_size = exp_type.gen_size_expr(exp_type_name)
         buf_type = T.make_entry(name="DflSys.UdpPacket")
@@ -116,11 +117,10 @@ class Socket(PortType):
             {"name": self.name, "usage": f"udp2ram_{self.name}"},
         ]
         # prototype expects to be closed by caller
-        proto = (" void {{name}}(int {{label.socket.name}}) {" +
-                 "\n uint16_t {{label.size.name}};" +
-                 "\n" + T.gen_decl(f"{{{{label.{self.name}.name}}}}", buf_type) +
-                 "\n"
-                 )
+        proto = [
+            " void {{name}}(int {{label.socket.name}}) {",
+            "uint16_t {{label.size.name}}",
+        ] + T.gen_decl(buf_type, f"{{{{label.{self.name}.name}}}}")
         instances = [{
             "placeholder": "receive",
             "block": Ref(f"recv_{prefix}_{self.name}"),
@@ -140,7 +140,6 @@ class Socket(PortType):
             "bind": [
                 {"label_to_label": {"parent": self.name, "child": self.name}},
             ]
-
         }]
         # print(T.get(exp_type).gen_unmarshal(var, f"(*{var})"))
         blocks = [{
@@ -148,24 +147,25 @@ class Socket(PortType):
             "type": {"module": "Generic.Dfl", "name": "UdpReceive"}
         }, {
             "name": f"marshal_{prefix}_{self.name}",
-            "code": T.get(exp_type).gen_unmarshal(var, f"(*{var})"),
+            "code": ";\n".join(T.get(exp_type).gen_unmarshal(var, f"(*{var})")) + ";\n",
             "prototype": '{{ placeholder["code"] }}'
         }]
         return labels, proto, instances, blocks
 
     def sender_genspec(self, prefix, T):
-        exp_type, exp_type_name = (T.get(self.data_type), T.c_name(self.data_type))
+        exp_type_name = T.gen_typename_expr(self.data_type)
+        exp_type = T.get(self.data_type)
         exp_size = exp_type.gen_size_expr(exp_type_name)
         var = f"{{{{label.{self.name}.name}}}}"
         bname = f"{prefix}_{self.name}"
         
-        instances = [{                                       # marshalling first
+        instances = [{
             "placeholder": f"marshal_{bname}",
             "block": None,
             "directive": ["expand"],
-            "usage": exp_type.gen_marshal(var, f"(*{var})"),
+            "usage": ";\n".join(exp_type.gen_marshal(var, f"(*{var})")) + ";\n",
             "bind": [{"label_to_label": {"child": self.name, "parent": self.name}}]
-        }, {                                                 # send after marshalling
+        }, {
             "placeholder": f"send_{bname}",
             "block": Ref(f"send_{bname}"),
             "directive": ["expand"],
@@ -213,13 +213,13 @@ class Timer(PortType):
         labels = [
             {"name": "timestamp", "usage": "DFL_timestamp"},
             {"name": self.name, "usage": f"timerrecv_{self.name}",
-             "glue": T.gen_access_dict(buf_type, read_only=False)},
+             "glue": T.access_dict(buf_type, read_only=False)},
         ]
         # prototype expects to be closed by caller
-        proto = (" void {{name}}(int64_t {{label.timestamp.name}}) {" +
-                 "\n" + T.gen_decl(f"{{{{label.{self.name}.name}}}}", buf_type) +
-                 "\n"
-                 )
+        proto = [
+            "void {{name}}(int64_t {{label.timestamp.name}}) {",
+            
+        ] + T.gen_decl(buf_type, f"{{{{label.{self.name}.name}}}}")
         instances = [{
             "placeholder": "read_timer",
             "block": Ref(f"read_timer_{prefix}_{self.name}"),
