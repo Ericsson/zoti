@@ -80,6 +80,12 @@ class Entry(Uid):
             super(Entry, self).__init__(qualified_name)
         self.value = value
 
+    def __eq__(self, other):
+        return super(Entry, self).__eq__(other)
+
+    def __hash__(self):
+        return hash(super(Entry, self).__repr__())
+    
     def __repr__(self):
         return super(Entry, self).__repr__() + (f" = {self.value}" if self.value else "")
 
@@ -302,14 +308,14 @@ class Void(TypeABC):
         return [self] if of_class == tok.TYPE_VOID else []
 
 
-# class Atom(TypeABC):
-#     class Schema(TypeABC.Schema):
-#         @mm.post_load
-#         def construct(self, data, **kwargs):
-#             return Atom(**data)
+class Atom(TypeABC):
+    class Schema(TypeABC.Schema):
+        @mm.post_load
+        def construct(self, data, **kwargs):
+            return Atom(**data)
 
-#     def select_types(self, of_class=None):
-#         return [self] if of_class == tok.TYPE_ATOM else []
+    def select_types(self, of_class=None):
+        return [self] if of_class == tok.TYPE_ATOM else []
 
 
 @dataclass
@@ -524,7 +530,7 @@ class FtnDb:
     """
     __instance = None
     __specs: Dict[str, mm.Schema] = {
-        # tok.TYPE_ATOM: Atom.Schema(),
+        tok.TYPE_ATOM: Atom.Schema(),
         tok.TYPE_VOID: Void.Schema(),
         tok.TYPE_BOOLEAN: Boolean.Schema(),
         tok.TYPE_INTEGER: Integer.Schema(),

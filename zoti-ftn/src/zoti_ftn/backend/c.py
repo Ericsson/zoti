@@ -543,19 +543,19 @@ class Void(ftn.Void, TypeABC):
         def construct(self, data, **kwargs):
             return Void(**data)
 
-# @with_schema(ftn.Atom.Schema)
-# class Atom(ftn.Atom, TypeABC):
-#     def gen_ctype_expr(self, name, allow_void=False):
-#         return ("DFL_atom_t", "")
+@with_schema(ftn.Atom.Schema)
+class Atom(ftn.Atom, TypeABC):
+    def gen_ctype_expr(self, name, allow_void=False):
+        return ("DFL_atom_t", "")
 
-#     def gen_access_expr(self, src_expr, iter_lvl):
-#         # TODO: Something more is probably needed here to manage byte order
-#         #   differences when transferring atoms, probably the same as integer
-#         #   needs.
-#         return [([], [], src_expr, self.readonly)]
+    def gen_access_expr(self, src_expr, iter_lvl):
+        # TODO: Something more is probably needed here to manage byte order
+        #   differences when transferring atoms, probably the same as integer
+        #   needs.
+        return [([], [], src_expr, self.readonly)]
 
-#     def _gen_marshalling(self, buf_ptr, acc_expr, iter_lvl, inverse=False):
-#         return []
+    def _gen_marshalling(self, buf_ptr, acc_expr, iter_lvl, inverse=False):
+        return []
 
 
 # @with_schema(ftn.Integer.Schema)
@@ -689,7 +689,7 @@ class Boolean(ftn.Boolean, TypeABC):
 
 class FtnDb(ftn.FtnDb):
     __specs = {
-        # tok.TYPE_ATOM: Atom.Schema(),
+        tok.TYPE_ATOM: Atom.Schema(),
         tok.TYPE_VOID: Void.Schema(),
         tok.TYPE_BOOLEAN: Boolean.Schema(),
         tok.TYPE_INTEGER: Integer.Schema(),
