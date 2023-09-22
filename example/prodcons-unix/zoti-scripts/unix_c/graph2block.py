@@ -62,6 +62,8 @@ else:
 debug = {} if args.debug else None
 script = tran.Script(G, T, dump_prefix=args.plots)
 
+def gvstring(s): return repr(s).replace("{","(").replace("}",")")
+
 script.sanity([
     sanity.port_dangling,
     sanity.node_platform_hierarchy,
@@ -79,7 +81,7 @@ script.transform([
         dump_title="tran_1_port_inference",
         dump_nodes=debug,
         dump_graphviz={
-            "port_info": lambda p: f"{type(p).__name__},{p.data_type}",
+            "port_info": lambda p: f"{type(p).__name__},{gvstring(p.data_type)}",
             "node_info": lambda p: ",".join([k for k in p.mark.keys()]),
         } if args.debug else None,
     ),

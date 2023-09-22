@@ -363,7 +363,7 @@ def _make_iport_reaction(pltf_name, actor_id, port_id, G, T):
 
     schedule = [inst.get("placeholder") for inst in insts]
 
-    print (pre_proto)
+    # print (pre_proto)
     comp = {
         "name": f"DFLF_{pltf_name}_{iport.name}",
         "type": {"module": "Generic", "name": "Composite"},
@@ -521,7 +521,6 @@ def typedefs(G, T, port_inference, **kwargs):
         tydefs += _from_stmts(T.gen_typedef(typ))
         tydefs += "".join(T.gen_access_macros_expr(typ)) + "\n"
     return {"types.h": tydefs}
-
 
 ############################
 ##      GENDEPL PART      ##

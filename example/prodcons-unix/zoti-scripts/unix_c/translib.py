@@ -51,10 +51,13 @@ def prepare_platform_ports(G, T, port_inference, **kwargs):
         # alter exit ports to reflect socket variables
         for oport in G.ports(pltf, select=lambda p: p.kind == ty.Dir.OUT):
             socket_id = oport.withSuffix(f"{pltf.name()}_socket")
-            # for p in G.connected_ports(oport):
-            #     if G.has_ancestor(p, pltf):
-            #         G.decouple(p)
-            #         G.entry(p).mark["socket_port"] = socket_id
+            for p in G.connected_ports(oport):
+                if G.has_ancestor(p, pltf):
+                    G.decouple(p)
+                    # mark["socket_name"] = socket_id
+                    G.entry(p).mark["socket_port"] = socket_id
+                    G.entry(p).mark["socket_name"] = socket_id.name()
+        
             socket_port = G.entry(oport).new_output_socket_port(socket_id, T)
             G.register_port(pltf, G.new(socket_id, socket_port))
             log.info(f"  - Added global out port for: {oport}")
