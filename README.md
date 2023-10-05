@@ -1,6 +1,6 @@
 # zoti
 
-This is the monorepo associated with the ZOTI (Zero Overhead Topology
+This is the repository associated with the ZOTI (Zero Overhead Topology
 Infrastrcture) project ongoing at Ericsson. It is a collection of
 open-source tools for developing code synthesis flows towards
 heterogeneous platforms, together with demo examples. All tools and
